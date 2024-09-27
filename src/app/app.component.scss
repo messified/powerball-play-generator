@@ -1,0 +1,259 @@
+.container {
+  background-color: #FDFDFF;
+  text-align: center;
+}
+
+p {
+  font-size: 1.6rem;
+}
+
+h1 {
+  margin: 30px 0 0;
+  padding: 0;
+  text-transform: uppercase;
+  font-size: 2rem;
+}
+
+.jumbotron {
+  margin-bottom: 0;
+  background-color: #fff;
+}
+
+.powerball ul {
+  margin: 0;
+  padding: 0;
+}
+
+.powerball li {
+  margin-left: 30px;
+}
+
+.ball span {
+  position: relative;
+  top: 15px;
+  font-weight: bold;
+  color: #000;
+}
+
+.bold {
+  font-weight: bold;
+}
+
+.start {
+  background-color: #33b786;
+}
+
+.ball {
+  display: inline-block;
+  width: 50px;
+  height: 50px;
+  margin: 0;
+  background-color: #fff;
+  border-radius: 50%;
+  box-shadow: inset -5px -5px 20px rgba(0, 0, 0, 0.5);
+  background-image: -webkit-linear-gradient(
+    -45deg,
+    rgba(255, 255, 220, 0.2) 0%,
+    transparent 100%
+  );
+  background-image: -moz-linear-gradient(
+    -45deg,
+    rgba(255, 255, 220, 0.2) 0%,
+    transparent 100%
+  );
+  background-image: -o-linear-gradient(
+    -45deg,
+    rgba(255, 255, 220, 0.2) 0%,
+    transparent 100%
+  );
+  background-image: -ms-linear-gradient(
+    -45deg,
+    rgba(255, 255, 220, 0.2) 0%,
+    transparent 100%
+  );
+}
+
+li.ball.pb {
+  background-color: #db4437;
+  margin-bottom: 5px;
+}
+
+li.ball.pb span {
+  color: #fff;
+}
+
+.ball:last-of-type {
+  background-color: #db4437;
+}
+
+.ball:last-of-type span {
+  color: #fff;
+}
+
+.powerball li:first-of-type {
+  margin-left: 0;
+}
+
+li.ball.match {
+  background-color: #fff700;
+}
+
+li.ball.match > span {
+  color: #000;
+}
+
+.history h4 {
+  margin-bottom: 3rem;
+  color: #fff;
+  background-color: #337ab7;
+  border-color: #337ab7;
+}
+
+.history ul {
+  margin: 0;
+  padding: 0;
+  max-height: 128px;
+  overflow: scroll;
+  border: 1px solid #e3e3e3;
+}
+
+.history li {
+  list-style-type: none;
+  margin: 15px;
+}
+
+.ticket-wrapper {
+  margin-bottom: 10px;
+}
+
+.ticket-container {
+  position: relative;
+}
+
+.icon {
+  font-size: 20px;
+  position: absolute;
+  top: 7px;
+  right: 10px;
+  color: #ffffff;
+  cursor: pointer;
+}
+
+.panel-primary {
+  border: 1px solid #e0e0e0;
+  position: relative;
+}
+
+.panel {
+  box-shadow: none;
+  background-color: transparent;
+}
+
+.panel-body {
+  padding: 0;
+}
+
+.panel-primary {
+  border: none;
+}
+
+.history-heading {
+  color: #fff;
+  background-color: #2f3e48;
+  border-color: #828282;
+}
+
+.past-winning {
+  max-height: 400px;
+  overflow: scroll;
+}
+
+.generated {
+  background: #2f3e48;
+}
+
+ul.powerball.well.generated {
+  margin: 0;
+  border-radius: 0;
+  border: none;
+  background-color: #2f3e48;
+}
+
+button.btn.btn-primary.generate-button {
+  border-radius: 0;
+  text-transform: uppercase;
+  font-weight: 500;
+}
+
+.button-row {
+  margin: 20px auto 45px;
+}
+
+.footer {
+  margin-top: 45px;
+  padding: 25px;
+  border-top: 1px solid #f1f1f1;
+}
+
+.footer p {
+  font-size: 1.2rem;
+}
+
+.circle {
+  margin: 0 auto;
+  width: 80px;
+  border: 2px solid #ccc;
+  border-radius: 100%;
+}
+
+.fa-clipboard:before {
+  color: #fccc00;
+}
+
+.chart img {
+  margin: 0 auto;
+}
+
+button.btn.btn-secondary {
+  background-color: #d54234;
+  border: 1px solid #000;
+  font-weight: 500;
+  text-transform: uppercase;
+  font-size: 1.7rem;
+  color: #fff;
+  margin: 35px 0 0;
+}
+
+@media only screen and (min-device-width: 320px) and (max-device-width: 480px) and (-webkit-min-device-pixel-ratio: 2) {
+  .jumbotron {
+    background: transparent;
+    margin-bottom: 10px;
+  }
+
+  .well {
+    padding: 10px 0 10px;
+    margin: 5px 0;
+    border-radius: 0;
+    border: none;
+    background-color: #2f3e48;
+  }
+
+  .powerball li {
+    margin-left: 5px;
+  }
+
+  .ball {
+    display: inline-block;
+    width: 50px;
+    height: 50px;
+    margin: 0;
+    background-color: #fff;
+  }
+
+  button.btn.btn-primary {
+    height: 50px;
+    width: 100%;
+    text-transform: uppercase;
+    font-weight: 500;
+  }
+}
