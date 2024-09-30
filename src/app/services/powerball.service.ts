@@ -86,6 +86,13 @@ export class PowerballService {
         : randomNumber;
     });
 
+    const firstPredictedNumber = this.pickMostFrequentFirstNumber();
+    const predictivePlay = this.buildWithTheFirst(firstPredictedNumber, initialPlay);
+
+    console.log(predictivePlay);
+    
+    console.log('firstPredictedNumber:  ', firstPredictedNumber);
+
     const firstNumber = initialPlay[0].length === 1 ? `0${initialPlay[0]}` : initialPlay[0];
 
     const bestGuestSetForSecond = this.generateNextNumberArray(firstNumber, 0);
@@ -102,10 +109,33 @@ export class PowerballService {
 
     const sixthNumber = initialPlay[5].length === 1 ? `0${initialPlay[5]}` : initialPlay[5];
 
+    const playTwo = [firstNumber, secondNumber, thirdNumber, forthNumber, fifithNumber, sixthNumber];
+
     console.log({
-      payOne: initialPlay,
-      playTwo: [firstNumber, secondNumber, thirdNumber, forthNumber, fifithNumber, sixthNumber]
+      initialPlay,
+      playTwo,
+      predictivePlay
     })
+
+    return predictivePlay;
+  }
+
+  private buildWithTheFirst(firstPredictedNumber: string, initialPlay: any){
+    const firstNumber = firstPredictedNumber;
+
+    const bestGuestSetForSecond = this.generateNextNumberArray(firstNumber, 0);
+    const secondNumber = this.pickRandomIndexInArray(_.uniq(bestGuestSetForSecond));
+
+    const bestGuestSetForThird = this.generateNextNumberArray(secondNumber, 1);
+    const thirdNumber = this.pickRandomIndexInArray(_.uniq(bestGuestSetForThird));
+
+    const bestGuestSetForForth = this.generateNextNumberArray(thirdNumber, 2);
+    const forthNumber = this.pickRandomIndexInArray(_.uniq(bestGuestSetForForth));
+
+    const bestGuestSetForFifth = this.generateNextNumberArray(forthNumber, 3);
+    const fifithNumber = this.pickRandomIndexInArray(_.uniq(bestGuestSetForFifth));
+
+    const sixthNumber = initialPlay[5].length === 1 ? `0${initialPlay[5]}` : initialPlay[5];
 
     return [firstNumber, secondNumber, thirdNumber, forthNumber, fifithNumber, sixthNumber];
   }
@@ -348,5 +378,33 @@ export class PowerballService {
     return Object.keys(counts)
       .filter((key) => counts[Number(key)] >= occurrence)
       .map(Number);
+  }
+
+  private pickMostFrequentFirstNumber() {
+    // Step 1: Extract the first numbers
+    const firstNumbers = this.historicalData.map(subArray => subArray[0]);
+
+    // Step 2: Count the frequency of each number
+    const frequencyMap: { [key: string]: number } = {};
+    firstNumbers.forEach(number => {
+      if (frequencyMap[number]) {
+        frequencyMap[number]++;
+      } else {
+        frequencyMap[number] = 1;
+      }
+    });
+
+    // Step 3: Find the number with the highest frequency
+    let mostFrequentNumber = firstNumbers[0];
+    let maxCount = 0;
+
+    for (const number in frequencyMap) {
+      if (frequencyMap[number] > maxCount) {
+        maxCount = frequencyMap[number];
+        mostFrequentNumber = number;
+      }
+    }
+
+    return mostFrequentNumber;
   }
 }
