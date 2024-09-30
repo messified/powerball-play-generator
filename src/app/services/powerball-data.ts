@@ -499,106 +499,106 @@ export const PowerballData = [
     winning_numbers: '27 28 34 37 44 08',
     multiplier: '2',
   },
-  // {
-  //   draw_date: '2024-02-07T00:00:00.000',
-  //   winning_numbers: '12 21 62 67 69 17',
-  //   multiplier: '3',
-  // },
-  // {
-  //   draw_date: '2024-02-05T00:00:00.000',
-  //   winning_numbers: '01 02 27 30 67 09',
-  //   multiplier: '5',
-  // },
-  // {
-  //   draw_date: '2024-02-03T00:00:00.000',
-  //   winning_numbers: '09 11 27 59 66 19',
-  //   multiplier: '3',
-  // },
-  // {
-  //   draw_date: '2024-01-31T00:00:00.000',
-  //   winning_numbers: '15 18 19 41 43 14',
-  //   multiplier: '2',
-  // },
-  // {
-  //   draw_date: '2024-01-29T00:00:00.000',
-  //   winning_numbers: '39 41 43 49 64 04',
-  //   multiplier: '2',
-  // },
-  // {
-  //   draw_date: '2024-01-27T00:00:00.000',
-  //   winning_numbers: '07 38 65 66 68 21',
-  //   multiplier: '2',
-  // },
-  // {
-  //   draw_date: '2024-01-24T00:00:00.000',
-  //   winning_numbers: '01 05 32 50 64 08',
-  //   multiplier: '4',
-  // },
-  // {
-  //   draw_date: '2024-01-22T00:00:00.000',
-  //   winning_numbers: '24 25 43 52 63 21',
-  //   multiplier: '2',
-  // },
-  // {
-  //   draw_date: '2024-01-20T00:00:00.000',
-  //   winning_numbers: '16 31 34 47 65 10',
-  //   multiplier: '3',
-  // },
-  // {
-  //   draw_date: '2024-01-17T00:00:00.000',
-  //   winning_numbers: '18 22 43 61 65 02',
-  //   multiplier: '4',
-  // },
-  // {
-  //   draw_date: '2024-01-15T00:00:00.000',
-  //   winning_numbers: '13 30 35 49 59 04',
-  //   multiplier: '3',
-  // },
-  // {
-  //   draw_date: '2024-01-13T00:00:00.000',
-  //   winning_numbers: '13 31 33 51 58 15',
-  //   multiplier: '2',
-  // },
-  // {
-  //   draw_date: '2024-01-10T00:00:00.000',
-  //   winning_numbers: '25 40 43 48 50 11',
-  //   multiplier: '2',
-  // },
-  // {
-  //   draw_date: '2024-01-08T00:00:00.000',
-  //   winning_numbers: '07 17 28 40 45 02',
-  //   multiplier: '3',
-  // },
-  // {
-  //   draw_date: '2024-01-06T00:00:00.000',
-  //   winning_numbers: '04 31 34 38 61 13',
-  //   multiplier: '2',
-  // },
-  // {
-  //   draw_date: '2024-01-03T00:00:00.000',
-  //   winning_numbers: '30 31 38 48 68 08',
-  //   multiplier: '10',
-  // },
-  // {
-  //   draw_date: '2024-01-01T00:00:00.000',
-  //   winning_numbers: '12 21 42 44 49 01',
-  //   multiplier: '3',
-  // },
-  // {
-  //   draw_date: '2023-12-30T00:00:00.000',
-  //   winning_numbers: '10 11 26 27 34 07',
-  //   multiplier: '4',
-  // },
-  // {
-  //   draw_date: '2023-12-27T00:00:00.000',
-  //   winning_numbers: '04 11 38 51 68 05',
-  //   multiplier: '3',
-  // },
-  // {
-  //   draw_date: '2023-12-25T00:00:00.000',
-  //   winning_numbers: '05 12 20 24 29 04',
-  //   multiplier: '2',
-  // },
+  {
+    draw_date: '2024-02-07T00:00:00.000',
+    winning_numbers: '12 21 62 67 69 17',
+    multiplier: '3',
+  },
+  {
+    draw_date: '2024-02-05T00:00:00.000',
+    winning_numbers: '01 02 27 30 67 09',
+    multiplier: '5',
+  },
+  {
+    draw_date: '2024-02-03T00:00:00.000',
+    winning_numbers: '09 11 27 59 66 19',
+    multiplier: '3',
+  },
+  {
+    draw_date: '2024-01-31T00:00:00.000',
+    winning_numbers: '15 18 19 41 43 14',
+    multiplier: '2',
+  },
+  {
+    draw_date: '2024-01-29T00:00:00.000',
+    winning_numbers: '39 41 43 49 64 04',
+    multiplier: '2',
+  },
+  {
+    draw_date: '2024-01-27T00:00:00.000',
+    winning_numbers: '07 38 65 66 68 21',
+    multiplier: '2',
+  },
+  {
+    draw_date: '2024-01-24T00:00:00.000',
+    winning_numbers: '01 05 32 50 64 08',
+    multiplier: '4',
+  },
+  {
+    draw_date: '2024-01-22T00:00:00.000',
+    winning_numbers: '24 25 43 52 63 21',
+    multiplier: '2',
+  },
+  {
+    draw_date: '2024-01-20T00:00:00.000',
+    winning_numbers: '16 31 34 47 65 10',
+    multiplier: '3',
+  },
+  {
+    draw_date: '2024-01-17T00:00:00.000',
+    winning_numbers: '18 22 43 61 65 02',
+    multiplier: '4',
+  },
+  {
+    draw_date: '2024-01-15T00:00:00.000',
+    winning_numbers: '13 30 35 49 59 04',
+    multiplier: '3',
+  },
+  {
+    draw_date: '2024-01-13T00:00:00.000',
+    winning_numbers: '13 31 33 51 58 15',
+    multiplier: '2',
+  },
+  {
+    draw_date: '2024-01-10T00:00:00.000',
+    winning_numbers: '25 40 43 48 50 11',
+    multiplier: '2',
+  },
+  {
+    draw_date: '2024-01-08T00:00:00.000',
+    winning_numbers: '07 17 28 40 45 02',
+    multiplier: '3',
+  },
+  {
+    draw_date: '2024-01-06T00:00:00.000',
+    winning_numbers: '04 31 34 38 61 13',
+    multiplier: '2',
+  },
+  {
+    draw_date: '2024-01-03T00:00:00.000',
+    winning_numbers: '30 31 38 48 68 08',
+    multiplier: '10',
+  },
+  {
+    draw_date: '2024-01-01T00:00:00.000',
+    winning_numbers: '12 21 42 44 49 01',
+    multiplier: '3',
+  },
+  {
+    draw_date: '2023-12-30T00:00:00.000',
+    winning_numbers: '10 11 26 27 34 07',
+    multiplier: '4',
+  },
+  {
+    draw_date: '2023-12-27T00:00:00.000',
+    winning_numbers: '04 11 38 51 68 05',
+    multiplier: '3',
+  },
+  {
+    draw_date: '2023-12-25T00:00:00.000',
+    winning_numbers: '05 12 20 24 29 04',
+    multiplier: '2',
+  },
   // {
   //   draw_date: '2023-12-23T00:00:00.000',
   //   winning_numbers: '09 14 17 18 53 06',

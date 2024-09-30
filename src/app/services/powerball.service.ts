@@ -135,6 +135,8 @@ export class PowerballService {
     const bestGuestSetForFifth = this.generateNextNumberArray(forthNumber, 3);
     const fifithNumber = this.pickRandomIndexInArray(_.uniq(bestGuestSetForFifth));
 
+    const pbPredict = this.pickMostFrequentFirstNumber(true);
+    console.log('pbPredict: ', pbPredict);
     const sixthNumber = initialPlay[5].length === 1 ? `0${initialPlay[5]}` : initialPlay[5];
 
     return [firstNumber, secondNumber, thirdNumber, forthNumber, fifithNumber, sixthNumber];
@@ -380,9 +382,10 @@ export class PowerballService {
       .map(Number);
   }
 
-  private pickMostFrequentFirstNumber() {
+  private pickMostFrequentFirstNumber(powerball:boolean = false) {
+    const index = powerball ? 5 : 0;
     // Step 1: Extract the first numbers
-    const firstNumbers = this.historicalData.map(subArray => subArray[0]);
+    const firstNumbers = this.historicalData.map(subArray => subArray[index]);
 
     // Step 2: Count the frequency of each number
     const frequencyMap: { [key: string]: number } = {};
