@@ -29,7 +29,7 @@ export class PowerballService {
   // async fetchPowerballResults() {
   //   try {
   //     const headers = new HttpHeaders({ 'Content-Type': 'application/json' });
-  //     const url = 'http://data.ny.gov/resource/d6yy-54nr.json';
+  //     const url = 'https://data.ny.gov/resource/d6yy-54nr.json';
   //     const data = await this.httpClient
   //       .get(url, { headers: headers })
   //       .toPromise();
