@@ -87,6 +87,7 @@ export class PowerballService {
     });
 
     const firstPredictedNumber = this.pickMostFrequentFirstNumber();
+    console.log('bestGuestSetForFirst: ', firstPredictedNumber);
     const predictivePlay = this.buildWithTheFirst(firstPredictedNumber, initialPlay);
 
     console.log(predictivePlay);
@@ -115,7 +116,7 @@ export class PowerballService {
       initialPlay,
       playTwo,
       predictivePlay
-    })
+    });
 
     return predictivePlay;
   }
@@ -124,15 +125,19 @@ export class PowerballService {
     const firstNumber = firstPredictedNumber;
 
     const bestGuestSetForSecond = this.generateNextNumberArray(firstNumber, 0);
+    console.log('bestGuestSetForSecond: ', bestGuestSetForSecond);
     const secondNumber = this.pickRandomIndexInArray(_.uniq(bestGuestSetForSecond));
 
     const bestGuestSetForThird = this.generateNextNumberArray(secondNumber, 1);
+    console.log('bestGuestSetForThird: ', bestGuestSetForThird);
     const thirdNumber = this.pickRandomIndexInArray(_.uniq(bestGuestSetForThird));
 
     const bestGuestSetForForth = this.generateNextNumberArray(thirdNumber, 2);
+    console.log('bestGuestSetForForth: ', bestGuestSetForForth);
     const forthNumber = this.pickRandomIndexInArray(_.uniq(bestGuestSetForForth));
 
     const bestGuestSetForFifth = this.generateNextNumberArray(forthNumber, 3);
+    console.log('bestGuestSetForFifth: ', bestGuestSetForFifth);
     const fifithNumber = this.pickRandomIndexInArray(_.uniq(bestGuestSetForFifth));
 
     const pbPredict = this.pickMostFrequentFirstNumber(true);
@@ -217,7 +222,7 @@ export class PowerballService {
         let result: any[] = [];
         switch (key) {
           case 'powerball':
-            result = this.findDuplicates(parsedNumberSets[key], 4);
+            result = this.findDuplicates(parsedNumberSets[key], 5);
 
             //console.log('Powerball: ', result);
             // result = [
