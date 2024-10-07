@@ -1,7 +1,6 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { PowerballData } from './powerball-data';
-import * as _ from 'lodash';
+import _ from 'lodash';
 
 export interface IWinningsResponse {
   draw_date: string;
@@ -17,11 +16,11 @@ export interface IParsedWinningsResponse {
 
 @Injectable()
 export class PowerballService {
-  fromDate: Date = new Date('2019-01-04T00:00:00');
-  powerballData: any;
+  private fromDate: Date = new Date('2019-01-04T00:00:00');
+  private powerballData: any;
   private historicalData: string[][] = [];
 
-  constructor(private httpClient: HttpClient) {}
+  constructor() {}
 
   /**
    * Http request to pull latest data
@@ -76,9 +75,20 @@ export class PowerballService {
     const parsedsets = await this.parseWinningNumbers(formattedData);
     const filteredParsedSets = await this.filterParsedNumberSets(parsedsets);
 
+    const highestProbabilityPlay = filteredParsedSets.map((set) => {
+      const numbers = set.numbers;
+      const strNums: string[] = [];
+      
+      numbers.forEach(num => {
+        const strN = num.length === 1 ? `0${num.toString()}` : num.toString();
+        strNums.push(strN);
+      });
+
+      return this.pickAdvancedProbabilityNumberWithRecency(strNums, 50);
+    });
+
     const initialPlay = filteredParsedSets.map((set) => {
       const numbers = set.numbers;
-      console.log(numbers);
       const randomNumber = numbers[Math.floor(Math.random() * numbers.length)];
 
       return typeof randomNumber === 'number'
@@ -86,65 +96,52 @@ export class PowerballService {
         : randomNumber;
     });
 
-    const firstPredictedNumber = this.pickMostFrequentFirstNumber();
-    console.log('bestGuestSetForFirst: ', firstPredictedNumber);
-    const predictivePlay = this.buildWithTheFirst(firstPredictedNumber, initialPlay);
-
-    console.log(predictivePlay);
+    /**
+     * Fist Predicted Number
+     */
+    const firstFreqPredictedNumber = this.pickMostFrequentFirstNumber();
+    const firstPredictedNumber = this.pickWeightedRandomFirstNumber();
     
-    console.log('firstPredictedNumber:  ', firstPredictedNumber);
+    const predictiveFreqPredictedPlay = this.buildWithTheFirst(firstFreqPredictedNumber, initialPlay);
+    const predictiveWeightedRandomPlay = this.buildWithTheFirst(firstPredictedNumber, initialPlay);
 
-    const firstNumber = initialPlay[0].length === 1 ? `0${initialPlay[0]}` : initialPlay[0];
-
-    const bestGuestSetForSecond = this.generateNextNumberArray(firstNumber, 0);
-    const secondNumber = this.pickRandomIndexInArray(_.uniq(bestGuestSetForSecond));
-
-    const bestGuestSetForThird = this.generateNextNumberArray(secondNumber, 1);
-    const thirdNumber = this.pickRandomIndexInArray(_.uniq(bestGuestSetForThird));
-
-    const bestGuestSetForForth = this.generateNextNumberArray(thirdNumber, 2);
-    const forthNumber = this.pickRandomIndexInArray(_.uniq(bestGuestSetForForth));
-
-    const bestGuestSetForFifth = this.generateNextNumberArray(forthNumber, 3);
-    const fifithNumber = this.pickRandomIndexInArray(_.uniq(bestGuestSetForFifth));
-
-    const sixthNumber = initialPlay[5].length === 1 ? `0${initialPlay[5]}` : initialPlay[5];
-
-    const playTwo = [firstNumber, secondNumber, thirdNumber, forthNumber, fifithNumber, sixthNumber];
-
-    console.log({
+    console.log(JSON.stringify({
       initialPlay,
-      playTwo,
-      predictivePlay
-    });
+      predictiveFreqPredictedPlay,
+      predictiveWeightedRandomPlay,
+      highestProbabilityPlay
+    }));
 
-    return predictivePlay;
+    return predictiveFreqPredictedPlay;
   }
 
-  private buildWithTheFirst(firstPredictedNumber: string, initialPlay: any){
+  private buildWithTheFirst(firstPredictedNumber: string, initialPlay: any): string[] {
+    // Start by predicting the first number
     const firstNumber = firstPredictedNumber;
 
-    const bestGuestSetForSecond = this.generateNextNumberArray(firstNumber, 0);
-    console.log('bestGuestSetForSecond: ', bestGuestSetForSecond);
-    const secondNumber = this.pickRandomIndexInArray(_.uniq(bestGuestSetForSecond));
+    // Helper function to handle the generation of the next number
+    const generateAndPickNextNumber = (predictedNumber: string, index: number): string => {
+      const bestGuessSet = _.uniq(this.removeDuplicateStrings(this.generateNextNumberArray(predictedNumber, index)));
+      return this.pickAdvancedProbabilityNumberWithRecency(bestGuessSet, 50);
+    };
 
-    const bestGuestSetForThird = this.generateNextNumberArray(secondNumber, 1);
-    console.log('bestGuestSetForThird: ', bestGuestSetForThird);
-    const thirdNumber = this.pickRandomIndexInArray(_.uniq(bestGuestSetForThird));
+    // Predict the second, third, fourth, and fifth numbers
+    const secondNumber = generateAndPickNextNumber(firstNumber, 0);
+    const thirdNumber = generateAndPickNextNumber(secondNumber, 1);
+    const forthNumber = generateAndPickNextNumber(thirdNumber, 2);
+    const fifthNumber = generateAndPickNextNumber(forthNumber, 3);
 
-    const bestGuestSetForForth = this.generateNextNumberArray(thirdNumber, 2);
-    console.log('bestGuestSetForForth: ', bestGuestSetForForth);
-    const forthNumber = this.pickRandomIndexInArray(_.uniq(bestGuestSetForForth));
+    // Predict the powerball or similar value
+    const pbFreqPredict = this.pickMostFrequentFirstNumber(true);
+    console.log('pbFreqPredict: ', pbFreqPredict);
+    const pbWeightedPredict = this.pickWeightedRandomFirstNumber(true);
+    console.log('pbWeightedPredict: ', pbWeightedPredict);
 
-    const bestGuestSetForFifth = this.generateNextNumberArray(forthNumber, 3);
-    console.log('bestGuestSetForFifth: ', bestGuestSetForFifth);
-    const fifithNumber = this.pickRandomIndexInArray(_.uniq(bestGuestSetForFifth));
+    // Handle the sixth number (with padding if necessary)
+    // const sixthNumber = initialPlay[5].length === 1 ? `0${initialPlay[5]}` : initialPlay[5];
 
-    const pbPredict = this.pickMostFrequentFirstNumber(true);
-    console.log('pbPredict: ', pbPredict);
-    const sixthNumber = initialPlay[5].length === 1 ? `0${initialPlay[5]}` : initialPlay[5];
-
-    return [firstNumber, secondNumber, thirdNumber, forthNumber, fifithNumber, sixthNumber];
+    // Return the final result set
+    return [firstNumber, secondNumber, thirdNumber, forthNumber, fifthNumber, pbWeightedPredict];
   }
 
   private pickRandomIndexInArray(array: string[]): string {
@@ -154,6 +151,75 @@ export class PowerballService {
     // Return the element at the random index
     return array[randomIndex];
   }
+
+  private pickHighestProbabilityNumber(bestGuessSet: string[]): string {
+    // Step 1: Create a frequency map for numbers in bestGuessSet
+    const frequencyMap: { [key: string]: number } = {};
+
+    // Initialize the frequency map for all numbers in bestGuessSet
+    bestGuessSet.forEach(number => {
+        frequencyMap[number] = 0;
+    });
+
+    // Step 2: Count occurrences of each number in the historical data
+    this.historicalData.forEach(row => {
+        row.forEach(number => {
+            if (bestGuessSet.includes(number)) {
+                frequencyMap[number] += 1;
+            }
+        });
+    });
+
+    // Step 3: Find the number with the highest frequency
+    let highestProbabilityNumber = bestGuessSet[0];
+    let maxFrequency = frequencyMap[highestProbabilityNumber];
+
+    bestGuessSet.forEach(number => {
+        if (frequencyMap[number] > maxFrequency) {
+            highestProbabilityNumber = number;
+            maxFrequency = frequencyMap[number];
+        }
+    });
+
+    // Step 4: Return the number with the highest probability
+    return highestProbabilityNumber;
+}
+
+private pickAdvancedProbabilityNumber(bestGuessSet: string[]): string {
+  // Step 1: Create a frequency map for numbers in bestGuessSet
+  const frequencyMap: { [key: string]: number } = {};
+
+  // Initialize frequency map for bestGuessSet numbers
+  bestGuessSet.forEach(number => {
+      frequencyMap[number] = 0;
+  });
+
+  // Step 2: Count occurrences of each number in historical data
+  this.historicalData.forEach((row, index) => {
+      row.forEach(number => {
+          if (bestGuessSet.includes(number)) {
+              // Increase count based on recency bias (newer data gets more weight)
+              // Recent rows are given a higher multiplier for their frequency
+              const recencyWeight = this.historicalData.length - index;
+              frequencyMap[number] += recencyWeight;
+          }
+      });
+  });
+
+  // Step 3: Convert frequencies into a weighted probability array
+  const weightedArray: string[] = [];
+  bestGuessSet.forEach(number => {
+      // Push the number into weightedArray based on its frequency (weight)
+      for (let i = 0; i < frequencyMap[number]; i++) {
+          weightedArray.push(number);
+      }
+  });
+
+  // Step 4: Select a random number from the weighted array
+  const randomIndex = Math.floor(Math.random() * weightedArray.length);
+  return weightedArray[randomIndex];
+}
+
   
 
   private async parseWinningNumbers(results: any[]) {
@@ -213,8 +279,6 @@ export class PowerballService {
       powerball: powerballs,
     };
 
-    console.log(parsedNumberSets);
-
     const filteredNumbers = [];
 
     for (const key in parsedNumberSets) {
@@ -222,77 +286,33 @@ export class PowerballService {
         let result: any[] = [];
         switch (key) {
           case 'powerball':
-            result = this.findDuplicates(parsedNumberSets[key], 5);
+            result = this.findDuplicates(parsedNumberSets[key], 3);
 
-            //console.log('Powerball: ', result);
-            // result = [
-            //   '1',
-            //   '3',
-            //   '24',
-            //   '5',
-            //   '7',
-            //   '8',
-            //   '12',
-            //   '10',
-            //   '09',
-            //   '15',
-            //   '21',
-            //   '23',
-            //   '25',
-            //   '26',
-            // ];
             break;
           case 'first':
-            // const first = this.filterNumbersByRange(
-            //   parsedNumberSets[key],
-            //   1,
-            //   15
-            // );
             const first = this.filterNumbersByRange(parsedNumberSets[key], 1);
 
-            result = this.findDuplicates(first, 5);
-            // console.log('First SETS: ', parsedNumberSets[key]);
-            console.log('First: ', result);
+            result = this.findDuplicates(first, 3);
             break;
           case 'second':
             const second = this.filterNumbersByRange(parsedNumberSets[key], 1);
 
-            result = this.findDuplicates(second, 4);
-            // console.log('Second SETS: ', parsedNumberSets[key]);
-            console.log('Second: ', result);
+            result = this.findDuplicates(second, 3);
             break;
           case 'third':
-            // const third = this.filterNumbersByRange(
-            //   parsedNumberSets[key],
-            //   25,
-            //   39
-            // );
             const third = this.filterNumbersByRange(parsedNumberSets[key], 1);
 
-            result = this.findDuplicates(third, 4);
-            console.log('Third: ', result);
+            result = this.findDuplicates(third, 3);
             break;
           case 'fourth':
-            // const fourth = this.filterNumbersByRange(
-            //   parsedNumberSets[key],
-            //   35,
-            //   62
-            // );
             const fourth = this.filterNumbersByRange(parsedNumberSets[key], 1);
 
-            result = this.findDuplicates(fourth, 4);
-            console.log('Forth: ', result);
+            result = this.findDuplicates(fourth, 3);
             break;
           case 'fifth':
-            // const fifth = this.filterNumbersByRange(
-            //   parsedNumberSets[key],
-            //   45,
-            //   69
-            // );
             const fifth = this.filterNumbersByRange(parsedNumberSets[key], 1);
 
-            result = this.findDuplicates(fifth, 4);
-            console.log('Fifth: ', result);
+            result = this.findDuplicates(fifth, 3);
             break;
         }
 
@@ -312,6 +332,11 @@ export class PowerballService {
       selectedNumber,
       customIndex
     );
+  }
+
+  private removeDuplicateStrings(arr: string[]): string[] {
+    // Use a Set to automatically handle duplicates
+    return [...new Set(arr)];
   }
 
   // Function to find the numbers that follow the selected number at the given index
@@ -415,4 +440,70 @@ export class PowerballService {
 
     return mostFrequentNumber;
   }
+
+  private pickWeightedRandomFirstNumber(powerball:boolean = false) {
+    const index = powerball ? 5 : 0;
+    // Step 1: Extract the first numbers
+    const firstNumbers = this.historicalData.map(subArray => subArray[index]);
+
+    // Step 2: Count the frequency of each number
+    const frequencyMap: { [key: string]: number } = {};
+    firstNumbers.forEach(number => {
+      if (frequencyMap[number]) {
+        frequencyMap[number]++;
+      } else {
+        frequencyMap[number] = 1;
+      }
+    });
+
+    // Step 3: Build a weighted array where each number is added as many times as its frequency
+    const weightedArray: string[] = [];
+    for (const number in frequencyMap) {
+      for (let i = 0; i < frequencyMap[number]; i++) {
+        weightedArray.push(number);
+      }
+    }
+
+    // Step 4: Pick a random number from the weighted array
+    const randomIndex = Math.floor(Math.random() * weightedArray.length);
+    return weightedArray[randomIndex];
+  }
+
+  private pickAdvancedProbabilityNumberWithRecency(bestGuessSet: string[], recencyThreshold: number): string {
+    // Step 1: Limit historical data to only rows within the recency threshold
+    const recentData = this.historicalData.slice(-recencyThreshold);
+
+    // Step 2: Create a frequency map for numbers in bestGuessSet
+    const frequencyMap: { [key: string]: number } = {};
+
+    // Initialize frequency map for bestGuessSet numbers
+    bestGuessSet.forEach(number => {
+        frequencyMap[number] = 0;
+    });
+
+    // Step 3: Count occurrences of each number in recent data with recency bias
+    recentData.forEach((row, index) => {
+        row.forEach(number => {
+            if (bestGuessSet.includes(number)) {
+                // Increase count based on recency bias (newer data gets more weight)
+                const recencyWeight = recentData.length - index; // More recent rows get higher weights
+                frequencyMap[number] += recencyWeight;
+            }
+        });
+    });
+
+    // Step 4: Convert frequencies into a weighted probability array
+    const weightedArray: string[] = [];
+    bestGuessSet.forEach(number => {
+        // Push the number into weightedArray based on its frequency (weight)
+        for (let i = 0; i < frequencyMap[number]; i++) {
+            weightedArray.push(number);
+        }
+    });
+
+    // Step 5: Select a random number from the weighted array
+    const randomIndex = Math.floor(Math.random() * weightedArray.length);
+    return weightedArray[randomIndex];
+}
+
 }

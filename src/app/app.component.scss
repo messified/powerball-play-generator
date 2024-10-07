@@ -110,11 +110,12 @@ li.ball.match > span {
 }
 
 .history ul {
-  margin: 0;
-  padding: 0;
+  margin: 1rem;
+  padding: 1rem;
   max-height: 128px;
+  background-color: #555555;
   overflow: scroll;
-  border: 1px solid #e3e3e3;
+  border: 1px solid #337ab7cc;
 }
 
 .history li {
