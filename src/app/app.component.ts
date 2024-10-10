@@ -47,8 +47,6 @@ export class AppComponent implements OnInit {
     // Format play results to ensure two digits
     this.play = generatePowerballPlayResults.map((num: string | any[]) => num.length === 1 ? `0${num}` : num);
 
-    console.log(this.play);
-
     const matchedSets: { matchedSetsIndex: number }[] = [];
 
     // Find matching sets

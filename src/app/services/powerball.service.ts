@@ -225,7 +225,7 @@ private pickAdvancedProbabilityNumber(bestGuessSet: string[]): string {
   private async parseWinningNumbers(results: any[]) {
     const plays = results.map((set: { numbers: any }) => set.numbers);
 
-    this.historicalData = plays;
+    this.historicalData = _.clone(plays);
 
     return plays.map((set: any[]) =>
       Object.assign(
