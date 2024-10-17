@@ -122,7 +122,7 @@ export class PowerballService {
     // Helper function to handle the generation of the next number
     const generateAndPickNextNumber = (predictedNumber: string, index: number): string => {
       const bestGuessSet = _.uniq(this.removeDuplicateStrings(this.generateNextNumberArray(predictedNumber, index)));
-      return this.pickAdvancedProbabilityNumberWithRecency(bestGuessSet, 50);
+      return this.pickAdvancedProbabilityNumber(bestGuessSet);
     };
 
     // Predict the second, third, fourth, and fifth numbers
@@ -183,42 +183,42 @@ export class PowerballService {
 
     // Step 4: Return the number with the highest probability
     return highestProbabilityNumber;
-}
+  }
 
-private pickAdvancedProbabilityNumber(bestGuessSet: string[]): string {
-  // Step 1: Create a frequency map for numbers in bestGuessSet
-  const frequencyMap: { [key: string]: number } = {};
+  private pickAdvancedProbabilityNumber(bestGuessSet: string[]): string {
+    // Step 1: Create a frequency map for numbers in bestGuessSet
+    const frequencyMap: { [key: string]: number } = {};
 
-  // Initialize frequency map for bestGuessSet numbers
-  bestGuessSet.forEach(number => {
-      frequencyMap[number] = 0;
-  });
+    // Initialize frequency map for bestGuessSet numbers
+    bestGuessSet.forEach(number => {
+        frequencyMap[number] = 0;
+    });
 
-  // Step 2: Count occurrences of each number in historical data
-  this.historicalData.forEach((row, index) => {
-      row.forEach(number => {
-          if (bestGuessSet.includes(number)) {
-              // Increase count based on recency bias (newer data gets more weight)
-              // Recent rows are given a higher multiplier for their frequency
-              const recencyWeight = this.historicalData.length - index;
-              frequencyMap[number] += recencyWeight;
-          }
-      });
-  });
+    // Step 2: Count occurrences of each number in historical data
+    this.historicalData.forEach((row, index) => {
+        row.forEach(number => {
+            if (bestGuessSet.includes(number)) {
+                // Increase count based on recency bias (newer data gets more weight)
+                // Recent rows are given a higher multiplier for their frequency
+                const recencyWeight = this.historicalData.length - index;
+                frequencyMap[number] += recencyWeight;
+            }
+        });
+    });
 
-  // Step 3: Convert frequencies into a weighted probability array
-  const weightedArray: string[] = [];
-  bestGuessSet.forEach(number => {
-      // Push the number into weightedArray based on its frequency (weight)
-      for (let i = 0; i < frequencyMap[number]; i++) {
-          weightedArray.push(number);
-      }
-  });
+    // Step 3: Convert frequencies into a weighted probability array
+    const weightedArray: string[] = [];
+    bestGuessSet.forEach(number => {
+        // Push the number into weightedArray based on its frequency (weight)
+        for (let i = 0; i < frequencyMap[number]; i++) {
+            weightedArray.push(number);
+        }
+    });
 
-  // Step 4: Select a random number from the weighted array
-  const randomIndex = Math.floor(Math.random() * weightedArray.length);
-  return weightedArray[randomIndex];
-}
+    // Step 4: Select a random number from the weighted array
+    const randomIndex = Math.floor(Math.random() * weightedArray.length);
+    return weightedArray[randomIndex];
+  }
 
   
 

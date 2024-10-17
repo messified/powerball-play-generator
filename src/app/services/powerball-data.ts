@@ -1,5 +1,20 @@
 export const PowerballData = [
   {
+    draw_date: '2024-10-14T00:00:00.000',
+    winning_numbers: '14 18 33 64 67 14',
+    multiplier: '2',
+  },
+  {
+    draw_date: '2024-10-12T00:00:00.000',
+    winning_numbers: '05 14 20 41 57 06',
+    multiplier: '3',
+  },
+  {
+    draw_date: '2024-10-09T00:00:00.000',
+    winning_numbers: '25 32 43 53 66 10',
+    multiplier: '3',
+  },
+  {
     draw_date: '2024-10-07T00:00:00.000',
     winning_numbers: '18 30 31 52 63 22',
     multiplier: '2',
