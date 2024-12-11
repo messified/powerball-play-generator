@@ -2,6 +2,12 @@
 
 This Angular 17 app is designed to predict and select numbers based on historical data. It incorporates advanced probability-based logic and supports features like recency thresholds, weighted random selection, and ADA compliance.
 
+Author: **Jesse Reese**  
+Website: [https://jessereese.com/](https://jessereese.com/)  
+LinkedIn: [https://www.linkedin.com/in/jcreese/](https://www.linkedin.com/in/jcreese/)  
+Medium: [https://medium.com/@Jesse_Reese](https://medium.com/@Jesse_Reese)  
+Github: [https://github.com/messified](https://github.com/messified)
+
 ## Features
 
 - **Historical Data Analysis**: Uses historical data to predict numbers based on patterns.
