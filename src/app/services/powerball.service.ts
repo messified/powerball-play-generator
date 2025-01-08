@@ -126,17 +126,33 @@ export class PowerballService {
       initialPlay
     );
 
+    /**
+     * 9. Sort the first five numbers of each generated set, do NOT sort the Powerball.
+     * We'll define a small helper that attempts to sort any arrays of length 6.
+     */
+    const sortedInitialPlay = this.sortGeneratedSet(initialPlay);
+    const sortedPredictiveFreqPredictedPlay = this.sortGeneratedSet(
+      predictiveFreqPredictedPlay
+    );
+    const sortedPredictiveWeightedRandomPlay = this.sortGeneratedSet(
+      predictiveWeightedRandomPlay
+    );
+    const sortedHighestProbabilityPlay = this.sortGeneratedSet(
+      highestProbabilityPlay
+    );
+
+    // 10. Log your final (sorted) sets
     console.log(
       JSON.stringify({
-        initialPlay,
-        predictiveFreqPredictedPlay,
-        predictiveWeightedRandomPlay,
-        highestProbabilityPlay,
+        initialPlay: sortedInitialPlay,
+        predictiveFreqPredictedPlay: sortedPredictiveFreqPredictedPlay,
+        predictiveWeightedRandomPlay: sortedPredictiveWeightedRandomPlay,
+        highestProbabilityPlay: sortedHighestProbabilityPlay,
       })
     );
 
-    // Final return
-    return predictiveFreqPredictedPlay;
+    // Final return: you can decide which set to return, here returning highestProbabilityPlay
+    return sortedHighestProbabilityPlay;
   }
 
   private buildWithTheFirst(
@@ -204,11 +220,58 @@ export class PowerballService {
   }
 
   /**
+   * -------------------------
+   * SORTING HELPER FOR RESULTS
+   * -------------------------
+   * This function attempts to sort only the first 5 numbers in each "set".
+   * If you pass in an array of length 6, it sorts indices [0..4], leaves [5] alone.
+   * If you pass in an array of arrays (e.g. multiple sets), it applies sorting to each sub-array
+   * that has length 6. Otherwise, returns them as-is.
+   */
+  private sortGeneratedSet(generated: any): any {
+    // If it's an array of arrays, apply to each sub-array
+    if (Array.isArray(generated) && Array.isArray(generated[0])) {
+      return generated.map((g) => this.sortSingleSet(g));
+    }
+    // If it's a single array of length 6, just sort it
+    if (Array.isArray(generated) && generated.length === 6) {
+      return this.sortSingleSet(generated);
+    }
+    // If it's an array of strings (e.g. each item is just '17'), no 6-element sets → skip
+    if (Array.isArray(generated)) {
+      return generated.map((item) => {
+        // If the item itself is an array of length 6, sort it
+        if (Array.isArray(item) && item.length === 6) {
+          return this.sortSingleSet(item);
+        }
+        // Otherwise, just return
+        return item;
+      });
+    }
+    // Fallback if it's not an array
+    return generated;
+  }
+
+  private sortSingleSet(setOfSix: string[]): string[] {
+    if (!setOfSix || setOfSix.length !== 6) {
+      return setOfSix;
+    }
+    // 1. Separate the first five numbers, parse them
+    const firstFive = setOfSix.slice(0, 5).map((val) => parseInt(val, 10));
+    // 2. Sort them numerically
+    firstFive.sort((a, b) => a - b);
+    // 3. Convert back to zero-padded strings (if desired)
+    const sortedStrings = firstFive.map((num) =>
+      num.toString().padStart(2, '0')
+    );
+    // 4. Keep the powerball (#6) as is
+    return [...sortedStrings, setOfSix[5]];
+  }
+
+  /**
    * Example fallback if out-of-range
    */
   private fallbackPowerballValue(num: number): string {
-    // Could do something more advanced,
-    // for now, just clamp the value to the [1..26] range
     if (num < 1) return '01';
     if (num > 26) return '26';
     return num.toString().padStart(2, '0');
@@ -218,7 +281,6 @@ export class PowerballService {
    * Example fallback if out-of-range
    */
   private fallbackWhiteBallValue(num: number): string {
-    // Just clamp to [1..69]
     if (num < 1) return '01';
     if (num > 69) return '69';
     return num.toString().padStart(2, '0');
@@ -257,7 +319,6 @@ export class PowerballService {
   }
 
   private pickAdvancedProbabilityNumber(bestGuessSet: string[]): string {
-    // Optional exponential base for recency weighting
     const RECENCY_EXP_BASE = 1.03; // tweak as needed
 
     // Step 1: Create a frequency map for numbers in bestGuessSet
@@ -265,7 +326,7 @@ export class PowerballService {
 
     // Step 2: Count occurrences of each number in historical data with exponential recency weighting
     this.historicalData.forEach((row, index) => {
-      const reverseIndex = this.historicalData.length - 1 - index; // 0 => oldest, so invert
+      const reverseIndex = this.historicalData.length - 1 - index;
       row.forEach((number) => {
         if (bestGuessSet.includes(number)) {
           // Exponential weighting
@@ -365,35 +426,37 @@ export class PowerballService {
         let result: number[] = [];
         switch (key) {
           case 'powerball':
-            result = this.findDuplicates(parsedNumberSets[key], 3);
+            // If you want to filter out or find duplicates for powerball with a different threshold
+            // you can adjust the occurrence # as needed
+            result = this.findDuplicates(parsedNumberSets[key], 2);
             break;
           case 'first':
             result = this.findDuplicates(
-              this.filterNumbersByRange(parsedNumberSets[key], 4),
+              this.filterNumbersByRange(parsedNumberSets[key], 2),
               3
             );
             break;
           case 'second':
             result = this.findDuplicates(
-              this.filterNumbersByRange(parsedNumberSets[key], 3),
+              this.filterNumbersByRange(parsedNumberSets[key], 2),
               3
             );
             break;
           case 'third':
             result = this.findDuplicates(
-              this.filterNumbersByRange(parsedNumberSets[key], 3),
+              this.filterNumbersByRange(parsedNumberSets[key], 2),
               3
             );
             break;
           case 'fourth':
             result = this.findDuplicates(
-              this.filterNumbersByRange(parsedNumberSets[key], 3),
+              this.filterNumbersByRange(parsedNumberSets[key], 2),
               3
             );
             break;
           case 'fifth':
             result = this.findDuplicates(
-              this.filterNumbersByRange(parsedNumberSets[key], 3),
+              this.filterNumbersByRange(parsedNumberSets[key], 2),
               3
             );
             break;
@@ -614,3 +677,4 @@ export class PowerballService {
     return weightedArray[randomIndex];
   }
 }
+ 

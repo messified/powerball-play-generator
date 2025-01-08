@@ -1,5 +1,4 @@
 import { Component, OnInit } from '@angular/core';
-import { RouterOutlet } from '@angular/router';
 import { PowerballService } from './services/powerball.service';
 import { ToastrService } from 'ngx-toastr';
 import { CommonModule } from '@angular/common';
@@ -11,7 +10,7 @@ import { Lightbox, LightboxModule } from 'ngx-lightbox';
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [RouterOutlet, CommonModule, ToastrModule, HttpClientModule, LightboxModule],
+  imports: [CommonModule, ToastrModule, HttpClientModule, LightboxModule],
   providers: [
     PowerballService,
     provideAnimations(),

@@ -1,5 +1,10 @@
 export const PowerballData = [
   {
+    draw_date: '2025-01-06T00:00:00.000',
+    winning_numbers: '17 34 46 66 67 14',
+    multiplier: '2',
+  },
+  {
     draw_date: '2025-01-04T00:00:00.000',
     winning_numbers: '26 32 43 54 56 24',
     multiplier: '2',
@@ -809,206 +814,206 @@ export const PowerballData = [
     winning_numbers: '05 12 20 24 29 04',
     multiplier: '2',
   },
-  // {
-  //   draw_date: '2023-12-23T00:00:00.000',
-  //   winning_numbers: '09 14 17 18 53 06',
-  //   multiplier: '3',
-  // },
-  // {
-  //   draw_date: '2023-12-20T00:00:00.000',
-  //   winning_numbers: '27 35 41 56 60 16',
-  //   multiplier: '2',
-  // },
-  // {
-  //   draw_date: '2023-12-18T00:00:00.000',
-  //   winning_numbers: '05 08 19 34 39 26',
-  //   multiplier: '3',
-  // },
-  // {
-  //   draw_date: '2023-12-16T00:00:00.000',
-  //   winning_numbers: '03 09 10 20 62 25',
-  //   multiplier: '3',
-  // },
-  // {
-  //   draw_date: '2023-12-13T00:00:00.000',
-  //   winning_numbers: '03 08 41 56 64 18',
-  //   multiplier: '2',
-  // },
-  // {
-  //   draw_date: '2023-12-11T00:00:00.000',
-  //   winning_numbers: '01 24 27 31 62 20',
-  //   multiplier: '3',
-  // },
-  // {
-  //   draw_date: '2023-12-09T00:00:00.000',
-  //   winning_numbers: '05 25 26 40 60 01',
-  //   multiplier: '2',
-  // },
-  // {
-  //   draw_date: '2023-12-06T00:00:00.000',
-  //   winning_numbers: '02 12 37 56 65 21',
-  //   multiplier: '3',
-  // },
-  // {
-  //   draw_date: '2023-12-04T00:00:00.000',
-  //   winning_numbers: '18 19 27 28 45 09',
-  //   multiplier: '3',
-  // },
-  // {
-  //   draw_date: '2023-12-02T00:00:00.000',
-  //   winning_numbers: '28 35 41 47 60 03',
-  //   multiplier: '2',
-  // },
-  // {
-  //   draw_date: '2023-11-29T00:00:00.000',
-  //   winning_numbers: '06 47 50 61 68 04',
-  //   multiplier: '2',
-  // },
-  // {
-  //   draw_date: '2023-11-27T00:00:00.000',
-  //   winning_numbers: '02 21 38 61 66 12',
-  //   multiplier: '2',
-  // },
-  // {
-  //   draw_date: '2023-11-25T00:00:00.000',
-  //   winning_numbers: '27 33 63 66 68 09',
-  //   multiplier: '2',
-  // },
-  // {
-  //   draw_date: '2023-11-22T00:00:00.000',
-  //   winning_numbers: '20 24 33 39 42 21',
-  //   multiplier: '2',
-  // },
-  // {
-  //   draw_date: '2023-11-20T00:00:00.000',
-  //   winning_numbers: '19 26 30 39 63 13',
-  //   multiplier: '2',
-  // },
-  // {
-  //   draw_date: '2023-11-18T00:00:00.000',
-  //   winning_numbers: '34 50 51 61 67 20',
-  //   multiplier: '2',
-  // },
-  // {
-  //   draw_date: '2023-11-15T00:00:00.000',
-  //   winning_numbers: '03 04 51 53 60 06',
-  //   multiplier: '3',
-  // },
-  // {
-  //   draw_date: '2023-11-13T00:00:00.000',
-  //   winning_numbers: '24 33 35 37 42 21',
-  //   multiplier: '2',
-  // },
-  // {
-  //   draw_date: '2023-11-11T00:00:00.000',
-  //   winning_numbers: '01 12 14 24 57 07',
-  //   multiplier: '4',
-  // },
-  // {
-  //   draw_date: '2023-11-08T00:00:00.000',
-  //   winning_numbers: '14 21 33 39 62 20',
-  //   multiplier: '2',
-  // },
-  // {
-  //   draw_date: '2023-11-06T00:00:00.000',
-  //   winning_numbers: '12 25 40 59 61 26',
-  //   multiplier: '2',
-  // },
-  // {
-  //   draw_date: '2023-11-04T00:00:00.000',
-  //   winning_numbers: '01 28 30 34 52 06',
-  //   multiplier: '2',
-  // },
-  // {
-  //   draw_date: '2023-11-01T00:00:00.000',
-  //   winning_numbers: '22 26 39 47 63 12',
-  //   multiplier: '3',
-  // },
-  // {
-  //   draw_date: '2023-10-30T00:00:00.000',
-  //   winning_numbers: '19 22 34 66 69 05',
-  //   multiplier: '3',
-  // },
-  // {
-  //   draw_date: '2023-10-28T00:00:00.000',
-  //   winning_numbers: '14 24 50 59 64 02',
-  //   multiplier: '2',
-  // },
-  // {
-  //   draw_date: '2023-10-25T00:00:00.000',
-  //   winning_numbers: '25 27 41 53 68 02',
-  //   multiplier: '2',
-  // },
-  // {
-  //   draw_date: '2023-10-23T00:00:00.000',
-  //   winning_numbers: '18 21 25 46 64 21',
-  //   multiplier: '5',
-  // },
-  // {
-  //   draw_date: '2023-10-21T00:00:00.000',
-  //   winning_numbers: '06 15 24 67 68 11',
-  //   multiplier: '2',
-  // },
-  // {
-  //   draw_date: '2023-10-18T00:00:00.000',
-  //   winning_numbers: '01 04 13 35 58 24',
-  //   multiplier: '2',
-  // },
-  // {
-  //   draw_date: '2023-10-16T00:00:00.000',
-  //   winning_numbers: '02 27 31 44 64 18',
-  //   multiplier: '3',
-  // },
-  // {
-  //   draw_date: '2023-10-14T00:00:00.000',
-  //   winning_numbers: '14 16 42 48 64 14',
-  //   multiplier: '2',
-  // },
-  // {
-  //   draw_date: '2023-10-11T00:00:00.000',
-  //   winning_numbers: '22 24 40 52 64 10',
-  //   multiplier: '2',
-  // },
-  // {
-  //   draw_date: '2023-10-09T00:00:00.000',
-  //   winning_numbers: '16 34 46 55 67 14',
-  //   multiplier: '3',
-  // },
-  // {
-  //   draw_date: '2023-10-07T00:00:00.000',
-  //   winning_numbers: '47 54 57 60 65 19',
-  //   multiplier: '3',
-  // },
-  // {
-  //   draw_date: '2023-10-04T00:00:00.000',
-  //   winning_numbers: '09 35 54 63 64 01',
-  //   multiplier: '2',
-  // },
-  // {
-  //   draw_date: '2023-10-02T00:00:00.000',
-  //   winning_numbers: '12 26 27 43 47 05',
-  //   multiplier: '2',
-  // },
-  // {
-  //   draw_date: '2023-09-30T00:00:00.000',
-  //   winning_numbers: '19 30 37 44 46 22',
-  //   multiplier: '2',
-  // },
-  // {
-  //   draw_date: '2023-09-27T00:00:00.000',
-  //   winning_numbers: '01 07 46 47 63 07',
-  //   multiplier: '3',
-  // },
-  // {
-  //   draw_date: '2023-09-25T00:00:00.000',
-  //   winning_numbers: '10 12 22 36 50 04',
-  //   multiplier: '2',
-  // },
-  // {
-  //   draw_date: '2023-09-23T00:00:00.000',
-  //   winning_numbers: '01 12 20 33 66 21',
-  //   multiplier: '2',
-  // },
+  {
+    draw_date: '2023-12-23T00:00:00.000',
+    winning_numbers: '09 14 17 18 53 06',
+    multiplier: '3',
+  },
+  {
+    draw_date: '2023-12-20T00:00:00.000',
+    winning_numbers: '27 35 41 56 60 16',
+    multiplier: '2',
+  },
+  {
+    draw_date: '2023-12-18T00:00:00.000',
+    winning_numbers: '05 08 19 34 39 26',
+    multiplier: '3',
+  },
+  {
+    draw_date: '2023-12-16T00:00:00.000',
+    winning_numbers: '03 09 10 20 62 25',
+    multiplier: '3',
+  },
+  {
+    draw_date: '2023-12-13T00:00:00.000',
+    winning_numbers: '03 08 41 56 64 18',
+    multiplier: '2',
+  },
+  {
+    draw_date: '2023-12-11T00:00:00.000',
+    winning_numbers: '01 24 27 31 62 20',
+    multiplier: '3',
+  },
+  {
+    draw_date: '2023-12-09T00:00:00.000',
+    winning_numbers: '05 25 26 40 60 01',
+    multiplier: '2',
+  },
+  {
+    draw_date: '2023-12-06T00:00:00.000',
+    winning_numbers: '02 12 37 56 65 21',
+    multiplier: '3',
+  },
+  {
+    draw_date: '2023-12-04T00:00:00.000',
+    winning_numbers: '18 19 27 28 45 09',
+    multiplier: '3',
+  },
+  {
+    draw_date: '2023-12-02T00:00:00.000',
+    winning_numbers: '28 35 41 47 60 03',
+    multiplier: '2',
+  },
+  {
+    draw_date: '2023-11-29T00:00:00.000',
+    winning_numbers: '06 47 50 61 68 04',
+    multiplier: '2',
+  },
+  {
+    draw_date: '2023-11-27T00:00:00.000',
+    winning_numbers: '02 21 38 61 66 12',
+    multiplier: '2',
+  },
+  {
+    draw_date: '2023-11-25T00:00:00.000',
+    winning_numbers: '27 33 63 66 68 09',
+    multiplier: '2',
+  },
+  {
+    draw_date: '2023-11-22T00:00:00.000',
+    winning_numbers: '20 24 33 39 42 21',
+    multiplier: '2',
+  },
+  {
+    draw_date: '2023-11-20T00:00:00.000',
+    winning_numbers: '19 26 30 39 63 13',
+    multiplier: '2',
+  },
+  {
+    draw_date: '2023-11-18T00:00:00.000',
+    winning_numbers: '34 50 51 61 67 20',
+    multiplier: '2',
+  },
+  {
+    draw_date: '2023-11-15T00:00:00.000',
+    winning_numbers: '03 04 51 53 60 06',
+    multiplier: '3',
+  },
+  {
+    draw_date: '2023-11-13T00:00:00.000',
+    winning_numbers: '24 33 35 37 42 21',
+    multiplier: '2',
+  },
+  {
+    draw_date: '2023-11-11T00:00:00.000',
+    winning_numbers: '01 12 14 24 57 07',
+    multiplier: '4',
+  },
+  {
+    draw_date: '2023-11-08T00:00:00.000',
+    winning_numbers: '14 21 33 39 62 20',
+    multiplier: '2',
+  },
+  {
+    draw_date: '2023-11-06T00:00:00.000',
+    winning_numbers: '12 25 40 59 61 26',
+    multiplier: '2',
+  },
+  {
+    draw_date: '2023-11-04T00:00:00.000',
+    winning_numbers: '01 28 30 34 52 06',
+    multiplier: '2',
+  },
+  {
+    draw_date: '2023-11-01T00:00:00.000',
+    winning_numbers: '22 26 39 47 63 12',
+    multiplier: '3',
+  },
+  {
+    draw_date: '2023-10-30T00:00:00.000',
+    winning_numbers: '19 22 34 66 69 05',
+    multiplier: '3',
+  },
+  {
+    draw_date: '2023-10-28T00:00:00.000',
+    winning_numbers: '14 24 50 59 64 02',
+    multiplier: '2',
+  },
+  {
+    draw_date: '2023-10-25T00:00:00.000',
+    winning_numbers: '25 27 41 53 68 02',
+    multiplier: '2',
+  },
+  {
+    draw_date: '2023-10-23T00:00:00.000',
+    winning_numbers: '18 21 25 46 64 21',
+    multiplier: '5',
+  },
+  {
+    draw_date: '2023-10-21T00:00:00.000',
+    winning_numbers: '06 15 24 67 68 11',
+    multiplier: '2',
+  },
+  {
+    draw_date: '2023-10-18T00:00:00.000',
+    winning_numbers: '01 04 13 35 58 24',
+    multiplier: '2',
+  },
+  {
+    draw_date: '2023-10-16T00:00:00.000',
+    winning_numbers: '02 27 31 44 64 18',
+    multiplier: '3',
+  },
+  {
+    draw_date: '2023-10-14T00:00:00.000',
+    winning_numbers: '14 16 42 48 64 14',
+    multiplier: '2',
+  },
+  {
+    draw_date: '2023-10-11T00:00:00.000',
+    winning_numbers: '22 24 40 52 64 10',
+    multiplier: '2',
+  },
+  {
+    draw_date: '2023-10-09T00:00:00.000',
+    winning_numbers: '16 34 46 55 67 14',
+    multiplier: '3',
+  },
+  {
+    draw_date: '2023-10-07T00:00:00.000',
+    winning_numbers: '47 54 57 60 65 19',
+    multiplier: '3',
+  },
+  {
+    draw_date: '2023-10-04T00:00:00.000',
+    winning_numbers: '09 35 54 63 64 01',
+    multiplier: '2',
+  },
+  {
+    draw_date: '2023-10-02T00:00:00.000',
+    winning_numbers: '12 26 27 43 47 05',
+    multiplier: '2',
+  },
+  {
+    draw_date: '2023-09-30T00:00:00.000',
+    winning_numbers: '19 30 37 44 46 22',
+    multiplier: '2',
+  },
+  {
+    draw_date: '2023-09-27T00:00:00.000',
+    winning_numbers: '01 07 46 47 63 07',
+    multiplier: '3',
+  },
+  {
+    draw_date: '2023-09-25T00:00:00.000',
+    winning_numbers: '10 12 22 36 50 04',
+    multiplier: '2',
+  },
+  {
+    draw_date: '2023-09-23T00:00:00.000',
+    winning_numbers: '01 12 20 33 66 21',
+    multiplier: '2',
+  },
   // {
   //   draw_date: '2023-09-20T00:00:00.000',
   //   winning_numbers: '16 27 59 62 63 23',
