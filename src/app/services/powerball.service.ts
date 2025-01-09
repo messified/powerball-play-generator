@@ -195,7 +195,7 @@ export class PowerballService {
     );
 
     // Return whichever set you want. Here we return the new AI set
-    return sortedHighestProbabilityPlay;
+    return sortedPredictiveWeightedRandomPlay;
   }
 
   // ------------------------------------------------------------
