@@ -40,6 +40,9 @@ export class AppComponent implements OnInit {
 
   async generateTicket(): Promise<void> {
     const generatePowerballPlayResults = await this.powerballService.generatePowerballPlay();
+
+    console.log(generatePowerballPlayResults);
+
     const pastDrawingCount = 49;
     const recentDrawings = await this.powerballService.getRecentDrawings(pastDrawingCount);
 

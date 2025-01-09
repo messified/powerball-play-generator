@@ -21,8 +21,7 @@ export class PowerballService {
   private historicalData: string[][] = [];
 
   /**
-   * We will store synergy data for each of the first 5 positions.
-   * synergyMap[positionIndex][currentNumber][nextNumber] = how often `nextNumber` follows `currentNumber`
+   * synergyMap[positionIndex][currentNumber][nextNumber] = frequency
    */
   private synergyMap: {
     [positionIndex: number]: {
@@ -32,34 +31,15 @@ export class PowerballService {
 
   constructor() {}
 
-  /**
-   * Http request to pull latest data
-   */
-  // async fetchPowerballResults() {
-  //   try {
-  //     const headers = new HttpHeaders({ 'Content-Type': 'application/json' });
-  //     const url = 'https://data.ny.gov/resource/d6yy-54nr.json';
-  //     const data = await this.httpClient.get(url, { headers }).toPromise();
-
-  //     this.powerballData = localStorage.getItem('powerball_data')
-  //       ? JSON.parse(localStorage.getItem('powerball_data') as string)
-  //       : null;
-
-  //     if (!this.powerballData) {
-  //       localStorage.setItem('powerball_data', JSON.stringify(data));
-  //     }
-
-  //     return await this.generatePowerballPlay(data);
-  //   } catch (e) {
-  //     console.error(e);
-  //   }
-  // }
+  // ------------------------------------------------------------
+  // MAIN ENTRY
+  // ------------------------------------------------------------
 
   async generatePowerballPlay() {
-    // 1. Load historical data (here we directly use PowerballData)
+    // 1. Load historical data
     this.powerballData = PowerballData;
 
-    // 2. Filter draws based on fromDate
+    // 2. Filter based on fromDate
     const filtered = this.powerballData.filter(
       (el: { draw_date: string | number | Date }) => {
         const drawDate = new Date(el.draw_date);
@@ -67,7 +47,7 @@ export class PowerballService {
       }
     );
 
-    // 3. Format the data for internal usage
+    // 3. Map the filtered data
     const formattedData = filtered.map(
       (result: {
         draw_date: any;
@@ -80,20 +60,19 @@ export class PowerballService {
       })
     );
 
-    // 4. Parse winning numbers (this populates this.historicalData and synergyMap)
+    // 4. Parse winning numbers
     const parsedsets = await this.parseWinningNumbers(formattedData);
 
-    // 5. Filter the parsed sets for duplicates, top frequencies, etc.
+    // 5. Filter duplicates/frequencies
     const filteredParsedSets = await this.filterParsedNumberSets(parsedsets);
 
-    // 6. Use recency-based synergy picks for a “highest probability” set
+    // 6. Highest Probability
     const highestProbabilityPlay = filteredParsedSets.map((set) => {
       const numbers = set.numbers;
       const strNums: string[] = [];
 
       numbers.forEach((num: any) => {
-        // zero-pad single-digit numbers
-        const strN = num.length === 1 ? `0${num.toString()}` : num.toString();
+        const strN = num.length === 1 ? `0${num}` : num.toString();
         strNums.push(strN);
       });
 
@@ -101,7 +80,7 @@ export class PowerballService {
       return this.pickAdvancedProbabilityNumberWithRecency(strNums, 50);
     });
 
-    // 7. Build an initial random-based play
+    // 7. Initial Random
     const initialPlay = filteredParsedSets.map((set) => {
       const numbers = set.numbers;
       const randomNumber = numbers[Math.floor(Math.random() * numbers.length)];
@@ -110,13 +89,10 @@ export class PowerballService {
         : randomNumber;
     });
 
-    /**
-     * Fist Predicted Number
-     */
+    // 8. Two different seeded plays
     const firstFreqPredictedNumber = this.pickMostFrequentFirstNumber();
     const firstPredictedNumber = this.pickWeightedRandomFirstNumber();
 
-    // 8. Build two different “plays” by ensuring the first number is set
     const predictiveFreqPredictedPlay = this.buildWithTheFirst(
       firstFreqPredictedNumber,
       initialPlay
@@ -127,9 +103,73 @@ export class PowerballService {
     );
 
     /**
-     * 9. Sort the first five numbers of each generated set, do NOT sort the Powerball.
-     * We'll define a small helper that attempts to sort any arrays of length 6.
+     * 9. AI Predictive Set
+     *    This merges synergy-based logic with advanced recency weighting,
+     *    plus fallback logic and a mild random offset to avoid repetitive "01" sets.
      */
+    const aiPredictiveSet = filteredParsedSets.map((set) => {
+      // We'll generate 6 numbers (index 0..5)
+      // If set.numbers is empty or invalid, fallback to random picks
+      if (!set.numbers || !set.numbers.length) {
+        return this.generateFallbackSet();
+      }
+
+      const synergyBasedPick: string[] = [];
+      // Start with a random seed from the set
+      let currentPick = set.numbers[
+        Math.floor(Math.random() * set.numbers.length)
+      ].toString();
+
+      // We'll fill first 5 positions using synergy + recency weighting
+      for (let i = 0; i < 5; i++) {
+        // synergy approach
+        const synergyCandidates = this.generateNextNumberArray(currentPick, i);
+
+        // fallback if synergy is empty
+        if (!synergyCandidates || !synergyCandidates.length) {
+          // fallback to random from 1..69
+          const fallback = this.randomNumberInRange(1, 69);
+          synergyBasedPick.push(fallback);
+          currentPick = fallback;
+          continue;
+        }
+
+        const uniqueCandidates = _.uniq(
+          this.removeDuplicateStrings(synergyCandidates)
+        );
+
+        // use advanced recency weighting
+        let chosen = this.pickAdvancedProbabilityNumber(uniqueCandidates);
+
+        // fallback if chosen is empty
+        if (!chosen) {
+          chosen = this.randomNumberInRange(1, 69);
+        }
+
+        // mild random offset chance (e.g. 15% chance we pick random out-of-band)
+        if (Math.random() < 0.15) {
+          const randomAlt = this.randomNumberInRange(1, 69);
+          chosen = randomAlt;
+        }
+
+        synergyBasedPick.push(chosen);
+        currentPick = chosen;
+      }
+
+      // Choose powerball with synergy or random
+      const chosenPB = this.pickPowerballAi();
+
+      // Enforce PB range
+      const numericPB = parseInt(chosenPB, 10);
+      const validPB =
+        numericPB < 1 || numericPB > 26
+          ? this.fallbackPowerballValue(numericPB)
+          : chosenPB;
+
+      return [...synergyBasedPick, validPB];
+    });
+
+    // 10. Sort the first five numbers in each set
     const sortedInitialPlay = this.sortGeneratedSet(initialPlay);
     const sortedPredictiveFreqPredictedPlay = this.sortGeneratedSet(
       predictiveFreqPredictedPlay
@@ -140,55 +180,107 @@ export class PowerballService {
     const sortedHighestProbabilityPlay = this.sortGeneratedSet(
       highestProbabilityPlay
     );
+    // Sort the new AI set
+    const sortedAiPredictiveSet = this.sortGeneratedSet(aiPredictiveSet);
 
-    // 10. Log your final (sorted) sets
+    // 11. Log resulting sets, now including aiPredictiveSet
     console.log(
       JSON.stringify({
         initialPlay: sortedInitialPlay,
         predictiveFreqPredictedPlay: sortedPredictiveFreqPredictedPlay,
         predictiveWeightedRandomPlay: sortedPredictiveWeightedRandomPlay,
         highestProbabilityPlay: sortedHighestProbabilityPlay,
+        aiPredictiveSet: sortedAiPredictiveSet,
       })
     );
 
-    // Final return: you can decide which set to return, here returning highestProbabilityPlay
+    // Return whichever set you want. Here we return the new AI set
     return sortedHighestProbabilityPlay;
   }
+
+  // ------------------------------------------------------------
+  // AI HELPER METHODS
+  // ------------------------------------------------------------
+
+  /**
+   * Picks a powerball with synergy + random fallback.
+   */
+  private pickPowerballAi(): string {
+    // Attempt synergy approach (using historical PBs)
+    const possiblePBs = this.historicalData.map((row) => row[5]);
+    if (possiblePBs && possiblePBs.length) {
+      const freqMap = this.createFrequencyMap(possiblePBs);
+      const weightedPBs = this.buildWeightedArrayFromMap(freqMap);
+      // fallback if no weighting
+      if (!weightedPBs.length) {
+        return this.randomNumberInRange(1, 26);
+      }
+      return weightedPBs[Math.floor(Math.random() * weightedPBs.length)] || '01';
+    }
+    // fallback if no PB data
+    return this.randomNumberInRange(1, 26);
+  }
+
+  /**
+   * Generates a random fallback set of length 6 (1..69 for first five, 1..26 for PB).
+   * This is used if synergy fails or there's no data in the set.
+   */
+  private generateFallbackSet(): string[] {
+    const fallback = [];
+    for (let i = 0; i < 5; i++) {
+      fallback.push(this.randomNumberInRange(1, 69));
+    }
+    fallback.push(this.randomNumberInRange(1, 26));
+    return fallback;
+  }
+
+  /**
+   * Returns a random integer (as a string) between [min..max], zero-padded if needed.
+   */
+  private randomNumberInRange(min: number, max: number): string {
+    const rand = Math.floor(Math.random() * (max - min + 1)) + min;
+    return rand.toString().padStart(2, '0');
+  }
+
+  // ------------------------------------------------------------
+  // BUILD + SORT HELPERS
+  // ------------------------------------------------------------
 
   private buildWithTheFirst(
     firstPredictedNumber: string,
     initialPlay: any
   ): string[] {
-    // Start by predicting the first number
     const firstNumber = firstPredictedNumber;
 
-    // Helper function to handle generation of the next number
     const generateAndPickNextNumber = (
       predictedNumber: string,
       index: number
     ): string => {
-      // Build synergy-based “best guess” set
-      const synergyBasedNext = this.generateNextNumberArray(predictedNumber, index);
-      // Ensure we remove duplicates, then apply advanced weighting
+      const synergyBasedNext = this.generateNextNumberArray(
+        predictedNumber,
+        index
+      );
       const bestGuessSet = _.uniq(this.removeDuplicateStrings(synergyBasedNext));
 
-      return this.pickAdvancedProbabilityNumber(bestGuessSet);
+      // If synergy is empty, fallback
+      if (!bestGuessSet || !bestGuessSet.length) {
+        return this.randomNumberInRange(1, 69);
+      }
+      const picked = this.pickAdvancedProbabilityNumber(bestGuessSet);
+      // fallback if none picked
+      if (!picked) {
+        return this.randomNumberInRange(1, 69);
+      }
+      return picked;
     };
 
-    // Predict the second, third, fourth, and fifth numbers
     const secondNumber = generateAndPickNextNumber(firstNumber, 0);
     const thirdNumber = generateAndPickNextNumber(secondNumber, 1);
     const forthNumber = generateAndPickNextNumber(thirdNumber, 2);
     const fifthNumber = generateAndPickNextNumber(forthNumber, 3);
 
-    // Predict the powerball or similar value (positions[5])
-    const pbFreqPredict = this.pickMostFrequentFirstNumber(true);
-    console.log('pbFreqPredict: ', pbFreqPredict);
-
     const pbWeightedPredict = this.pickWeightedRandomFirstNumber(true);
-    console.log('pbWeightedPredict: ', pbWeightedPredict);
 
-    // Return final result (using the weighted pick for the last number)
     const finalPick = [
       firstNumber,
       secondNumber,
@@ -198,16 +290,14 @@ export class PowerballService {
       pbWeightedPredict,
     ];
 
-    // Optional: Make sure the 6th (powerball) number is within 1..26
+    // Range enforcement
     const enforcedRange = finalPick.map((val, idx) => {
       if (idx === 5) {
-        // PB range enforcement
         const numeric = parseInt(val, 10);
         if (numeric < 1 || numeric > 26) {
           return this.fallbackPowerballValue(numeric);
         }
       } else {
-        // White ball range enforcement (1..69)
         const numeric = parseInt(val, 10);
         if (numeric < 1 || numeric > 69) {
           return this.fallbackWhiteBallValue(numeric);
@@ -219,67 +309,46 @@ export class PowerballService {
     return enforcedRange;
   }
 
-  /**
-   * -------------------------
-   * SORTING HELPER FOR RESULTS
-   * -------------------------
-   * This function attempts to sort only the first 5 numbers in each "set".
-   * If you pass in an array of length 6, it sorts indices [0..4], leaves [5] alone.
-   * If you pass in an array of arrays (e.g. multiple sets), it applies sorting to each sub-array
-   * that has length 6. Otherwise, returns them as-is.
-   */
   private sortGeneratedSet(generated: any): any {
-    // If it's an array of arrays, apply to each sub-array
     if (Array.isArray(generated) && Array.isArray(generated[0])) {
+      // Array of arrays
       return generated.map((g) => this.sortSingleSet(g));
     }
-    // If it's a single array of length 6, just sort it
     if (Array.isArray(generated) && generated.length === 6) {
+      // Single set
       return this.sortSingleSet(generated);
     }
-    // If it's an array of strings (e.g. each item is just '17'), no 6-element sets → skip
     if (Array.isArray(generated)) {
+      // Possibly an array of strings or nested arrays
       return generated.map((item) => {
-        // If the item itself is an array of length 6, sort it
         if (Array.isArray(item) && item.length === 6) {
           return this.sortSingleSet(item);
         }
-        // Otherwise, just return
         return item;
       });
     }
-    // Fallback if it's not an array
-    return generated;
+    return generated; // Fallback
   }
 
   private sortSingleSet(setOfSix: string[]): string[] {
     if (!setOfSix || setOfSix.length !== 6) {
       return setOfSix;
     }
-    // 1. Separate the first five numbers, parse them
     const firstFive = setOfSix.slice(0, 5).map((val) => parseInt(val, 10));
-    // 2. Sort them numerically
     firstFive.sort((a, b) => a - b);
-    // 3. Convert back to zero-padded strings (if desired)
-    const sortedStrings = firstFive.map((num) =>
-      num.toString().padStart(2, '0')
-    );
-    // 4. Keep the powerball (#6) as is
+    const sortedStrings = firstFive.map((num) => num.toString().padStart(2, '0'));
     return [...sortedStrings, setOfSix[5]];
   }
 
-  /**
-   * Example fallback if out-of-range
-   */
+  // ------------------------------------------------------------
+  // CLAMPING / FALLBACKS
+  // ------------------------------------------------------------
   private fallbackPowerballValue(num: number): string {
     if (num < 1) return '01';
     if (num > 26) return '26';
     return num.toString().padStart(2, '0');
   }
 
-  /**
-   * Example fallback if out-of-range
-   */
   private fallbackWhiteBallValue(num: number): string {
     if (num < 1) return '01';
     if (num > 69) return '69';
@@ -291,11 +360,13 @@ export class PowerballService {
     return array[randomIndex];
   }
 
+  // ------------------------------------------------------------
+  // PROBABILITY PICKS
+  // ------------------------------------------------------------
+
   private pickHighestProbabilityNumber(bestGuessSet: string[]): string {
-    // Step 1: Create a frequency map for numbers in bestGuessSet
     const frequencyMap = this.createFrequencyMap(bestGuessSet);
 
-    // Step 2: Count occurrences of each number in the historical data
     this.historicalData.forEach((row) => {
       row.forEach((number) => {
         if (bestGuessSet.includes(number)) {
@@ -304,7 +375,6 @@ export class PowerballService {
       });
     });
 
-    // Step 3: Find the number with the highest frequency
     let highestProbabilityNumber = bestGuessSet[0];
     let maxFrequency = frequencyMap[highestProbabilityNumber] || 0;
 
@@ -314,48 +384,65 @@ export class PowerballService {
         maxFrequency = frequencyMap[number];
       }
     }
-
     return highestProbabilityNumber;
   }
 
   private pickAdvancedProbabilityNumber(bestGuessSet: string[]): string {
-    const RECENCY_EXP_BASE = 1.03; // tweak as needed
-
-    // Step 1: Create a frequency map for numbers in bestGuessSet
+    const RECENCY_EXP_BASE = 1.03;
     const frequencyMap = this.createFrequencyMap(bestGuessSet);
 
-    // Step 2: Count occurrences of each number in historical data with exponential recency weighting
     this.historicalData.forEach((row, index) => {
       const reverseIndex = this.historicalData.length - 1 - index;
       row.forEach((number) => {
         if (bestGuessSet.includes(number)) {
-          // Exponential weighting
           const exponent = Math.pow(RECENCY_EXP_BASE, reverseIndex);
           frequencyMap[number] += exponent;
         }
       });
     });
 
-    // Step 3: Build a weighted array
     const weightedArray = this.buildWeightedArrayFromMap(frequencyMap);
-
-    // Step 4: Pick random from the weighted array
     return this.pickRandomFromWeightedArray(weightedArray, bestGuessSet);
   }
+
+  // Exposes synergy + recency for the last 'recencyThreshold' draws
+  private pickAdvancedProbabilityNumberWithRecency(
+    bestGuessSet: string[],
+    recencyThreshold: number
+  ): string {
+    const RECENCY_EXP_BASE = 1.03;
+    const recentData = this.historicalData.slice(-recencyThreshold);
+    const frequencyMap = this.createFrequencyMap(bestGuessSet);
+
+    recentData.forEach((row, index) => {
+      const reverseIndex = recentData.length - 1 - index;
+      row.forEach((number) => {
+        if (bestGuessSet.includes(number)) {
+          const exponent = Math.pow(RECENCY_EXP_BASE, reverseIndex);
+          frequencyMap[number] += exponent;
+        }
+      });
+    });
+
+    const weightedArray = this.buildWeightedArrayFromMap(frequencyMap);
+    return this.pickRandomFromWeightedArray(weightedArray, bestGuessSet);
+  }
+
+  // ------------------------------------------------------------
+  // DATA PARSING + FILTERS
+  // ------------------------------------------------------------
 
   private async parseWinningNumbers(results: any[]) {
     const plays = results.map((set: { numbers: any }) => set.numbers);
     this.historicalData = _.clone(plays);
 
-    // Initialize synergyMap for positions 0..4
+    // Initialize synergy
     for (let i = 0; i < 5; i++) {
       this.synergyMap[i] = {};
     }
 
-    // Build synergy data:
-    // synergyMap[i][currentNum][nextNum]++
+    // Build synergy data
     for (const row of plays) {
-      // Only track synergy in the first 5 positions (since 6th is PB)
       for (let i = 0; i < 4; i++) {
         const current = row[i];
         const next = row[i + 1];
@@ -399,15 +486,10 @@ export class PowerballService {
       fifths.push(parseInt(set.fifth, 10));
       powerballs.push(parseInt(set.powerball, 10));
 
-      completeSets.push(
-        Object.assign(
-          {},
-          {
-            twoThree: [set.second, set.third],
-            fourthFifth: [set.fourth, set.fifth],
-          }
-        )
-      );
+      completeSets.push({
+        twoThree: [set.second, set.third],
+        fourthFifth: [set.fourth, set.fifth],
+      });
     });
 
     const parsedNumberSets = {
@@ -426,8 +508,6 @@ export class PowerballService {
         let result: number[] = [];
         switch (key) {
           case 'powerball':
-            // If you want to filter out or find duplicates for powerball with a different threshold
-            // you can adjust the occurrence # as needed
             result = this.findDuplicates(parsedNumberSets[key], 2);
             break;
           case 'first':
@@ -468,38 +548,34 @@ export class PowerballService {
     return filteredNumbers;
   }
 
+  // ------------------------------------------------------------
+  // SYNERGY-BASED + SCANNING
+  // ------------------------------------------------------------
+
   private generateNextNumberArray(
     selectedNumber: string,
     customIndex: number = 0
   ): string[] {
-    return this.findNextNumbers(
-      this.historicalData,
-      selectedNumber,
-      customIndex
-    );
+    return this.findNextNumbers(this.historicalData, selectedNumber, customIndex);
   }
 
   private removeDuplicateStrings(arr: string[]): string[] {
     return [...new Set(arr)];
   }
 
-  // Uses synergyMap if possible, fallback to simple “stripSixthElement” approach
   private findNextNumbers(
     data: string[][],
     selectedNumber: string,
     customIndex: number = 0
   ): string[] {
-    // First, gather synergy-based picks if they exist
     const synergyResults = this.getSynergyBasedNextNumbers(
       customIndex,
       selectedNumber
     );
 
-    // If synergy is empty, fallback to direct scanning
     if (!synergyResults.length) {
       const nextNumbers: string[] = [];
       const strippedData = this.stripSixthElement(data);
-
       for (const subArray of strippedData) {
         if (customIndex < 0 || customIndex > 4) continue;
         if (subArray[customIndex] === selectedNumber) {
@@ -510,18 +586,14 @@ export class PowerballService {
       }
       return nextNumbers;
     }
-
     return synergyResults;
   }
 
   private getSynergyBasedNextNumbers(positionIndex: number, currentNum: string) {
-    // If synergy data is available for positionIndex, attempt to get next numbers
     if (!this.synergyMap[positionIndex][currentNum]) {
       return [];
     }
     const synergyObject = this.synergyMap[positionIndex][currentNum];
-    // synergyObject might look like { "06": 3, "12": 1 } meaning "06" followed "currentNum" 3 times, "12" 1 time, etc.
-    // We'll build a weighted array from that synergy object
     const synergyWeightedArray: string[] = [];
     for (const nextNum in synergyObject) {
       const count = synergyObject[nextNum];
@@ -536,13 +608,15 @@ export class PowerballService {
     return data.map((subArray) => subArray.slice(0, 5));
   }
 
+  // ------------------------------------------------------------
+  // RECENT DRAWS, RANGE, DUPLICATES
+  // ------------------------------------------------------------
+
   async getRecentDrawings(count: number) {
     const recentDraws = [];
-
     for (let i = 0; i < count; i++) {
       recentDraws.push(this.powerballData[i]);
     }
-
     return recentDraws.map((result) => ({
       date: result.draw_date,
       numbers: result.winning_numbers.split(' '),
@@ -555,9 +629,9 @@ export class PowerballService {
     from: number,
     to: number | null = null
   ): number[] {
-    const fromSet = set.filter((number) => number >= from);
+    const fromSet = set.filter((num) => num >= from);
     if (to) {
-      return fromSet.filter((number) => number <= to);
+      return fromSet.filter((num) => num <= to);
     }
     return fromSet;
   }
@@ -573,10 +647,13 @@ export class PowerballService {
       .map(Number);
   }
 
+  // ------------------------------------------------------------
+  // FIRST NUMBER PICKS
+  // ------------------------------------------------------------
+
   private pickMostFrequentFirstNumber(powerball: boolean = false) {
     const index = powerball ? 5 : 0;
     const firstNumbers = this.historicalData.map((subArray) => subArray[index]);
-
     const frequencyMap = this.createFrequencyMap(firstNumbers);
 
     let mostFrequentNumber = firstNumbers[0] || '01';
@@ -597,54 +674,20 @@ export class PowerballService {
     const frequencyMap = this.createFrequencyMap(firstNumbers);
 
     const weightedArray = this.buildWeightedArrayFromMap(frequencyMap);
-
-    // Fallback
     if (!weightedArray.length) {
       return firstNumbers[Math.floor(Math.random() * firstNumbers.length)] || '01';
     }
-
     const randomIndex = Math.floor(Math.random() * weightedArray.length);
     return weightedArray[randomIndex];
   }
 
-  private pickAdvancedProbabilityNumberWithRecency(
-    bestGuessSet: string[],
-    recencyThreshold: number
-  ): string {
-    const RECENCY_EXP_BASE = 1.03; // tweak as needed
-    // 1. Slice data for recency
-    const recentData = this.historicalData.slice(-recencyThreshold);
+  // ------------------------------------------------------------
+  // FREQUENCY MAP + WEIGHTED ARRAY
+  // ------------------------------------------------------------
 
-    // 2. Create a frequency map
-    const frequencyMap = this.createFrequencyMap(bestGuessSet);
-
-    // 3. Count occurrences with exponential recency weighting
-    recentData.forEach((row, index) => {
-      const reverseIndex = recentData.length - 1 - index;
-      row.forEach((number) => {
-        if (bestGuessSet.includes(number)) {
-          const exponent = Math.pow(RECENCY_EXP_BASE, reverseIndex);
-          frequencyMap[number] += exponent;
-        }
-      });
-    });
-
-    // 4. Build weighted array
-    const weightedArray = this.buildWeightedArrayFromMap(frequencyMap);
-
-    // 5. Pick random
-    return this.pickRandomFromWeightedArray(weightedArray, bestGuessSet);
-  }
-
-  /**
-   * -----------------------
-   * SHARED HELPER METHODS
-   * -----------------------
-   */
   private createFrequencyMap(array: string[]): { [key: string]: number } {
     const frequencyMap: { [key: string]: number } = {};
     array.forEach((value) => {
-      // Initialize to 0 to avoid NaN
       if (!frequencyMap[value]) {
         frequencyMap[value] = 0;
       }
@@ -670,11 +713,9 @@ export class PowerballService {
     fallbackSet: string[]
   ): string {
     if (!weightedArray.length) {
-      // fallback
       return fallbackSet[Math.floor(Math.random() * fallbackSet.length)] || '01';
     }
     const randomIndex = Math.floor(Math.random() * weightedArray.length);
     return weightedArray[randomIndex];
   }
 }
- 
