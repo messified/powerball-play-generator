@@ -147,7 +147,7 @@ export class PowerballService {
         }
 
         // mild random offset chance (e.g. 15% chance we pick random out-of-band)
-        if (Math.random() < 0.15) {
+        if (Math.random() < 0.10) {
           const randomAlt = this.randomNumberInRange(1, 69);
           chosen = randomAlt;
         }
@@ -185,17 +185,18 @@ export class PowerballService {
 
     // 11. Log resulting sets, now including aiPredictiveSet
     console.log(
-      JSON.stringify({
+      {
         initialPlay: sortedInitialPlay,
         predictiveFreqPredictedPlay: sortedPredictiveFreqPredictedPlay,
         predictiveWeightedRandomPlay: sortedPredictiveWeightedRandomPlay,
         highestProbabilityPlay: sortedHighestProbabilityPlay,
         aiPredictiveSet: sortedAiPredictiveSet,
-      })
+      }
     );
 
     // Return whichever set you want. Here we return the new AI set
-    return sortedPredictiveWeightedRandomPlay;
+    // return sortedAiPredictiveSet[Math.floor(Math.random() * sortedAiPredictiveSet.length)];
+    return predictiveWeightedRandomPlay;
   }
 
   // ------------------------------------------------------------
@@ -210,11 +211,15 @@ export class PowerballService {
     const possiblePBs = this.historicalData.map((row) => row[5]);
     if (possiblePBs && possiblePBs.length) {
       const freqMap = this.createFrequencyMap(possiblePBs);
-      const weightedPBs = this.buildWeightedArrayFromMap(freqMap);
+      // const weightedPBs = this.buildWeightedArrayFromMap(freqMap);
+
+      const weightedPBs = ['01','24','14','15','25','04','07','12','10','23','20','08'];
+
       // fallback if no weighting
       if (!weightedPBs.length) {
         return this.randomNumberInRange(1, 26);
       }
+
       return weightedPBs[Math.floor(Math.random() * weightedPBs.length)] || '01';
     }
     // fallback if no PB data
@@ -267,6 +272,7 @@ export class PowerballService {
         return this.randomNumberInRange(1, 69);
       }
       const picked = this.pickAdvancedProbabilityNumber(bestGuessSet);
+      // const picked = this.pickHighestProbabilityNumber(bestGuessSet);
       // fallback if none picked
       if (!picked) {
         return this.randomNumberInRange(1, 69);
@@ -502,41 +508,43 @@ export class PowerballService {
     };
 
     const filteredNumbers: { key: string; numbers: number[] }[] = [];
+    const dupCount = 4;
 
     for (const key in parsedNumberSets) {
       if (parsedNumberSets.hasOwnProperty(key)) {
         let result: number[] = [];
         switch (key) {
           case 'powerball':
-            result = this.findDuplicates(parsedNumberSets[key], 2);
+            // result = this.findDuplicates(parsedNumberSets[key], 6);
+            result = [1, 24, 14, 15, 25, 4, 7, 12, 10, 23, 20];
             break;
           case 'first':
             result = this.findDuplicates(
-              this.filterNumbersByRange(parsedNumberSets[key], 2),
+              this.filterNumbersByRange(parsedNumberSets[key], dupCount),
               3
             );
             break;
           case 'second':
             result = this.findDuplicates(
-              this.filterNumbersByRange(parsedNumberSets[key], 2),
+              this.filterNumbersByRange(parsedNumberSets[key], dupCount),
               3
             );
             break;
           case 'third':
             result = this.findDuplicates(
-              this.filterNumbersByRange(parsedNumberSets[key], 2),
+              this.filterNumbersByRange(parsedNumberSets[key], dupCount),
               3
             );
             break;
           case 'fourth':
             result = this.findDuplicates(
-              this.filterNumbersByRange(parsedNumberSets[key], 2),
+              this.filterNumbersByRange(parsedNumberSets[key], dupCount),
               3
             );
             break;
           case 'fifth':
             result = this.findDuplicates(
-              this.filterNumbersByRange(parsedNumberSets[key], 2),
+              this.filterNumbersByRange(parsedNumberSets[key], dupCount),
               3
             );
             break;

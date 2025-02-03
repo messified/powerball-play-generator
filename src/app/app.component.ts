@@ -27,6 +27,7 @@ export class AppComponent implements OnInit {
 
   recentDrawings: string[][] = [];
   matchingSets: { index: number }[] = [];
+  latestDrawing: any = {};
 
   constructor(
     private powerballService: PowerballService,
@@ -45,6 +46,8 @@ export class AppComponent implements OnInit {
 
     const pastDrawingCount = 49;
     const recentDrawings = await this.powerballService.getRecentDrawings(pastDrawingCount);
+
+    this.latestDrawing = recentDrawings[0];
 
     // Format play results to ensure two digits
     this.play = generatePowerballPlayResults.map((num: string | any[]) => num.length === 1 ? `0${num}` : num);
