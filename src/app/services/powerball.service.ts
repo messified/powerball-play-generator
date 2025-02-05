@@ -184,6 +184,7 @@ export class PowerballService {
     const sortedAiPredictiveSet = this.sortGeneratedSet(aiPredictiveSet);
 
     // 11. Log resulting sets, now including aiPredictiveSet
+    console.group('All Generated Plays');
     console.log(
       {
         initialPlay: sortedInitialPlay,
@@ -193,6 +194,7 @@ export class PowerballService {
         aiPredictiveSet: sortedAiPredictiveSet,
       }
     );
+    console.groupEnd()
 
     // Return whichever set you want. Here we return the new AI set
     // return sortedAiPredictiveSet[Math.floor(Math.random() * sortedAiPredictiveSet.length)];
@@ -508,15 +510,15 @@ export class PowerballService {
     };
 
     const filteredNumbers: { key: string; numbers: number[] }[] = [];
-    const dupCount = 4;
+    const dupCount = 5;
 
     for (const key in parsedNumberSets) {
       if (parsedNumberSets.hasOwnProperty(key)) {
         let result: number[] = [];
         switch (key) {
           case 'powerball':
-            // result = this.findDuplicates(parsedNumberSets[key], 6);
-            result = [1, 24, 14, 15, 25, 4, 7, 12, 10, 23, 20];
+            result = this.findDuplicates(parsedNumberSets[key], dupCount);
+            // result = [1, 24, 14, 15, 25, 4, 7, 12, 10, 23, 20, 8, 9, 13];
             break;
           case 'first':
             result = this.findDuplicates(
