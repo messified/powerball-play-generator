@@ -517,8 +517,8 @@ export class PowerballService {
         let result: number[] = [];
         switch (key) {
           case 'powerball':
-            result = this.findDuplicates(parsedNumberSets[key], dupCount);
-            // result = [1, 24, 14, 15, 25, 4, 7, 12, 10, 23, 20, 8, 9, 13];
+            // result = this.findDuplicates(parsedNumberSets[key], dupCount);
+            result = [1, 24, 14, 15, 25, 4, 7, 12, 10, 23, 20, 8, 9, 13];
             break;
           case 'first':
             result = this.findDuplicates(

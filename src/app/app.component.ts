@@ -40,6 +40,7 @@ export class AppComponent implements OnInit {
   }
 
   async generateTicket(): Promise<void> {
+    for (let step = 0; step < 60; step++) {
     const generatePowerballPlayResults = await this.powerballService.generatePowerballPlay();
     const pastDrawingCount = 30;
     const recentDrawings = await this.powerballService.getRecentDrawings(pastDrawingCount);
@@ -76,6 +77,7 @@ export class AppComponent implements OnInit {
     });
 
     console.log(this.history);
+    }
   }
 
   open(): void {
