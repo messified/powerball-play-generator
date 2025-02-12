@@ -44,11 +44,6 @@
       </div>
     </div>
   </div>
-  <div class="row button-row">
-    <div class="col">
-      <button class="btn btn-primary bottom-button" (click)="generateTicket()">Generate Numbers</button>
-    </div>
-  </div>
   <div *ngIf="history.length >= 1" class="panel panel-primary history">
     <div class="panel-heading history-heading">Generated History
       <!-- <span class="icon" (click)="copyTicketToClipboard()"><i class="fas fa-clipboard"></i></span></div> -->
@@ -57,6 +52,11 @@
         <span>{{t}}</span>
       </li>
     </ul>
+  </div>
+  <div *ngIf="recentDrawings && history.length >= 1" class="row button-row">
+    <div class="col">
+      <button (click)="checkGeneratedPicks()" class="btn btn-secondary">Check Picks</button>
+    </div>
   </div>
   <div *ngIf="recentDrawings" class="row button-row">
     <div class="col">

@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { PowerballData } from './powerball-data';
+import { PowerballData } from '../data/powerball-data';
 import _ from 'lodash';
 
 export interface IWinningsResponse {
@@ -246,6 +246,7 @@ export class PowerballService {
    */
   private randomNumberInRange(min: number, max: number): string {
     const rand = Math.floor(Math.random() * (max - min + 1)) + min;
+
     return rand.toString().padStart(2, '0');
   }
 
@@ -517,8 +518,10 @@ export class PowerballService {
         let result: number[] = [];
         switch (key) {
           case 'powerball':
-            // result = this.findDuplicates(parsedNumberSets[key], dupCount);
-            result = [1, 24, 14, 15, 25, 4, 7, 12, 10, 23, 20, 8, 9, 13];
+            const pb = this.findDuplicates(parsedNumberSets[key], 4);
+            console.log(pb);
+            // result = [1, 9, 24, 14, 15, 18, 4, 7, 12, 10, 23, 20, 8, 17];
+            result = [8, 4, 14, 9, 18, 20];
             break;
           case 'first':
             result = this.findDuplicates(
@@ -554,6 +557,10 @@ export class PowerballService {
         filteredNumbers.push({ key, numbers: result });
       }
     }
+
+    console.group('filteredNumbers -----');
+    console.log(filteredNumbers);
+    console.groupEnd();
 
     return filteredNumbers;
   }

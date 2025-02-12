@@ -6,6 +6,9 @@ import { ToastrModule } from 'ngx-toastr';
 import { provideAnimations } from '@angular/platform-browser/animations';
 import { HttpClientModule } from '@angular/common/http';
 import { Lightbox, LightboxModule } from 'ngx-lightbox';
+import { PickCheckerService } from './services/pick-checker.service';
+import { count } from 'rxjs';
+import { StoredHistory } from './data/generated-picks';
 
 @Component({
   selector: 'app-root',
@@ -28,11 +31,14 @@ export class AppComponent implements OnInit {
   recentDrawings: string[][] = [];
   matchingSets: { index: number }[] = [];
   latestDrawing: any = {};
+  winningPicks: any;
+  counter: number = 0;
 
   constructor(
     private powerballService: PowerballService,
     private toastr: ToastrService,
-    private lightbox: Lightbox
+    private lightbox: Lightbox,
+    private pickCheckerService: PickCheckerService
   ) {}
 
   async ngOnInit(): Promise<void> {
@@ -40,6 +46,7 @@ export class AppComponent implements OnInit {
   }
 
   async generateTicket(): Promise<void> {
+    this.history = [];
     for (let step = 0; step < 60; step++) {
     const generatePowerballPlayResults = await this.powerballService.generatePowerballPlay();
     const pastDrawingCount = 30;
@@ -70,14 +77,33 @@ export class AppComponent implements OnInit {
 
     // Save play to history
     this.history.push([...this.play]);
+    }
 
     this.toastr.success('', 'Generated Powerball Play', {
       timeOut: 1500,
       positionClass: 'toast-bottom-right'
     });
 
-    console.log(this.history);
-    }
+    this.checkGeneratedPicks();
+  }
+
+  checkGeneratedPicks() {
+    const count = this.counter++;
+    const historyStorageKey = `generated_picks_${count}`;
+
+    this.winningPicks = this.pickCheckerService.checkPicks();
+    
+    localStorage.setItem(historyStorageKey, JSON.stringify({
+      totalWins: this.winningPicks.totalWins,
+      pastDrawingDate: this.winningPicks.date,
+      results: this.winningPicks, 
+      picks: this.history
+    }));
+
+    console.log(this.winningPicks);
+
+    // const storedHistory = localStorage.getItem(historyStorageKey);
+    console.log('Picks Count: ', StoredHistory);
   }
 
   open(): void {
