@@ -17,7 +17,7 @@ export class PickCheckerService {
 
   constructor() { }
 
-  checkPicks() {
+  checkPicks(myPicks: any) {
     /**
      * TEST NUMBERS HERE
      * customPB
@@ -27,17 +27,10 @@ export class PickCheckerService {
     // const myPicks = [...sixty, ...mergedPicks]; // HERE <===========
     // const myPicks = [...customPB, ...newDayFour];
     // const myPicks = [...newDayFour,...newDay11]; // Prospect
-
-    const myPicks = [...potentialOne, ...potentialTwo];
-
-    if(myPicks && myPicks.length <= 1) {
-      // myPicks = [...newDay11, ...customPB];
-    }
-
-    console.log(myPicks);
-
+    // const myPicks = [...potentialOne, ...potentialTwo];
     const matchCount = 4;
     const drawingResults: any = [];
+    
     this.historicalDrawings.forEach(draw => {
       drawingResults.push(this.processPicks(draw, myPicks, matchCount));
     });

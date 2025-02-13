@@ -1,5 +1,10 @@
 export const PowerballData = [
   {
+    draw_date: '2025-02-12T00:00:00.000',
+    winning_numbers: '21 32 36 45 49 18',
+    multiplier: '2',
+  },
+  {
     draw_date: '2025-02-10T00:00:00.000',
     winning_numbers: '02 17 18 29 43 03',
     multiplier: '3',

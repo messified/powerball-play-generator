@@ -91,7 +91,7 @@ export class AppComponent implements OnInit {
     const count = this.counter++;
     const historyStorageKey = `generated_picks_${count}`;
 
-    this.winningPicks = this.pickCheckerService.checkPicks();
+    this.winningPicks = this.pickCheckerService.checkPicks(this.history);
     
     localStorage.setItem(historyStorageKey, JSON.stringify({
       totalWins: this.winningPicks.totalWins,
@@ -99,8 +99,6 @@ export class AppComponent implements OnInit {
       results: this.winningPicks, 
       picks: this.history
     }));
-
-    console.log(this.winningPicks);
 
     // const storedHistory = localStorage.getItem(historyStorageKey);
     console.log('Picks Count: ', StoredHistory);

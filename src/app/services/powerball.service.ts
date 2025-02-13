@@ -184,17 +184,17 @@ export class PowerballService {
     const sortedAiPredictiveSet = this.sortGeneratedSet(aiPredictiveSet);
 
     // 11. Log resulting sets, now including aiPredictiveSet
-    console.group('All Generated Plays');
-    console.log(
-      {
-        initialPlay: sortedInitialPlay,
-        predictiveFreqPredictedPlay: sortedPredictiveFreqPredictedPlay,
-        predictiveWeightedRandomPlay: sortedPredictiveWeightedRandomPlay,
-        highestProbabilityPlay: sortedHighestProbabilityPlay,
-        aiPredictiveSet: sortedAiPredictiveSet,
-      }
-    );
-    console.groupEnd()
+    // console.group('All Generated Plays');
+    // console.log(
+    //   {
+    //     initialPlay: sortedInitialPlay,
+    //     predictiveFreqPredictedPlay: sortedPredictiveFreqPredictedPlay,
+    //     predictiveWeightedRandomPlay: sortedPredictiveWeightedRandomPlay,
+    //     highestProbabilityPlay: sortedHighestProbabilityPlay,
+    //     aiPredictiveSet: sortedAiPredictiveSet,
+    //   }
+    // );
+    // console.groupEnd()
 
     // Return whichever set you want. Here we return the new AI set
     // return sortedAiPredictiveSet[Math.floor(Math.random() * sortedAiPredictiveSet.length)];
@@ -519,7 +519,7 @@ export class PowerballService {
         switch (key) {
           case 'powerball':
             const pb = this.findDuplicates(parsedNumberSets[key], 4);
-            console.log(pb);
+            // console.log(pb);
             // result = [1, 9, 24, 14, 15, 18, 4, 7, 12, 10, 23, 20, 8, 17];
             result = [8, 4, 14, 9, 18, 20];
             break;
@@ -558,9 +558,9 @@ export class PowerballService {
       }
     }
 
-    console.group('filteredNumbers -----');
-    console.log(filteredNumbers);
-    console.groupEnd();
+    // console.group('filteredNumbers -----');
+    // console.log(filteredNumbers);
+    // console.groupEnd();
 
     return filteredNumbers;
   }
