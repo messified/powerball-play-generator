@@ -49,7 +49,7 @@ export class AppComponent implements OnInit {
     this.history = [];
     for (let step = 0; step < 60; step++) {
     const generatePowerballPlayResults = await this.powerballService.generatePowerballPlay();
-    const pastDrawingCount = 30;
+    const pastDrawingCount = 200;
     const recentDrawings = await this.powerballService.getRecentDrawings(pastDrawingCount);
 
     this.latestDrawing = recentDrawings[0];
@@ -64,7 +64,7 @@ export class AppComponent implements OnInit {
       const numbers = set.numbers;
       const numberMatches = numbers.filter((num: string, index: number) => this.play[index] == num);
 
-      if (numberMatches.length >= 2) {
+      if (numberMatches.length >= 3) {
         matchedSets.push({ matchedSetsIndex: i });
       }
 
@@ -88,8 +88,8 @@ export class AppComponent implements OnInit {
   }
 
   checkGeneratedPicks() {
-    const count = this.counter++;
-    const historyStorageKey = `generated_picks_${count}`;
+    const now = Date.now();
+    const historyStorageKey = `generated_picks_${now}`;
 
     this.winningPicks = this.pickCheckerService.checkPicks(this.history);
     
@@ -99,9 +99,22 @@ export class AppComponent implements OnInit {
       results: this.winningPicks, 
       picks: this.history
     }));
+  
+    let allMatchingPicks: any = [];
+    this.winningPicks.wins.forEach((win: any) => {
+      const matchingPicks = win.matching_picks;
+      allMatchingPicks = [...allMatchingPicks, ...matchingPicks];
+    });
+
+    const uniqueMatchingPicks = this.pickCheckerService.removeDuplicateArrays(allMatchingPicks);
+
+    console.log({
+      mp: uniqueMatchingPicks.length,
+      uniqueMatchingPicks
+    })
 
     // const storedHistory = localStorage.getItem(historyStorageKey);
-    console.log('Picks Count: ', StoredHistory);
+    console.log(this.winningPicks);
   }
 
   open(): void {

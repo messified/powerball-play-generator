@@ -198,7 +198,7 @@ export class PowerballService {
 
     // Return whichever set you want. Here we return the new AI set
     // return sortedAiPredictiveSet[Math.floor(Math.random() * sortedAiPredictiveSet.length)];
-    return predictiveWeightedRandomPlay;
+    return sortedPredictiveWeightedRandomPlay;
   }
 
   // ------------------------------------------------------------
@@ -211,11 +211,11 @@ export class PowerballService {
   private pickPowerballAi(): string {
     // Attempt synergy approach (using historical PBs)
     const possiblePBs = this.historicalData.map((row) => row[5]);
+
     if (possiblePBs && possiblePBs.length) {
       const freqMap = this.createFrequencyMap(possiblePBs);
-      // const weightedPBs = this.buildWeightedArrayFromMap(freqMap);
-
-      const weightedPBs = ['01','24','14','15','25','04','07','12','10','23','20','08'];
+      const weightedPBs = this.buildWeightedArrayFromMap(freqMap);
+      // const weightedPBs = ['01','24','14','15','25','04','07','12','10','23','20','08'];
 
       // fallback if no weighting
       if (!weightedPBs.length) {
@@ -518,39 +518,41 @@ export class PowerballService {
         let result: number[] = [];
         switch (key) {
           case 'powerball':
-            const pb = this.findDuplicates(parsedNumberSets[key], 4);
+            const pb = this.findDuplicates(parsedNumberSets[key], 9);
+            // [1, 3, 4, 5, 8, 9, 14, 15, 16, 17, 20, 21, 22, 23]
             // console.log(pb);
-            // result = [1, 9, 24, 14, 15, 18, 4, 7, 12, 10, 23, 20, 8, 17];
-            result = [8, 4, 14, 9, 18, 20];
+            // result = [1, 9, 24, 14, 15, 18, 4, 12, 10, 23, 20, 8, 17];
+            // result = [24, 1, 5, 4, 14, 9, 18, 20];
+            result = pb;
             break;
           case 'first':
             result = this.findDuplicates(
-              this.filterNumbersByRange(parsedNumberSets[key], dupCount),
-              3
+              this.filterNumbersByRange(parsedNumberSets[key]),
+              9       
             );
             break;
           case 'second':
             result = this.findDuplicates(
-              this.filterNumbersByRange(parsedNumberSets[key], dupCount),
-              3
+              this.filterNumbersByRange(parsedNumberSets[key]),
+              dupCount
             );
             break;
           case 'third':
             result = this.findDuplicates(
-              this.filterNumbersByRange(parsedNumberSets[key], dupCount),
-              3
+              this.filterNumbersByRange(parsedNumberSets[key]),
+              dupCount
             );
             break;
           case 'fourth':
             result = this.findDuplicates(
-              this.filterNumbersByRange(parsedNumberSets[key], dupCount),
-              3
+              this.filterNumbersByRange(parsedNumberSets[key]),
+              dupCount
             );
             break;
           case 'fifth':
             result = this.findDuplicates(
-              this.filterNumbersByRange(parsedNumberSets[key], dupCount),
-              3
+              this.filterNumbersByRange(parsedNumberSets[key]),
+              dupCount
             );
             break;
         }
@@ -631,7 +633,7 @@ export class PowerballService {
 
   async getRecentDrawings(count: number) {
     const recentDraws = [];
-    for (let i = 0; i < count; i++) {
+    for (let i = 0; i < this.powerballData.length; i++) {
       recentDraws.push(this.powerballData[i]);
     }
     return recentDraws.map((result) => ({
@@ -643,7 +645,7 @@ export class PowerballService {
 
   private filterNumbersByRange(
     set: number[],
-    from: number,
+    from: number = 1,
     to: number | null = null
   ): number[] {
     const fromSet = set.filter((num) => num >= from);
@@ -674,7 +676,7 @@ export class PowerballService {
     const frequencyMap = this.createFrequencyMap(firstNumbers);
 
     let mostFrequentNumber = firstNumbers[0] || '01';
-    let maxCount = 0;
+    let maxCount = 5;
 
     for (const number in frequencyMap) {
       if (frequencyMap[number] > maxCount) {
@@ -682,6 +684,7 @@ export class PowerballService {
         mostFrequentNumber = number;
       }
     }
+
     return mostFrequentNumber;
   }
 
@@ -689,12 +692,14 @@ export class PowerballService {
     const index = powerball ? 5 : 0;
     const firstNumbers = this.historicalData.map((subArray) => subArray[index]);
     const frequencyMap = this.createFrequencyMap(firstNumbers);
-
     const weightedArray = this.buildWeightedArrayFromMap(frequencyMap);
+
     if (!weightedArray.length) {
       return firstNumbers[Math.floor(Math.random() * firstNumbers.length)] || '01';
     }
+    
     const randomIndex = Math.floor(Math.random() * weightedArray.length);
+    
     return weightedArray[randomIndex];
   }
 
@@ -702,26 +707,23 @@ export class PowerballService {
   // FREQUENCY MAP + WEIGHTED ARRAY
   // ------------------------------------------------------------
 
-  private createFrequencyMap(array: string[]): { [key: string]: number } {
-    const frequencyMap: { [key: string]: number } = {};
-    array.forEach((value) => {
-      if (!frequencyMap[value]) {
-        frequencyMap[value] = 0;
-      }
-    });
-    return frequencyMap;
+  private createFrequencyMap(arr: string[]): Record<string, number> {
+    return arr.reduce((acc, cur) => {
+      acc[cur] = (acc[cur] || 0) + 1;
+      return acc;
+    }, {} as Record<string, number>);
   }
 
-  private buildWeightedArrayFromMap(
-    frequencyMap: { [key: string]: number }
-  ): string[] {
+  private buildWeightedArrayFromMap(freqMap: Record<string, number>): string[] {
     const weightedArray: string[] = [];
-    for (const number in frequencyMap) {
-      const weight = Math.floor(frequencyMap[number]);
-      for (let i = 0; i < weight; i++) {
-        weightedArray.push(number);
+  
+    for (const [key, count] of Object.entries(freqMap)) {
+      // Append the key 'count' times to the weightedArray
+      for (let i = 0; i < count; i++) {
+        weightedArray.push(key);
       }
     }
+  
     return weightedArray;
   }
 

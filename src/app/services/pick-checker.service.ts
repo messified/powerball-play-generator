@@ -1,6 +1,8 @@
 import { Injectable } from '@angular/core';
 import { PowerballData } from '../data/powerball-data';
 import { anotherSet, anotherSixty, customPB, customPB10, customPB11, customPB12, customPB13, customPB5, customPB6, customPB7, customPB9, customPBFour, customPBThree, customPBTwo, generatedPicks, lastSixty, latestPicks, mergedPicks, mixedDupCount60, morePicks, newDay, newDay11, newDayEight, newDayFive, newDayFour, newDayNine, newDaySeven, newDaySix, newDayTen, newDayThree, newDayTwo, newPredictRandom, oneTwenty, potentialOne, potentialTwo, predictPlay, sixty, threeFifty } from '../data/generated-picks';
+import { PastTwoMonthsHistoricalData } from '../data/historical-data';
+import { sundayFunday, theGoat, UniquePicks, UniquePicksTwo, sundayUni, sunday2, sundayUniTwo, sundayUniThree } from '../data/todays-picks';
 
 @Injectable({
   providedIn: 'root'
@@ -15,6 +17,8 @@ export class PickCheckerService {
     }
   });
 
+  winningPicks: any = [];
+
   constructor() { }
 
   checkPicks(myPicks: any) {
@@ -25,11 +29,25 @@ export class PickCheckerService {
      * newDayNine
      */
     // const myPicks = [...sixty, ...mergedPicks]; // HERE <===========
-    // const myPicks = [...customPB, ...newDayFour];
-    // const myPicks = [...newDayFour,...newDay11]; // Prospect
+    // myPicks = customPB;
+    // myPicks = [...newDayFour,...newDay11]; // Prospect
     // const myPicks = [...potentialOne, ...potentialTwo];
-    const matchCount = 4;
+    const matchCount =  4;
     const drawingResults: any = [];
+
+    // myPicks = sundayFunday;
+    // myPicks = customPBFour;
+
+    // myPicks = [...customPB, ...customPBFour]; // 45
+    // myPicks= customPBFour; // 26
+    // myPicks = customPB; // 25
+    // myPicks = newDayFour;
+
+    // myPicks = [...UniquePicks, ...UniquePicksTwo];
+
+    myPicks = [...sundayUni, ...customPB];
+
+    console.log(myPicks.length)
     
     this.historicalDrawings.forEach(draw => {
       drawingResults.push(this.processPicks(draw, myPicks, matchCount));
@@ -43,8 +61,9 @@ export class PickCheckerService {
 
     return {
       totalWins: wins.length,
-      totalDraws: PowerballData.length,
+      totalDraws: this.historicalDrawings.length,
       myPicks: myPicks.length,
+      picks: myPicks,
       wins
     }
   }
@@ -56,11 +75,9 @@ export class PickCheckerService {
     // Remove duplicates from the imported array.
     // const uniqueArrays = removeDuplicateArrays(generatedPicks);
     const uniqueArrays = this.removeDuplicateArrays(myPk);
-
-    console.log('uniqueArrays: ', uniqueArrays.length);
-
+    console.log('uniqueArrays.length: ', uniqueArrays.length);
     const matchingPicks = this.filterArrays(uniqueArrays, historicalDraw, matchCount);
-
+    
     if (matchingPicks.length > 0) {
       const result = {
         // day: moment(draw.date).format('dddd'),
