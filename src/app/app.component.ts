@@ -16,7 +16,7 @@ import { StoredHistory } from './data/generated-picks';
   imports: [CommonModule, ToastrModule, HttpClientModule, LightboxModule],
   providers: [
     PowerballService,
-    provideAnimations(),
+    provideAnimations()
   ],
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss'
@@ -47,7 +47,8 @@ export class AppComponent implements OnInit {
 
   async generateTicket(): Promise<void> {
     this.history = [];
-    for (let step = 0; step < 60; step++) {
+
+    for (let step = 0; step < 80; step++) {
     const generatePowerballPlayResults = await this.powerballService.generatePowerballPlay();
     const pastDrawingCount = 200;
     const recentDrawings = await this.powerballService.getRecentDrawings(pastDrawingCount);
@@ -107,11 +108,6 @@ export class AppComponent implements OnInit {
     });
 
     const uniqueMatchingPicks = this.pickCheckerService.removeDuplicateArrays(allMatchingPicks);
-
-    console.log({
-      mp: uniqueMatchingPicks.length,
-      uniqueMatchingPicks
-    })
 
     // const storedHistory = localStorage.getItem(historyStorageKey);
     console.log(this.winningPicks);

@@ -397,7 +397,7 @@ export class PowerballService {
   }
 
   private pickAdvancedProbabilityNumber(bestGuessSet: string[]): string {
-    const RECENCY_EXP_BASE = 1.03;
+    const RECENCY_EXP_BASE = 1.055;
     const frequencyMap = this.createFrequencyMap(bestGuessSet);
 
     this.historicalData.forEach((row, index) => {
@@ -411,6 +411,11 @@ export class PowerballService {
     });
 
     const weightedArray = this.buildWeightedArrayFromMap(frequencyMap);
+
+    // console.group('weightedArray ----');
+    // console.log(weightedArray);
+    // console.groupEnd();
+
     return this.pickRandomFromWeightedArray(weightedArray, bestGuessSet);
   }
 
@@ -419,7 +424,7 @@ export class PowerballService {
     bestGuessSet: string[],
     recencyThreshold: number
   ): string {
-    const RECENCY_EXP_BASE = 1.03;
+    const RECENCY_EXP_BASE = 1.055;
     const recentData = this.historicalData.slice(-recencyThreshold);
     const frequencyMap = this.createFrequencyMap(bestGuessSet);
 
