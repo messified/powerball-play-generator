@@ -3,7 +3,8 @@ import { PowerballData } from '../data/powerball-data';
 import { anotherSet, anotherSixty, customPB, customPB10, customPB11, customPB12, customPB13, customPB5, customPB6, customPB7, customPB9, customPBFour, customPBThree, customPBTwo, generatedPicks, lastSixty, latestPicks, mergedPicks, mixedDupCount60, morePicks, newDay, newDay11, newDayEight, newDayFive, newDayFour, newDayNine, newDaySeven, newDaySix, newDayTen, newDayThree, newDayTwo, newPredictRandom, oneTwenty, potentialOne, potentialTwo, predictPlay, sixty, threeFifty } from '../data/generated-picks';
 import { PastTwoMonthsHistoricalData } from '../data/historical-data';
 import { sundayFunday, theGoat, UniquePicks, UniquePicksTwo, sundayUni, sunday2, sundayUniTwo, sundayUniThree } from '../data/todays-picks';
-import { defLastSixty, firstThreeSets, lastThreeSets, my85, myLastSixtySets, myNextSixtySets, mySixtySets, newMy85, sixSets, sixtyIteration } from '../data/more-picks';
+import { defLastSixty, firstThreeSets, lastThreeSets, my85, myLastSixtySets, myNextSixtySets, mySixtySets, newMy85, sixSets, sixthSet, sixtyIteration } from '../data/more-picks';
+import { promising40 } from '../data/new-gen-picks';
 
 @Injectable({
   providedIn: 'root'
@@ -53,7 +54,7 @@ export class PickCheckerService {
     /**
      * Best 
      */
-    // myPicks = sundayUni; // customPB
+    // myPicks = [...customPB, ...sixthSet]; // customPB
 
     // myPicks = this.removeDuplicateArrays(myPicks);
 
