@@ -397,7 +397,7 @@ export class PowerballService {
   }
 
   private pickAdvancedProbabilityNumber(bestGuessSet: string[]): string {
-    const RECENCY_EXP_BASE = 1.05;
+    const RECENCY_EXP_BASE = 1.06;
     const frequencyMap = this.createFrequencyMap(bestGuessSet);
 
     this.historicalData.forEach((row, index) => {
@@ -424,7 +424,7 @@ export class PowerballService {
     bestGuessSet: string[],
     recencyThreshold: number
   ): string {
-    const RECENCY_EXP_BASE = 1.05;
+    const RECENCY_EXP_BASE = 1.06;
     const recentData = this.historicalData.slice(-recencyThreshold);
     const frequencyMap = this.createFrequencyMap(bestGuessSet);
 
@@ -527,8 +527,8 @@ export class PowerballService {
             // [1, 3, 4, 5, 8, 9, 14, 15, 16, 17, 20, 21, 22, 23]
             // console.log(pb);
             // result = [1, 9, 24, 14, 15, 18, 4, 12, 10, 23, 20, 8, 17];
-            // result = [24, 3, 5, 4, 14, 9, 18, 20, 23];
-            result = pb;
+            result = [24, 3, 5, 4, 17, 9, 20];
+            // result = pb;
             break;
           case 'first':
             result = this.findDuplicates(

@@ -49,15 +49,17 @@ export class AppComponent implements OnInit {
     this.newGenResults = {};
     this.playBasedOnPredictedPowerballResults = {};
 
+    const loopCount = 2;
+
     const newGenPrediction = [];
-    for (let step = 0; step < 20; step++) {
+    for (let step = 0; step < loopCount; step++) {
       const newPrediction =
         await this.predictionService.generatePowerballPlay();
       newGenPrediction.push(newPrediction);
     }
 
     const predictPlayBasedOnPredictedPowerball = [];
-    for (let step = 0; step < 20; step++) {
+    for (let step = 0; step < loopCount; step++) {
       const BFPB = this.predictionService.predictPlayBasedOnPredictedPowerball();
 
       predictPlayBasedOnPredictedPowerball.push(BFPB);
@@ -65,11 +67,11 @@ export class AppComponent implements OnInit {
 
     this.playBasedOnPredictedPowerballResults = this.pickCheckerService.checkPicks(predictPlayBasedOnPredictedPowerball);
 
-    console.group('playBasedOnPredictedPowerballResults');
-    console.log(this.playBasedOnPredictedPowerballResults);
-    console.groupEnd();
+    // console.group('playBasedOnPredictedPowerballResults');
+    // console.log(this.playBasedOnPredictedPowerballResults);
+    // console.groupEnd();
 
-    for (let step = 0; step < 20; step++) {
+    for (let step = 0; step < loopCount; step++) {
       const generatePowerballPlayResults =
         await this.powerballService.generatePowerballPlay();
       const pastDrawingCount = 200;
@@ -119,15 +121,15 @@ export class AppComponent implements OnInit {
 
     this.newGenResults = this.pickCheckerService.checkPicks(newGenPrediction);
 
-    console.group('newGenResults');
-    console.log(this.newGenResults);
-    console.groupEnd();
+    // console.group('newGenResults');
+    // console.log(this.newGenResults);
+    // console.groupEnd();
 
     this.winningPicks = this.pickCheckerService.checkPicks(this.history);
 
-    console.group('legacyGenResults: ');
-    console.log(this.winningPicks);
-    console.groupEnd();
+    // console.group('legacyGenResults: ');
+    // console.log(this.winningPicks);
+    // console.groupEnd();
 
     const combindResults = this.pickCheckerService.checkPicks([...newGenPrediction, ...this.history, ...predictPlayBasedOnPredictedPowerball])
 

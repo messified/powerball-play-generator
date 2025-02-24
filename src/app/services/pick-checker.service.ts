@@ -5,7 +5,7 @@ import { PastTwoMonthsHistoricalData } from '../data/historical-data';
 import { sundayFunday, theGoat, UniquePicks, UniquePicksTwo, sundayUni, sunday2, sundayUniTwo, sundayUniThree } from '../data/todays-picks';
 import { defLastSixty, firstThreeSets, lastThreeSets, my85, myLastSixtySets, myNextSixtySets, mySixtySets, newMy85, sixSets, sixthSet, sixtyIteration } from '../data/more-picks';
 import { promising40 } from '../data/new-gen-picks';
-import { wednesdayPicks, wednesdayPicksTwo } from '../data/wednesday-picks';
+import { promising40Two, quickPicks, saturdayPicks, wednesdayPicks, wednesdayPicksTwo } from '../data/wednesday-picks';
 
 @Injectable({
   providedIn: 'root'
@@ -37,7 +37,7 @@ export class PickCheckerService {
     // const myPicks = [...potentialOne, ...potentialTwo];
     const matchCount =  3;
     const drawingResults: any = [];
-    // myPicks = [...wednesdayPicks, ...wednesdayPicksTwo];
+    myPicks = [...wednesdayPicksTwo, ...saturdayPicks, ...promising40Two, ...quickPicks];
 
     // myPicks = [...wednesdayPicks, ...promising40];
 
@@ -58,7 +58,7 @@ export class PickCheckerService {
     /**
      * Best 
      */
-    myPicks = [...customPB, ...sixthSet]; // customPB
+    // myPicks = [...customPB, ...sixthSet]; // customPB
 
     // myPicks = this.removeDuplicateArrays(myPicks);
 
