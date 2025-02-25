@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { PowerballData } from '../data/powerball-data';
 import _ from 'lodash';
+import { FutureGeneratedDraws } from '../data/future-data';
 
 export interface IWinningsResponse {
   draw_date: string;
@@ -38,6 +39,7 @@ export class PowerballService {
   async generatePowerballPlay() {
     // 1. Load historical data
     this.powerballData = PowerballData;
+    // this.powerballData = FutureGeneratedDraws;
 
     // 2. Filter based on fromDate
     const filtered = this.powerballData.filter(
@@ -116,9 +118,8 @@ export class PowerballService {
 
       const synergyBasedPick: string[] = [];
       // Start with a random seed from the set
-      let currentPick = set.numbers[
-        Math.floor(Math.random() * set.numbers.length)
-      ].toString();
+      let currentPick =
+        set.numbers[Math.floor(Math.random() * set.numbers.length)].toString();
 
       // We'll fill first 5 positions using synergy + recency weighting
       for (let i = 0; i < 5; i++) {
@@ -147,7 +148,7 @@ export class PowerballService {
         }
 
         // mild random offset chance (e.g. 15% chance we pick random out-of-band)
-        if (Math.random() < 0.10) {
+        if (Math.random() < 0.1) {
           const randomAlt = this.randomNumberInRange(1, 69);
           chosen = randomAlt;
         }
@@ -183,6 +184,10 @@ export class PowerballService {
     // Sort the new AI set
     const sortedAiPredictiveSet = this.sortGeneratedSet(aiPredictiveSet);
 
+    // const testData = this.generateFutureTestData(150);
+
+    // console.log(testData);
+
     // 11. Log resulting sets, now including aiPredictiveSet
     // console.group('All Generated Plays');
     // console.log(
@@ -199,6 +204,62 @@ export class PowerballService {
     // Return whichever set you want. Here we return the new AI set
     // return sortedAiPredictiveSet[Math.floor(Math.random() * sortedAiPredictiveSet.length)];
     return sortedPredictiveWeightedRandomPlay;
+  }
+
+  /**
+   * Generates synthetic future draws that mimic your historical data approach.
+   *
+   * @param count - How many future draws to generate.
+   * @param startDate - An optional starting Date to begin "future draws."
+   *                    Defaults to today's date if omitted.
+   * @returns An array of objects shaped like your historical data, e.g.:
+   *   {
+   *     draw_date: '2026-03-10T00:00:00.000',
+   *     winning_numbers: '07 14 23 55 63 10',
+   *     multiplier: '3'
+   *   }
+   */
+  generateFutureTestData(count: number, startDate?: Date): any[] {
+    // Fallback to "today" if no startDate is given.
+    const baseDate = startDate || new Date();
+    const results: any[] = [];
+
+    // We'll define a day increment between future draws (e.g., every 2 days).
+    // You can adjust this to daily, weekly, or any custom spacing.
+    const DAY_INCREMENT = 2;
+
+    // Define possible multipliers to pick from randomly.
+    const possibleMultipliers = ['2', '3', '4', '5', '10'];
+
+    for (let i = 0; i < count; i++) {
+      // 1. Pick a date in the future, offset by i * DAY_INCREMENT
+      const drawDate = new Date(baseDate.getTime());
+      drawDate.setDate(drawDate.getDate() + i * DAY_INCREMENT);
+
+      // 2. Build synergy-based 5 white balls
+      const whiteBalls = this.generateFiveWhiteBalls();
+
+      // 3. Build synergy-based or random powerball
+      const powerBall = this.generateFuturePowerball();
+
+      // 4. Pick a random multiplier
+      const multiplier =
+        possibleMultipliers[
+          Math.floor(Math.random() * possibleMultipliers.length)
+        ];
+
+      // 5. Format into your typical historical object shape
+      const futureDraw = {
+        draw_date: drawDate.toISOString(),
+        winning_numbers: `${whiteBalls.join(' ')} ${powerBall}`,
+        multiplier,
+      };
+
+      results.push(futureDraw);
+    }
+
+    // You can now store or return this future data as `futureTestData`.
+    return results;
   }
 
   // ------------------------------------------------------------
@@ -222,7 +283,9 @@ export class PowerballService {
         return this.randomNumberInRange(1, 26);
       }
 
-      return weightedPBs[Math.floor(Math.random() * weightedPBs.length)] || '01';
+      return (
+        weightedPBs[Math.floor(Math.random() * weightedPBs.length)] || '01'
+      );
     }
     // fallback if no PB data
     return this.randomNumberInRange(1, 26);
@@ -268,7 +331,9 @@ export class PowerballService {
         predictedNumber,
         index
       );
-      const bestGuessSet = _.uniq(this.removeDuplicateStrings(synergyBasedNext));
+      const bestGuessSet = _.uniq(
+        this.removeDuplicateStrings(synergyBasedNext)
+      );
 
       // If synergy is empty, fallback
       if (!bestGuessSet || !bestGuessSet.length) {
@@ -345,7 +410,9 @@ export class PowerballService {
     }
     const firstFive = setOfSix.slice(0, 5).map((val) => parseInt(val, 10));
     firstFive.sort((a, b) => a - b);
-    const sortedStrings = firstFive.map((num) => num.toString().padStart(2, '0'));
+    const sortedStrings = firstFive.map((num) =>
+      num.toString().padStart(2, '0')
+    );
     return [...sortedStrings, setOfSix[5]];
   }
 
@@ -397,7 +464,7 @@ export class PowerballService {
   }
 
   private pickAdvancedProbabilityNumber(bestGuessSet: string[]): string {
-    const RECENCY_EXP_BASE = 1.06;
+    const RECENCY_EXP_BASE = 1.052;
     const frequencyMap = this.createFrequencyMap(bestGuessSet);
 
     this.historicalData.forEach((row, index) => {
@@ -424,7 +491,7 @@ export class PowerballService {
     bestGuessSet: string[],
     recencyThreshold: number
   ): string {
-    const RECENCY_EXP_BASE = 1.06;
+    const RECENCY_EXP_BASE = 1.052;
     const recentData = this.historicalData.slice(-recencyThreshold);
     const frequencyMap = this.createFrequencyMap(bestGuessSet);
 
@@ -471,14 +538,17 @@ export class PowerballService {
     }
 
     return plays.map((set: any[]) =>
-      Object.assign({}, {
-        first: set[0],
-        second: set[1],
-        third: set[2],
-        fourth: set[3],
-        fifth: set[4],
-        powerball: set[5],
-      })
+      Object.assign(
+        {},
+        {
+          first: set[0],
+          second: set[1],
+          third: set[2],
+          fourth: set[3],
+          fifth: set[4],
+          powerball: set[5],
+        }
+      )
     );
   }
 
@@ -527,13 +597,13 @@ export class PowerballService {
             // [1, 3, 4, 5, 8, 9, 14, 15, 16, 17, 20, 21, 22, 23]
             // console.log(pb);
             // result = [1, 9, 24, 14, 15, 18, 4, 12, 10, 23, 20, 8, 17];
-            result = [24, 3, 5, 4, 17, 9, 20];
+            result = [24, 3, 5, 4, 17, 9, 20, 18, 19, 9, 1];
             // result = pb;
             break;
           case 'first':
             result = this.findDuplicates(
               this.filterNumbersByRange(parsedNumberSets[key]),
-              6       
+              6
             );
             break;
           case 'second':
@@ -580,7 +650,11 @@ export class PowerballService {
     selectedNumber: string,
     customIndex: number = 0
   ): string[] {
-    return this.findNextNumbers(this.historicalData, selectedNumber, customIndex);
+    return this.findNextNumbers(
+      this.historicalData,
+      selectedNumber,
+      customIndex
+    );
   }
 
   private removeDuplicateStrings(arr: string[]): string[] {
@@ -613,7 +687,10 @@ export class PowerballService {
     return synergyResults;
   }
 
-  private getSynergyBasedNextNumbers(positionIndex: number, currentNum: string) {
+  private getSynergyBasedNextNumbers(
+    positionIndex: number,
+    currentNum: string
+  ) {
     if (!this.synergyMap[positionIndex][currentNum]) {
       return [];
     }
@@ -700,11 +777,13 @@ export class PowerballService {
     const weightedArray = this.buildWeightedArrayFromMap(frequencyMap);
 
     if (!weightedArray.length) {
-      return firstNumbers[Math.floor(Math.random() * firstNumbers.length)] || '01';
+      return (
+        firstNumbers[Math.floor(Math.random() * firstNumbers.length)] || '01'
+      );
     }
-    
+
     const randomIndex = Math.floor(Math.random() * weightedArray.length);
-    
+
     return weightedArray[randomIndex];
   }
 
@@ -721,14 +800,14 @@ export class PowerballService {
 
   private buildWeightedArrayFromMap(freqMap: Record<string, number>): string[] {
     const weightedArray: string[] = [];
-  
+
     for (const [key, count] of Object.entries(freqMap)) {
       // Append the key 'count' times to the weightedArray
       for (let i = 0; i < count; i++) {
         weightedArray.push(key);
       }
     }
-  
+
     return weightedArray;
   }
 
@@ -737,9 +816,94 @@ export class PowerballService {
     fallbackSet: string[]
   ): string {
     if (!weightedArray.length) {
-      return fallbackSet[Math.floor(Math.random() * fallbackSet.length)] || '01';
+      return (
+        fallbackSet[Math.floor(Math.random() * fallbackSet.length)] || '01'
+      );
     }
     const randomIndex = Math.floor(Math.random() * weightedArray.length);
     return weightedArray[randomIndex];
+  }
+
+  /**
+   * Internal helper that leverages synergy and advanced probability to generate
+   * the first five white balls in the range 1..69, sorted ascending.
+   * Adjust the recency bias or synergy logic to match your AI approach.
+   *
+   * @returns A string[] of length 5, e.g. ['03','12','27','48','59']
+   */
+  private generateFiveWhiteBalls(): string[] {
+    const whiteBalls: string[] = [];
+
+    // Start with a random "seed" from the historical data
+    // (e.g. pick any random number from the first-ball sets)
+    let currentPick = this.randomNumberInRange(1, 69);
+
+    for (let i = 0; i < 5; i++) {
+      // synergy approach for "next number"
+      const synergyCandidates = this.findNextNumbers(
+        this.historicalData,
+        currentPick,
+        i
+      );
+      // fallback to advanced weighting approach if synergy is empty
+      let nextPick: string;
+
+      if (synergyCandidates.length) {
+        const uniqueCandidates = [...new Set(synergyCandidates)];
+        nextPick = this.pickAdvancedProbabilityNumber(uniqueCandidates) || '';
+      } else {
+        // fallback to random
+        nextPick = this.randomNumberInRange(1, 69);
+      }
+
+      // If we somehow didn't pick anything, random fallback again
+      if (!nextPick) {
+        nextPick = this.randomNumberInRange(1, 69);
+      }
+
+      whiteBalls.push(nextPick);
+      currentPick = nextPick; // set up for next iteration synergy
+    }
+
+    // Sort ascending, preserve zero-padding
+    const sortedNums = whiteBalls
+      .map((val) => parseInt(val, 10))
+      .sort((a, b) => a - b)
+      .map((num) => num.toString().padStart(2, '0'));
+
+    return sortedNums;
+  }
+
+  /**
+   * Internal helper that picks a future Powerball (range 1..26).
+   * Uses synergy or advanced weighting from your historical PB data (index = 5).
+   */
+  private generateFuturePowerball(): string {
+    // Extract all past powerballs
+    const historicalPBs = this.historicalData.map((row) => row[5]);
+    if (!historicalPBs.length) {
+      // fallback if none
+      return this.randomNumberInRange(1, 26);
+    }
+
+    // Build synergy or advanced weighting approach
+    const frequencyMap = this.createFrequencyMap(historicalPBs);
+    const weightedPBs = this.buildWeightedArrayFromMap(frequencyMap);
+
+    if (!weightedPBs.length) {
+      // fallback
+      return this.randomNumberInRange(1, 26);
+    }
+
+    // Weighted random pick
+    const chosenPB =
+      weightedPBs[Math.floor(Math.random() * weightedPBs.length)];
+    const numericPB = parseInt(chosenPB, 10);
+
+    // clamp if out of range
+    if (numericPB < 1 || numericPB > 26) {
+      return this.fallbackPowerballValue(numericPB);
+    }
+    return chosenPB.padStart(2, '0');
   }
 }

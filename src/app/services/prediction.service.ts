@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { PowerballData } from '../data/powerball-data';
 import _ from 'lodash';
+import { FutureGeneratedDraws } from '../data/future-data';
 
 export interface IWinningsResponse {
   draw_date: string;
@@ -62,6 +63,7 @@ export class PredictionService {
   async generatePowerballPlay(): Promise<string[]> {
     // Load and format historical data.
     this.powerballData = PowerballData;
+    // this.powerballData = FutureGeneratedDraws;
     const formattedData = this.powerballData.map((result: { draw_date: any; winning_numbers: string; multiplier: any; }) => ({
       date: result.draw_date,
       numbers: result.winning_numbers.split(' '),

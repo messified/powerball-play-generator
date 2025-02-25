@@ -6,13 +6,14 @@ import { sundayFunday, theGoat, UniquePicks, UniquePicksTwo, sundayUni, sunday2,
 import { defLastSixty, firstThreeSets, lastThreeSets, my85, myLastSixtySets, myNextSixtySets, mySixtySets, newMy85, sixSets, sixthSet, sixtyIteration } from '../data/more-picks';
 import { promising40 } from '../data/new-gen-picks';
 import { promising40Two, quickPicks, saturdayPicks, wednesdayPicks, wednesdayPicksTwo } from '../data/wednesday-picks';
+import { FutureGeneratedDraws } from '../data/future-data';
 
 @Injectable({
   providedIn: 'root'
 })
 export class PickCheckerService {
 
-  historicalDrawings = PowerballData.map((obj: any) => {
+  historicalDrawings = FutureGeneratedDraws.map((obj: any) => {
     return {
       date: obj.draw_date,
       numbers: obj.winning_numbers.split(' '),
@@ -35,9 +36,9 @@ export class PickCheckerService {
     // myPicks = customPB;
     // myPicks = [...newDayFour,...newDay11]; // Prospect
     // const myPicks = [...potentialOne, ...potentialTwo];
-    const matchCount =  3;
+    const matchCount =  4;
     const drawingResults: any = [];
-    myPicks = [...wednesdayPicksTwo, ...saturdayPicks, ...promising40Two, ...quickPicks];
+    // myPicks = [...wednesdayPicksTwo, ...saturdayPicks, ...promising40Two, ...quickPicks];
 
     // myPicks = [...wednesdayPicks, ...promising40];
 

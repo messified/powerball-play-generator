@@ -49,7 +49,7 @@ export class AppComponent implements OnInit {
     this.newGenResults = {};
     this.playBasedOnPredictedPowerballResults = {};
 
-    const loopCount = 2;
+    const loopCount = 20;
 
     const newGenPrediction = [];
     for (let step = 0; step < loopCount; step++) {
