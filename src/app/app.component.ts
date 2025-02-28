@@ -24,6 +24,8 @@ export class AppComponent implements OnInit {
   year = new Date().getFullYear();
   totalMatches: number = 0;
 
+  aiResults: any[] = [];
+
   recentDrawings: string[][] = [];
   matchingSets: { index: number }[] = [];
   latestDrawing: any = {};
@@ -48,8 +50,9 @@ export class AppComponent implements OnInit {
     this.history = [];
     this.newGenResults = {};
     this.playBasedOnPredictedPowerballResults = {};
+    this.aiResults = [];
 
-    const loopCount = 20;
+    const loopCount = 1;
 
     const newGenPrediction = [];
     for (let step = 0; step < loopCount; step++) {
@@ -82,7 +85,7 @@ export class AppComponent implements OnInit {
       this.latestDrawing = recentDrawings[0];
 
       // Format play results to ensure two digits
-      this.play = generatePowerballPlayResults.map((num: string | any[]) =>
+      this.play = generatePowerballPlayResults.predictiveWeightedRandomPlay.map((num: string | any[]) =>
         num.length === 1 ? `0${num}` : num
       );
 
@@ -112,6 +115,8 @@ export class AppComponent implements OnInit {
 
       // Save play to history
       this.history.push([...this.play]);
+
+      this.aiResults.push([...generatePowerballPlayResults.predictiveFreqPredictedPlay]);
     }
 
     this.toastr.success('', 'Generated Powerball Play', {
@@ -129,6 +134,12 @@ export class AppComponent implements OnInit {
 
     // console.group('legacyGenResults: ');
     // console.log(this.winningPicks);
+    // console.groupEnd();
+
+    const aiResults = this.pickCheckerService.checkPicks(this.aiResults);
+
+    // console.group('aiResults: ');
+    // console.log(aiResults);
     // console.groupEnd();
 
     const combindResults = this.pickCheckerService.checkPicks([...newGenPrediction, ...this.history, ...predictPlayBasedOnPredictedPowerball])

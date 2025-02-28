@@ -160,6 +160,10 @@ export class PowerballService {
       // Choose powerball with synergy or random
       const chosenPB = this.pickPowerballAi();
 
+      // console.group('chosenPB');
+      // console.log(chosenPB);
+      // console.groupEnd();
+
       // Enforce PB range
       const numericPB = parseInt(chosenPB, 10);
       const validPB =
@@ -184,9 +188,9 @@ export class PowerballService {
     // Sort the new AI set
     const sortedAiPredictiveSet = this.sortGeneratedSet(aiPredictiveSet);
 
-    // const testData = this.generateFutureTestData(150);
+    const testData = this.generateFutureTestData(150);
 
-    // console.log(testData);
+    console.log(testData);
 
     // 11. Log resulting sets, now including aiPredictiveSet
     // console.group('All Generated Plays');
@@ -203,7 +207,13 @@ export class PowerballService {
 
     // Return whichever set you want. Here we return the new AI set
     // return sortedAiPredictiveSet[Math.floor(Math.random() * sortedAiPredictiveSet.length)];
-    return sortedPredictiveWeightedRandomPlay;
+    return {
+      initialPlay: sortedInitialPlay,
+      predictiveFreqPredictedPlay: sortedPredictiveFreqPredictedPlay,
+      predictiveWeightedRandomPlay: sortedPredictiveWeightedRandomPlay,
+      highestProbabilityPlay: sortedHighestProbabilityPlay,
+      aiPredictiveSet: sortedAiPredictiveSet,
+    };
   }
 
   /**
@@ -826,43 +836,56 @@ export class PowerballService {
 
   /**
    * Internal helper that leverages synergy and advanced probability to generate
-   * the first five white balls in the range 1..69, sorted ascending.
-   * Adjust the recency bias or synergy logic to match your AI approach.
+   * five unique white balls in the range 1..69, sorted ascending.
+   * Adjust the recency bias or synergy logic as desired.
    *
-   * @returns A string[] of length 5, e.g. ['03','12','27','48','59']
+   * @returns A string[] of length 5, e.g. ['03','12','27','48','59'],
+   *          guaranteed to have no duplicates.
    */
   private generateFiveWhiteBalls(): string[] {
     const whiteBalls: string[] = [];
 
-    // Start with a random "seed" from the historical data
-    // (e.g. pick any random number from the first-ball sets)
+    // Start with a random "seed" from the historical data or random fallback
     let currentPick = this.randomNumberInRange(1, 69);
 
     for (let i = 0; i < 5; i++) {
-      // synergy approach for "next number"
-      const synergyCandidates = this.findNextNumbers(
+      // Try synergy approach for the "next number"
+      let synergyCandidates = this.findNextNumbers(
         this.historicalData,
         currentPick,
         i
       );
-      // fallback to advanced weighting approach if synergy is empty
-      let nextPick: string;
 
-      if (synergyCandidates.length) {
-        const uniqueCandidates = [...new Set(synergyCandidates)];
-        nextPick = this.pickAdvancedProbabilityNumber(uniqueCandidates) || '';
-      } else {
-        // fallback to random
-        nextPick = this.randomNumberInRange(1, 69);
+      // If synergy is empty, fallback to an empty array so we skip synergy entirely
+      if (!synergyCandidates || synergyCandidates.length === 0) {
+        synergyCandidates = [];
       }
 
-      // If we somehow didn't pick anything, random fallback again
+      // Remove duplicates, just in case synergyCandidates repeated entries
+      synergyCandidates = [...new Set(synergyCandidates)];
+
+      // Use advanced recency weighting if synergyCandidates has data
+      let nextPick: string | null = null;
+      if (synergyCandidates.length > 0) {
+        nextPick = this.pickAdvancedProbabilityNumber(synergyCandidates);
+      }
+
+      // If synergy picking fails or returns an empty string, fallback to random
       if (!nextPick) {
         nextPick = this.randomNumberInRange(1, 69);
       }
 
+      // Ensure uniqueness: if we've already used nextPick, we re-roll
+      let attempts = 0;
+      while (whiteBalls.includes(nextPick) && attempts < 20) {
+        // Try synergy again or fallback to random
+        nextPick = this.randomNumberInRange(1, 69);
+        attempts++;
+      }
+
+      // At this point, nextPick should be unique or we forcibly keep it
       whiteBalls.push(nextPick);
-      currentPick = nextPick; // set up for next iteration synergy
+      currentPick = nextPick; // used for next synergy
     }
 
     // Sort ascending, preserve zero-padding
