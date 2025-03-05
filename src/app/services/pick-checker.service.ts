@@ -8,23 +8,33 @@ import { promising40 } from '../data/new-gen-picks';
 import { allThePicks, allThePicksFiltered, promising40Two, quickPicks, quickPicksTwo, saturdayPicks, wednesdayPicks, wednesdayPicksTwo } from '../data/wednesday-picks';
 import { FDRAWS, FutureGeneratedDraws, NewFutureDraws, NewFutureDrawsTwo } from '../data/future-data';
 import _ from 'lodash';
+import { ChartData } from 'chart.js';
+import { BehaviorSubject } from 'rxjs';
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class PickCheckerService {
-
   historicalDrawings = PowerballData.map((obj: any) => {
     return {
       date: obj.draw_date,
       numbers: obj.winning_numbers.split(' '),
-      multiplier: obj.multiplier
-    }
+      multiplier: obj.multiplier,
+    };
   });
 
   winningPicks: any = [];
 
-  constructor() { }
+  // Create an initial dataset (can be empty or pre-populated)
+  private initialChartData = [];
+
+  // Create a BehaviorSubject holding the current chart data
+  private chartDataSubject = new BehaviorSubject<string[][]>(this.initialChartData);
+
+  // Expose the chart data as an Observable
+  chartData$ = this.chartDataSubject.asObservable();
+
+  constructor() {}
 
   checkPicks(myPicks: any) {
     /**
@@ -37,7 +47,7 @@ export class PickCheckerService {
     // myPicks = customPB;
     // myPicks = [...newDayFour,...newDay11]; // Prospect
     // const myPicks = [...potentialOne, ...potentialTwo];
-    const matchCount =  4;
+    const matchCount = 2;
     const drawingResults: any = [];
     // myPicks = allThePicks;
     // myPicks = [...wednesdayPicksTwo, ...saturdayPicks, ...promising40Two, ...quickPicks, ...quickPicksTwo];
@@ -59,7 +69,7 @@ export class PickCheckerService {
     // myPicks = [...UniquePicks, ...UniquePicksTwo];
 
     /**
-     * Best 
+     * Best
      */
     // myPicks = [...customPB, ...sixthSet]; // customPB
 
@@ -70,8 +80,8 @@ export class PickCheckerService {
     // myPicks = myNextSixtySets;
     // myPicks = myLastSixtySets;
     // myPicks = sixtyIteration;
-    
-    this.historicalDrawings.forEach(draw => {
+
+    this.historicalDrawings.forEach((draw) => {
       drawingResults.push(this.processPicks(draw, myPicks, matchCount));
     });
 
@@ -86,7 +96,7 @@ export class PickCheckerService {
     //   if (win && win.matching_picks) {
     //     const matchingPicks: string[][] = win.matching_picks;
     //     const historicalDraw = win.historical_draw;
-        
+
     //     matchingPicks.forEach((pick: string[]) => {
     //       if(!_.isEqual(historicalDraw, pick)) {
     //         picks.push(pick);
@@ -98,13 +108,20 @@ export class PickCheckerService {
     // console.log('PICKS!!!!!!')
     // console.log(this.removeDuplicateArrays(picks));
 
+    this.updateChartData(wins);
+
     return {
       totalWins: wins.length,
       totalDraws: this.historicalDrawings.length,
       myPicks: myPicks.length,
       picks: myPicks,
-      wins
-    }
+      wins,
+    };
+  }
+
+  // Function that generates new chart data and updates the subject
+  updateChartData(newData: string[][]): void {
+    this.chartDataSubject.next(newData);
   }
 
   processPicks(draw: any, myPks: any, matchCount: number): any {
@@ -115,8 +132,12 @@ export class PickCheckerService {
     // const uniqueArrays = removeDuplicateArrays(generatedPicks);
     const uniqueArrays = this.removeDuplicateArrays(myPks);
 
-    const matchingPicks = this.filterArrays(uniqueArrays, historicalDraw, matchCount);
-    
+    const matchingPicks = this.filterArrays(
+      uniqueArrays,
+      historicalDraw,
+      matchCount
+    );
+
     if (matchingPicks.length > 0) {
       const result = {
         // day: moment(draw.date).format('dddd'),
@@ -124,7 +145,7 @@ export class PickCheckerService {
         historical_draw: historicalDraw,
         matching_picks_count: matchingPicks.length,
         matching_picks: matchingPicks,
-        multiplier
+        multiplier,
       };
 
       return result;
@@ -140,7 +161,7 @@ export class PickCheckerService {
    */
   removeDuplicateArrays(arrays: string[][]): string[][] {
     const seen = new Set<string>();
-    return arrays.filter(arr => {
+    return arrays.filter((arr) => {
       const key = arr.join(',');
       if (seen.has(key)) {
         return false;
@@ -160,11 +181,15 @@ export class PickCheckerService {
    * @param historicalDraw - The array used for comparison.
    * @returns A new array of arrays that have at least three matching values as defined.
    */
-  filterArrays(generatedPicks: string[][], historicalDraw: string[], count: number): string[][] {
+  filterArrays(
+    generatedPicks: string[][],
+    historicalDraw: string[],
+    count: number
+  ): string[][] {
     // Create a set for quick lookup of the first five elements of historicalDraw.
     const singleFirstFive = new Set(historicalDraw.slice(0, 5));
 
-    return generatedPicks.filter(subArray => {
+    return generatedPicks.filter((subArray) => {
       let matchCount = 0;
 
       // Only consider indices 0 to 4.
