@@ -5,15 +5,16 @@ import { PastTwoMonthsHistoricalData } from '../data/historical-data';
 import { sundayFunday, theGoat, UniquePicks, UniquePicksTwo, sundayUni, sunday2, sundayUniTwo, sundayUniThree } from '../data/todays-picks';
 import { defLastSixty, firstThreeSets, lastThreeSets, my85, myLastSixtySets, myNextSixtySets, mySixtySets, newMy85, sixSets, sixthSet, sixtyIteration } from '../data/more-picks';
 import { promising40 } from '../data/new-gen-picks';
-import { promising40Two, quickPicks, quickPicksTwo, saturdayPicks, wednesdayPicks, wednesdayPicksTwo } from '../data/wednesday-picks';
+import { allThePicks, allThePicksFiltered, promising40Two, quickPicks, quickPicksTwo, saturdayPicks, wednesdayPicks, wednesdayPicksTwo } from '../data/wednesday-picks';
 import { FDRAWS, FutureGeneratedDraws, NewFutureDraws, NewFutureDrawsTwo } from '../data/future-data';
+import _ from 'lodash';
 
 @Injectable({
   providedIn: 'root'
 })
 export class PickCheckerService {
 
-  historicalDrawings = FDRAWS.map((obj: any) => {
+  historicalDrawings = PowerballData.map((obj: any) => {
     return {
       date: obj.draw_date,
       numbers: obj.winning_numbers.split(' '),
@@ -36,9 +37,10 @@ export class PickCheckerService {
     // myPicks = customPB;
     // myPicks = [...newDayFour,...newDay11]; // Prospect
     // const myPicks = [...potentialOne, ...potentialTwo];
-    const matchCount =  2;
+    const matchCount =  4;
     const drawingResults: any = [];
-    myPicks = [...wednesdayPicksTwo, ...saturdayPicks, ...promising40Two, ...quickPicks, ...quickPicksTwo];
+    // myPicks = allThePicks;
+    // myPicks = [...wednesdayPicksTwo, ...saturdayPicks, ...promising40Two, ...quickPicks, ...quickPicksTwo];
 
     // myPicks = [...wednesdayPicks, ...promising40];
 
@@ -78,6 +80,23 @@ export class PickCheckerService {
         return win;
       }
     });
+
+    // const picks: string[][] = [];
+    // drawingResults.forEach((win: any) => {
+    //   if (win && win.matching_picks) {
+    //     const matchingPicks: string[][] = win.matching_picks;
+    //     const historicalDraw = win.historical_draw;
+        
+    //     matchingPicks.forEach((pick: string[]) => {
+    //       if(!_.isEqual(historicalDraw, pick)) {
+    //         picks.push(pick);
+    //       }
+    //     });
+    //   }
+    // });
+
+    // console.log('PICKS!!!!!!')
+    // console.log(this.removeDuplicateArrays(picks));
 
     return {
       totalWins: wins.length,

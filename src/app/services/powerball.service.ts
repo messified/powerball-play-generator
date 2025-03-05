@@ -188,9 +188,9 @@ export class PowerballService {
     // Sort the new AI set
     const sortedAiPredictiveSet = this.sortGeneratedSet(aiPredictiveSet);
 
-    const testData = this.generateFutureTestData(150);
+    // const testData = this.generateFutureTestData(150);
 
-    console.log(testData);
+    // console.log(testData);
 
     // 11. Log resulting sets, now including aiPredictiveSet
     // console.group('All Generated Plays');
