@@ -7,12 +7,12 @@ import { PredictionService } from '../services/prediction.service';
 import { CommonModule } from '@angular/common';
 import { HttpClientModule } from '@angular/common/http';
 import { provideAnimations } from '@angular/platform-browser/animations';
-import { DashboardComponent } from '../dashboard/dashboard.component';
+import { ChartComponent } from '../chart/chart.component';
 
 @Component({
   selector: 'app-play-generator',
   standalone: true,
-  imports: [CommonModule, ToastrModule, HttpClientModule, LightboxModule, DashboardComponent],
+  imports: [CommonModule, ToastrModule, HttpClientModule, LightboxModule, ChartComponent],
   providers: [PowerballService, provideAnimations(), PredictionService],
   templateUrl: './play-generator.component.html',
   styleUrl: './play-generator.component.scss'
@@ -52,23 +52,23 @@ export class PlayGeneratorComponent implements OnInit {
     this.playBasedOnPredictedPowerballResults = {};
     this.aiResults = [];
 
-    const loopCount = 1;
+    const loopCount = 150;
 
-    const newGenPrediction = [];
-    for (let step = 0; step < loopCount; step++) {
-      const newPrediction =
-        await this.predictionService.generatePowerballPlay();
-      newGenPrediction.push(newPrediction);
-    }
+    // const newGenPrediction = [];
+    // for (let step = 0; step < loopCount; step++) {
+    //   const newPrediction =
+    //     await this.predictionService.generatePowerballPlay();
+    //   newGenPrediction.push(newPrediction);
+    // }
 
-    const predictPlayBasedOnPredictedPowerball = [];
-    for (let step = 0; step < loopCount; step++) {
-      const BFPB = this.predictionService.predictPlayBasedOnPredictedPowerball();
+    // const predictPlayBasedOnPredictedPowerball = [];
+    // for (let step = 0; step < loopCount; step++) {
+    //   const BFPB = this.predictionService.predictPlayBasedOnPredictedPowerball();
 
-      predictPlayBasedOnPredictedPowerball.push(BFPB);
-    }
+    //   predictPlayBasedOnPredictedPowerball.push(BFPB);
+    // }
 
-    this.playBasedOnPredictedPowerballResults = this.pickCheckerService.checkPicks(predictPlayBasedOnPredictedPowerball);
+    // this.playBasedOnPredictedPowerballResults = this.pickCheckerService.checkPicks(predictPlayBasedOnPredictedPowerball);
 
     // console.group('playBasedOnPredictedPowerballResults');
     // console.log(this.playBasedOnPredictedPowerballResults);
@@ -116,7 +116,7 @@ export class PlayGeneratorComponent implements OnInit {
       // Save play to history
       this.history.push([...this.play]);
 
-      this.aiResults.push([...generatePowerballPlayResults.predictiveFreqPredictedPlay]);
+      // this.aiResults.push([...generatePowerballPlayResults.predictiveFreqPredictedPlay]);
     }
 
     this.toastr.success('', 'Generated Powerball Play', {
@@ -124,29 +124,31 @@ export class PlayGeneratorComponent implements OnInit {
       positionClass: 'toast-bottom-right',
     });
 
-    this.newGenResults = this.pickCheckerService.checkPicks(newGenPrediction);
+    // this.newGenResults = this.pickCheckerService.checkPicks(newGenPrediction);
 
     // console.group('newGenResults');
     // console.log(this.newGenResults);
     // console.groupEnd();
 
-    this.winningPicks = this.pickCheckerService.checkPicks(this.history);
+    // this.winningPicks = this.pickCheckerService.checkPicks(this.history);
 
     // console.group('legacyGenResults: ');
     // console.log(this.winningPicks);
     // console.groupEnd();
 
-    const aiResults = this.pickCheckerService.checkPicks(this.aiResults);
+    // const aiResults = this.pickCheckerService.checkPicks(this.aiResults);
 
     // console.group('aiResults: ');
     // console.log(aiResults);
     // console.groupEnd();
 
-    const combindResults = this.pickCheckerService.checkPicks([...newGenPrediction, ...this.history, ...predictPlayBasedOnPredictedPowerball])
+    // this.history = [...newGenPrediction, ...this.history, ...predictPlayBasedOnPredictedPowerball];
 
-    console.group('combindResults');
-    console.log(combindResults);
-    console.groupEnd();
+    this.pickCheckerService.checkPicks(this.history);
+
+    // console.group('combindResults');
+    // console.log(combindResults);
+    // console.groupEnd();
 
     // this.checkGeneratedPicks();
   }

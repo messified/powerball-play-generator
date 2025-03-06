@@ -1,8 +1,10 @@
 import { Routes } from '@angular/router';
-import { DashboardComponent } from './dashboard/dashboard.component';
 import { PlayGeneratorComponent } from './play-generator/play-generator.component';
 
 export const routes: Routes = [
-    { path: 'generator', component: PlayGeneratorComponent},
-    { path: 'dashboard', component: DashboardComponent },
-];
+    { path: 'generator', component: PlayGeneratorComponent },
+    // Optionally, redirect the empty path to wins-chart:
+    { path: '', redirectTo: '/generator', pathMatch: 'full' },
+    // Add a wildcard route if needed:
+    { path: '**', redirectTo: '/generator' }
+  ];

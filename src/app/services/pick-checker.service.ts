@@ -47,7 +47,7 @@ export class PickCheckerService {
     // myPicks = customPB;
     // myPicks = [...newDayFour,...newDay11]; // Prospect
     // const myPicks = [...potentialOne, ...potentialTwo];
-    const matchCount = 2;
+    const matchCount = 4;
     const drawingResults: any = [];
     // myPicks = allThePicks;
     // myPicks = [...wednesdayPicksTwo, ...saturdayPicks, ...promising40Two, ...quickPicks, ...quickPicksTwo];

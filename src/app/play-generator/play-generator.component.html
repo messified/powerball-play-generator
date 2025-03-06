@@ -1,4 +1,4 @@
-<div class="container">
+<div class="container-fluid">
     <div class="jumbotron">
       <img class="banner" src="img-responsive"
         src="../../../assets/powerball-logo.svg">
@@ -15,9 +15,9 @@
       </div>
     </div>
     <div class="row">
-        <div class="col">
-            <app-dashboard></app-dashboard>
-        </div>
+      <div class="col">
+          <app-chart></app-chart>
+      </div>
     </div>
     <div class="row" *ngIf="play">
       <div class="panel panel-primary">
@@ -63,11 +63,11 @@
         </li>
       </ul>
     </div>
-    <div *ngIf="recentDrawings && history.length >= 1" class="row button-row">
+    <!-- <div *ngIf="recentDrawings && history.length >= 1" class="row button-row">
       <div class="col">
         <button (click)="checkGeneratedPicks()" class="btn btn-secondary">Check Picks</button>
       </div>
-    </div>
+    </div> -->
     <div *ngIf="recentDrawings" class="row button-row">
       <div class="col">
         <button (click)="open()" class="btn btn-secondary">Ways to win!</button>
