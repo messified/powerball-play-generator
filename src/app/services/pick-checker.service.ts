@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { PowerballData } from '../data/powerball-data';
 import { anotherSet, anotherSixty, customPB, customPB10, customPB11, customPB12, customPB13, customPB5, customPB6, customPB7, customPB9, customPBFour, customPBThree, customPBTwo, generatedPicks, lastSixty, latestPicks, mergedPicks, mixedDupCount60, morePicks, newDay, newDay11, newDayEight, newDayFive, newDayFour, newDayNine, newDaySeven, newDaySix, newDayTen, newDayThree, newDayTwo, newPredictRandom, oneTwenty, potentialOne, potentialTwo, predictPlay, sixty, threeFifty } from '../data/generated-picks';
 import { PastTwoMonthsHistoricalData } from '../data/historical-data';
-import { sundayFunday, theGoat, UniquePicks, UniquePicksTwo, sundayUni, sunday2, sundayUniTwo, sundayUniThree } from '../data/todays-picks';
+import { sundayFunday, theGoat, UniquePicks, UniquePicksTwo, sundayUni, sunday2, sundayUniTwo, sundayUniThree, march22, march22V2, march19, march22V3, smallSetOne, smallSetTwo, smallSetThree, smallSetFour } from '../data/todays-picks';
 import { defLastSixty, firstThreeSets, lastThreeSets, my85, myLastSixtySets, myNextSixtySets, mySixtySets, newMy85, sixSets, sixthSet, sixtyIteration } from '../data/more-picks';
 import { promising40 } from '../data/new-gen-picks';
 import { allThePicks, allThePicksFiltered, promising40Two, quickPicks, quickPicksTwo, saturdayPicks, wednesdayPicks, wednesdayPicksTwo } from '../data/wednesday-picks';
@@ -10,6 +10,7 @@ import { FDRAWS, FutureGeneratedDraws, NewFutureDraws, NewFutureDrawsTwo } from 
 import _ from 'lodash';
 import { ChartData } from 'chart.js';
 import { BehaviorSubject } from 'rxjs';
+import moment from 'moment';
 
 @Injectable({
   providedIn: 'root',
@@ -47,8 +48,10 @@ export class PickCheckerService {
     // myPicks = customPB;
     // myPicks = [...newDayFour,...newDay11]; // Prospect
     // const myPicks = [...potentialOne, ...potentialTwo];
-    const matchCount = 2;
+    const matchCount = 3;
     const drawingResults: any = [];
+    myPicks = [...smallSetOne, ...smallSetTwo, ...smallSetThree, ...smallSetFour];
+    // myPicks = [...march19, ...march22V3];
     // myPicks = allThePicks;
     // myPicks = [...wednesdayPicksTwo, ...saturdayPicks, ...promising40Two, ...quickPicks, ...quickPicksTwo];
 
@@ -87,26 +90,32 @@ export class PickCheckerService {
 
     const wins = drawingResults.filter((win: any) => {
       if (win && win.matching_picks) {
+        win.month = moment(win.date).format('MMMM');
+        win.year = moment(win.date).format('YYYY');
+
         return win;
       }
     });
 
-    // const picks: string[][] = [];
-    // drawingResults.forEach((win: any) => {
-    //   if (win && win.matching_picks) {
-    //     const matchingPicks: string[][] = win.matching_picks;
-    //     const historicalDraw = win.historical_draw;
+    const sortedWins = _.sortBy(wins, 'year');
 
-    //     matchingPicks.forEach((pick: string[]) => {
-    //       if(!_.isEqual(historicalDraw, pick)) {
-    //         picks.push(pick);
-    //       }
-    //     });
-    //   }
-    // });
+    const picks: string[][] = [];
+    drawingResults.forEach((win: any) => {
+      if (win && win.matching_picks) {
+        const matchingPicks: string[][] = win.matching_picks;
+        const historicalDraw = win.historical_draw;
 
-    // console.log('PICKS!!!!!!')
-    // console.log(this.removeDuplicateArrays(picks));
+        matchingPicks.forEach((pick: string[]) => {
+          picks.push(pick);
+          // if(!_.isEqual(historicalDraw, pick)) {
+            
+          // }
+        });
+      }
+    });
+
+    console.log('PICKS!!!!!!')
+    console.log(this.removeDuplicateArrays(picks));
 
     this.updateChartData(wins);
 
@@ -116,6 +125,7 @@ export class PickCheckerService {
       myPicks: myPicks.length,
       picks: myPicks,
       wins,
+      sortedWins
     };
   }
 
@@ -123,6 +133,10 @@ export class PickCheckerService {
   updateChartData(newData: string[][]): void {
     this.chartDataSubject.next(newData);
   }
+
+  // updateBarCharData(newData): void {
+
+  // }
 
   processPicks(draw: any, myPks: any, matchCount: number): any {
     const historicalDraw = draw.numbers;

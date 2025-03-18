@@ -8,6 +8,7 @@ import { CommonModule } from '@angular/common';
 import { HttpClientModule } from '@angular/common/http';
 import { provideAnimations } from '@angular/platform-browser/animations';
 import { DashboardComponent } from '../dashboard/dashboard.component';
+import { groupBy } from 'lodash';
 
 @Component({
   selector: 'app-play-generator',
@@ -52,7 +53,7 @@ export class PlayGeneratorComponent implements OnInit {
     this.playBasedOnPredictedPowerballResults = {};
     this.aiResults = [];
 
-    const loopCount = 1;
+    const loopCount = 3;
 
     const newGenPrediction = [];
     for (let step = 0; step < loopCount; step++) {
@@ -143,9 +144,20 @@ export class PlayGeneratorComponent implements OnInit {
     // console.groupEnd();
 
     const combindResults = this.pickCheckerService.checkPicks([...newGenPrediction, ...this.history, ...predictPlayBasedOnPredictedPowerball])
-
+    const resultsArr = [];
+    const groupedResults: any = groupBy(combindResults.sortedWins, 'year');
+    const years = Object.keys(groupedResults);
+    const organizedResults = years.map((year: any) => {
+      return groupBy(groupedResults[year], 'month');
+    });
+    // const groupedByMonth = groupBy(groupedResults['2024'], 'month');
+    // console.log(groupedByMonth);
     console.group('combindResults');
     console.log(combindResults);
+    console.groupEnd();
+
+    console.group('organizedResults');
+    console.log(organizedResults);
     console.groupEnd();
 
     // this.checkGeneratedPicks();

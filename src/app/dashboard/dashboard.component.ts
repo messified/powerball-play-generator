@@ -145,11 +145,10 @@ export class DashboardComponent implements OnInit {
 
         // Prepare labels (dates) and data (multipliers)
         const labels = sortedData.map((entry) =>
-          new Date(entry.date).toLocaleDateString()
+          // new Date(entry.date).toLocaleDateString()
+          entry.month
         );
         const matchingPicks = this.wins.map((entry) => Number(entry.matching_picks_count));
-
-        console.log(matchingPicks);
 
         // Build the dataset compatible with Chart.js
         this.chartData = {
@@ -161,7 +160,7 @@ export class DashboardComponent implements OnInit {
               borderColor: 'rgba(75, 192, 192, 1)',
               backgroundColor: 'rgba(75, 192, 192, 0.2)',
               fill: false,
-              tension: 0.0,
+              tension: 0.1,
             },
           ],
         };
