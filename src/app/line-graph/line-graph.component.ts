@@ -20,14 +20,14 @@ interface Win {
 }
 
 @Component({
-  selector: 'app-dashboard',
+  selector: 'app-line-graph',
   standalone: true,
   imports: [BaseChartDirective],
   providers: [provideCharts(withDefaultRegisterables())],
-  templateUrl: './dashboard.component.html',
-  styleUrl: './dashboard.component.scss',
+  templateUrl: './line-graph.component.html',
+  styleUrl: './line-graph.component.scss',
 })
-export class DashboardComponent implements OnInit {
+export class LineGraphComponent implements OnInit {
   wins: any[] = [
     {
       date: '2025-02-17T00:00:00.000',
@@ -145,8 +145,7 @@ export class DashboardComponent implements OnInit {
 
         // Prepare labels (dates) and data (multipliers)
         const labels = sortedData.map((entry) =>
-          // new Date(entry.date).toLocaleDateString()
-          entry.month
+          new Date(entry.date).toLocaleDateString()
         );
         const matchingPicks = this.wins.map((entry) => Number(entry.matching_picks_count));
 

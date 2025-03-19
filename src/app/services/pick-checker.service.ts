@@ -1,14 +1,95 @@
 import { Injectable } from '@angular/core';
 import { PowerballData } from '../data/powerball-data';
-import { anotherSet, anotherSixty, customPB, customPB10, customPB11, customPB12, customPB13, customPB5, customPB6, customPB7, customPB9, customPBFour, customPBThree, customPBTwo, generatedPicks, lastSixty, latestPicks, mergedPicks, mixedDupCount60, morePicks, newDay, newDay11, newDayEight, newDayFive, newDayFour, newDayNine, newDaySeven, newDaySix, newDayTen, newDayThree, newDayTwo, newPredictRandom, oneTwenty, potentialOne, potentialTwo, predictPlay, sixty, threeFifty } from '../data/generated-picks';
+import {
+  anotherSet,
+  anotherSixty,
+  customPB,
+  customPB10,
+  customPB11,
+  customPB12,
+  customPB13,
+  customPB5,
+  customPB6,
+  customPB7,
+  customPB9,
+  customPBFour,
+  customPBThree,
+  customPBTwo,
+  generatedPicks,
+  lastSixty,
+  latestPicks,
+  mergedPicks,
+  mixedDupCount60,
+  morePicks,
+  newDay,
+  newDay11,
+  newDayEight,
+  newDayFive,
+  newDayFour,
+  newDayNine,
+  newDaySeven,
+  newDaySix,
+  newDayTen,
+  newDayThree,
+  newDayTwo,
+  newPredictRandom,
+  oneTwenty,
+  potentialOne,
+  potentialTwo,
+  predictPlay,
+  sixty,
+  threeFifty,
+} from '../data/generated-picks';
 import { PastTwoMonthsHistoricalData } from '../data/historical-data';
-import { sundayFunday, theGoat, UniquePicks, UniquePicksTwo, sundayUni, sunday2, sundayUniTwo, sundayUniThree, march22, march22V2, march19, march22V3, smallSetOne, smallSetTwo, smallSetThree, smallSetFour } from '../data/todays-picks';
-import { defLastSixty, firstThreeSets, lastThreeSets, my85, myLastSixtySets, myNextSixtySets, mySixtySets, newMy85, sixSets, sixthSet, sixtyIteration } from '../data/more-picks';
+import {
+  sundayFunday,
+  theGoat,
+  UniquePicks,
+  UniquePicksTwo,
+  sundayUni,
+  sunday2,
+  sundayUniTwo,
+  sundayUniThree,
+  march22,
+  march22V2,
+  march19,
+  march22V3,
+  smallSetOne,
+  smallSetTwo,
+  smallSetThree,
+  smallSetFour,
+} from '../data/todays-picks';
+import {
+  defLastSixty,
+  firstThreeSets,
+  lastThreeSets,
+  my85,
+  myLastSixtySets,
+  myNextSixtySets,
+  mySixtySets,
+  newMy85,
+  sixSets,
+  sixthSet,
+  sixtyIteration,
+} from '../data/more-picks';
 import { promising40 } from '../data/new-gen-picks';
-import { allThePicks, allThePicksFiltered, promising40Two, quickPicks, quickPicksTwo, saturdayPicks, wednesdayPicks, wednesdayPicksTwo } from '../data/wednesday-picks';
-import { FDRAWS, FutureGeneratedDraws, NewFutureDraws, NewFutureDrawsTwo } from '../data/future-data';
+import {
+  allThePicks,
+  allThePicksFiltered,
+  promising40Two,
+  quickPicks,
+  quickPicksTwo,
+  saturdayPicks,
+  wednesdayPicks,
+  wednesdayPicksTwo,
+} from '../data/wednesday-picks';
+import {
+  FDRAWS,
+  FutureGeneratedDraws,
+  NewFutureDraws,
+  NewFutureDrawsTwo,
+} from '../data/future-data';
 import _ from 'lodash';
-import { ChartData } from 'chart.js';
 import { BehaviorSubject } from 'rxjs';
 import moment from 'moment';
 
@@ -26,63 +107,22 @@ export class PickCheckerService {
 
   winningPicks: any = [];
 
-  // Create an initial dataset (can be empty or pre-populated)
-  private initialChartData = [];
-
-  // Create a BehaviorSubject holding the current chart data
-  private chartDataSubject = new BehaviorSubject<string[][]>(this.initialChartData);
+  private chartDataSubject = new BehaviorSubject<string[][]>([]);
+  private barChartDataSubject = new BehaviorSubject<string[][]>([]);
 
   // Expose the chart data as an Observable
   chartData$ = this.chartDataSubject.asObservable();
+  barChartData$ = this.barChartDataSubject.asObservable();
 
   constructor() {}
 
   checkPicks(myPicks: any) {
-    /**
-     * TEST NUMBERS HERE
-     * customPB
-     * customPBFour
-     * newDayNine
-     */
-    // const myPicks = [...sixty, ...mergedPicks]; // HERE <===========
-    // myPicks = customPB;
-    // myPicks = [...newDayFour,...newDay11]; // Prospect
-    // const myPicks = [...potentialOne, ...potentialTwo];
     const matchCount = 3;
     const drawingResults: any = [];
-    myPicks = [...smallSetOne, ...smallSetTwo, ...smallSetThree, ...smallSetFour];
-    // myPicks = [...march19, ...march22V3];
-    // myPicks = allThePicks;
-    // myPicks = [...wednesdayPicksTwo, ...saturdayPicks, ...promising40Two, ...quickPicks, ...quickPicksTwo];
 
-    // myPicks = [...wednesdayPicks, ...promising40];
-
-    // myPicks = [...customPBFour, ...sundayUni, ...sixSets];
-
-    // myPicks = [...newMy85, ...sundayUni];
-
-    // myPicks = sundayFunday;
-    // myPicks = customPBFour;
-
-    // myPicks = [...customPB, ...customPBFour]; // 45
-    // myPicks= customPBFour; // 26
-    // myPicks = customPB; // 25
-    // myPicks = newDayFour;
-
-    // myPicks = [...UniquePicks, ...UniquePicksTwo];
-
-    /**
-     * Best
-     */
-    // myPicks = [...customPB, ...sixthSet]; // customPB
-
-    // myPicks = this.removeDuplicateArrays(myPicks);
-
-    // myPicks = sixSets;
-    // myPicks = lastThreeSets;
-    // myPicks = myNextSixtySets;
-    // myPicks = myLastSixtySets;
-    // myPicks = sixtyIteration;
+    console.group('myPicks');
+    console.log(myPicks);
+    console.groupEnd();
 
     this.historicalDrawings.forEach((draw) => {
       drawingResults.push(this.processPicks(draw, myPicks, matchCount));
@@ -108,16 +148,25 @@ export class PickCheckerService {
         matchingPicks.forEach((pick: string[]) => {
           picks.push(pick);
           // if(!_.isEqual(historicalDraw, pick)) {
-            
+
           // }
         });
       }
     });
 
-    console.log('PICKS!!!!!!')
-    console.log(this.removeDuplicateArrays(picks));
+    // console.group('PICKS');
+    // console.log(this.removeDuplicateArrays(picks));
+    // console.groupEnd();
 
     this.updateChartData(wins);
+
+    const groupedResults: any = _.groupBy(wins, 'year');
+    const years = Object.keys(groupedResults);
+    const organizedResults = years.map((year: any) => {
+      return _.groupBy(groupedResults[year], 'month');
+    });
+
+    this.updateBarCharData(organizedResults);
 
     return {
       totalWins: wins.length,
@@ -125,7 +174,8 @@ export class PickCheckerService {
       myPicks: myPicks.length,
       picks: myPicks,
       wins,
-      sortedWins
+      sortedWins,
+      organizedResults,
     };
   }
 
@@ -134,9 +184,9 @@ export class PickCheckerService {
     this.chartDataSubject.next(newData);
   }
 
-  // updateBarCharData(newData): void {
-
-  // }
+  updateBarCharData(newData: any): void {
+    this.barChartDataSubject.next(newData);
+  }
 
   processPicks(draw: any, myPks: any, matchCount: number): any {
     const historicalDraw = draw.numbers;

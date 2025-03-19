@@ -1,124 +1,133 @@
 import { Component, OnInit } from '@angular/core';
 import { ChartData, ChartOptions } from 'chart.js';
+import {
+  BaseChartDirective,
+  provideCharts,
+  withDefaultRegisterables,
+} from 'ng2-charts';
+import { PickCheckerService } from '../services/pick-checker.service';
+import { Subscription } from 'rxjs';
 
-export const chartData = [
-  {
-    December: [
-      {
-        date: '2024-12-16T00:00:00.000',
-        historical_draw: ['09', '30', '33', '57', '61', '17'],
-        matching_picks_count: 1,
-        matching_picks: [['09', '30', '33', '57', '61', '23']],
-        multiplier: '2',
-        month: 'December',
-        year: '2024',
-      },
-    ],
-    August: [
-      {
-        date: '2024-08-31T00:00:00.000',
-        historical_draw: ['04', '34', '35', '38', '69', '19'],
-        matching_picks_count: 1,
-        matching_picks: [['04', '34', '35', '38', '69', '05']],
-        multiplier: '2',
-        month: 'August',
-        year: '2024',
-      },
-      {
-        date: '2024-08-05T00:00:00.000',
-        historical_draw: ['29', '42', '44', '51', '54', '12'],
-        matching_picks_count: 1,
-        matching_picks: [['16', '29', '42', '51', '54', '16']],
-        multiplier: '2',
-        month: 'August',
-        year: '2024',
-      },
-    ],
-    June: [
-      {
-        date: '2024-06-15T00:00:00.000',
-        historical_draw: ['04', '36', '48', '54', '56', '02'],
-        matching_picks_count: 1,
-        matching_picks: [['04', '36', '48', '54', '55', '02']],
-        multiplier: '3',
-        month: 'June',
-        year: '2024',
-      },
-    ],
-    April: [
-      {
-        date: '2024-04-10T00:00:00.000',
-        historical_draw: ['06', '07', '12', '24', '36', '15'],
-        matching_picks_count: 1,
-        matching_picks: [['01', '06', '07', '12', '24', '16']],
-        multiplier: '2',
-        month: 'April',
-        year: '2024',
-      },
-    ],
-    February: [
-      {
-        date: '2024-02-26T00:00:00.000',
-        historical_draw: ['24', '29', '42', '51', '54', '16'],
-        matching_picks_count: 1,
-        matching_picks: [['16', '29', '42', '51', '54', '16']],
-        multiplier: '3',
-        month: 'February',
-        year: '2024',
-      },
-    ],
-  },
-  {
-    March: [
-      {
-        date: '2025-03-01T00:00:00.000',
-        historical_draw: ['02', '23', '36', '44', '49', '25'],
-        matching_picks_count: 1,
-        matching_picks: [['02', '23', '36', '44', '49', '15']],
-        multiplier: '3',
-        month: 'March',
-        year: '2025',
-      },
-    ],
-  },
-];
-
+// export const chartData: any[] = [
+//   {
+//     'December': [
+//       {
+//         date: '2024-12-16T00:00:00.000',
+//         historical_draw: ['09', '30', '33', '57', '61', '17'],
+//         matching_picks_count: 1,
+//         matching_picks: [['09', '30', '33', '57', '61', '23']],
+//         multiplier: '2',
+//         month: 'December',
+//         year: '2024',
+//       },
+//     ],
+//     'August': [
+//       {
+//         date: '2024-08-31T00:00:00.000',
+//         historical_draw: ['04', '34', '35', '38', '69', '19'],
+//         matching_picks_count: 1,
+//         matching_picks: [['04', '34', '35', '38', '69', '05']],
+//         multiplier: '2',
+//         month: 'August',
+//         year: '2024',
+//       },
+//       {
+//         date: '2024-08-05T00:00:00.000',
+//         historical_draw: ['29', '42', '44', '51', '54', '12'],
+//         matching_picks_count: 1,
+//         matching_picks: [['16', '29', '42', '51', '54', '16']],
+//         multiplier: '2',
+//         month: 'August',
+//         year: '2024',
+//       },
+//     ],
+//     'June': [
+//       {
+//         date: '2024-06-15T00:00:00.000',
+//         historical_draw: ['04', '36', '48', '54', '56', '02'],
+//         matching_picks_count: 1,
+//         matching_picks: [['04', '36', '48', '54', '55', '02']],
+//         multiplier: '3',
+//         month: 'June',
+//         year: '2024',
+//       },
+//     ],
+//     'April': [
+//       {
+//         date: '2024-04-10T00:00:00.000',
+//         historical_draw: ['06', '07', '12', '24', '36', '15'],
+//         matching_picks_count: 1,
+//         matching_picks: [['01', '06', '07', '12', '24', '16']],
+//         multiplier: '2',
+//         month: 'April',
+//         year: '2024',
+//       },
+//     ],
+//     'February': [
+//       {
+//         date: '2024-02-26T00:00:00.000',
+//         historical_draw: ['24', '29', '42', '51', '54', '16'],
+//         matching_picks_count: 1,
+//         matching_picks: [['16', '29', '42', '51', '54', '16']],
+//         multiplier: '3',
+//         month: 'February',
+//         year: '2024',
+//       },
+//     ],
+//   },
+//   {
+//     'March': [
+//       {
+//         date: '2025-03-01T00:00:00.000',
+//         historical_draw: ['02', '23', '36', '44', '49', '25'],
+//         matching_picks_count: 1,
+//         matching_picks: [['02', '23', '36', '44', '49', '15']],
+//         multiplier: '3',
+//         month: 'March',
+//         year: '2025',
+//       },
+//     ],
+//   },
+// ];
 
 @Component({
   selector: 'app-bar-graph',
   standalone: true,
-  imports: [],
+  imports: [BaseChartDirective],
+  providers: [provideCharts(withDefaultRegisterables())],
   templateUrl: './bar-graph.component.html',
   styleUrl: './bar-graph.component.scss'
 })
 export class BarGraphComponent implements OnInit {
-  public barChartType: 'bar' = 'bar';
+  barChartType: 'bar' = 'bar';
 
-  public barChartOptions: ChartOptions<'bar'> = {
+  barChartOptions: ChartOptions<'bar'> = {
     responsive: true,
     plugins: {
       legend: { display: true },
     },
   };
 
-  public barChartData!: ChartData<'bar'>;
+  barChartData!: ChartData<'bar'>;
+  subscription!: Subscription;
+
+  constructor(private pickCheckerService: PickCheckerService) {}
 
   ngOnInit(): void {
-    // We'll aggregate by a label in the format "Month Year"
+    this.subscription = this.pickCheckerService.barChartData$.subscribe((chartData: any[]) => {
+          // We'll aggregate by a label in the format "Month Year"
     const aggregated: { [label: string]: number } = {};
+    chartData.forEach((obj) => {
+      Object.keys(obj).forEach((month) => {
+        const wins = obj[month];
 
-    // chartData is an array of objects. Loop through each object and its month keys.
-    chartData.forEach(obj => {
-      Object.keys(obj).forEach((monthKey) => {
-        // Each key (e.g., December, August, etc.) holds an array of entries.
-        obj[monthKey].forEach((entry: any) => {
-          const label = `${entry.month} ${entry.year}`;
-          const multiplier = Number(entry.multiplier);
-          aggregated[label] = (aggregated[label] || 0) + multiplier;
+        wins.forEach((win: any) => {
+          const label = `${win.month} ${win.year}`;
+
+          aggregated[label] = (aggregated[label] || 0) + win.matching_picks_count;
         });
       });
     });
-
     // To sort the labels chronologically, map month names to numbers.
     const monthOrder: { [key: string]: number } = {
       January: 1,
@@ -151,13 +160,18 @@ export class BarGraphComponent implements OnInit {
       labels,
       datasets: [
         {
-          label: 'Total Multiplier',
+          label: 'Total Winners',
           data,
-          backgroundColor: 'rgba(75, 192, 192, 0.6)',
-          borderColor: 'rgba(75, 192, 192, 1)',
+          backgroundColor: 'rgba(239, 23, 185, 0.60)',
+          borderColor: 'rgba(239, 23, 185, 1)',
           borderWidth: 1,
         },
       ],
     };
+
+    console.group('organizedResults');
+    console.log(chartData);
+    console.groupEnd();
+    });
   }
 }

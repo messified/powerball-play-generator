@@ -7,16 +7,21 @@ import { PredictionService } from '../services/prediction.service';
 import { CommonModule } from '@angular/common';
 import { HttpClientModule } from '@angular/common/http';
 import { provideAnimations } from '@angular/platform-browser/animations';
-import { DashboardComponent } from '../dashboard/dashboard.component';
-import { groupBy } from 'lodash';
+import { BarGraphComponent } from '../bar-graph/bar-graph.component';
 
 @Component({
   selector: 'app-play-generator',
   standalone: true,
-  imports: [CommonModule, ToastrModule, HttpClientModule, LightboxModule, DashboardComponent],
+  imports: [
+    CommonModule,
+    ToastrModule,
+    HttpClientModule,
+    LightboxModule,
+    BarGraphComponent,
+  ],
   providers: [PowerballService, provideAnimations(), PredictionService],
   templateUrl: './play-generator.component.html',
-  styleUrl: './play-generator.component.scss'
+  styleUrl: './play-generator.component.scss',
 })
 export class PlayGeneratorComponent implements OnInit {
   title = 'lottery-app';
@@ -41,7 +46,7 @@ export class PlayGeneratorComponent implements OnInit {
     private lightbox: Lightbox,
     private pickCheckerService: PickCheckerService,
     private predictionService: PredictionService
-  ) { }
+  ) {}
 
   async ngOnInit(): Promise<void> {
     await this.generateTicket();
@@ -56,28 +61,20 @@ export class PlayGeneratorComponent implements OnInit {
     const loopCount = 3;
 
     const newGenPrediction = [];
-    for (let step = 0; step < loopCount; step++) {
-      const newPrediction =
-        await this.predictionService.generatePowerballPlay();
-      newGenPrediction.push(newPrediction);
-    }
-
     const predictPlayBasedOnPredictedPowerball = [];
+    const newPlays = [];
+
+    // this.playBasedOnPredictedPowerballResults =
+    //   this.pickCheckerService.checkPicks(predictPlayBasedOnPredictedPowerball);
+
     for (let step = 0; step < loopCount; step++) {
       const BFPB = this.predictionService.predictPlayBasedOnPredictedPowerball();
+      predictPlayBasedOnPredictedPowerball.push([...BFPB]);
 
-      predictPlayBasedOnPredictedPowerball.push(BFPB);
-    }
+      const newPrediction = await this.predictionService.generatePowerballPlay();
+      newGenPrediction.push([...newPrediction]);
 
-    this.playBasedOnPredictedPowerballResults = this.pickCheckerService.checkPicks(predictPlayBasedOnPredictedPowerball);
-
-    // console.group('playBasedOnPredictedPowerballResults');
-    // console.log(this.playBasedOnPredictedPowerballResults);
-    // console.groupEnd();
-
-    for (let step = 0; step < loopCount; step++) {
-      const generatePowerballPlayResults =
-        await this.powerballService.generatePowerballPlay();
+      const generatePowerballPlayResults = await this.powerballService.generatePowerballPlay();
       const pastDrawingCount = 200;
       const recentDrawings = await this.powerballService.getRecentDrawings(
         pastDrawingCount
@@ -86,8 +83,8 @@ export class PlayGeneratorComponent implements OnInit {
       this.latestDrawing = recentDrawings[0];
 
       // Format play results to ensure two digits
-      this.play = generatePowerballPlayResults.predictiveWeightedRandomPlay.map((num: string | any[]) =>
-        num.length === 1 ? `0${num}` : num
+      this.play = generatePowerballPlayResults.predictiveWeightedRandomPlay.map(
+        (num: string | any[]) => (num.length === 1 ? `0${num}` : num)
       );
 
       const matchedSets: { matchedSetsIndex: number }[] = [];
@@ -114,10 +111,11 @@ export class PlayGeneratorComponent implements OnInit {
       );
       this.totalMatches = matchedSets.length;
 
-      // Save play to history
-      this.history.push([...this.play]);
+      newPlays.push([...this.play]);
 
-      this.aiResults.push([...generatePowerballPlayResults.predictiveFreqPredictedPlay]);
+      this.aiResults.push([
+        ...generatePowerballPlayResults.predictiveFreqPredictedPlay,
+      ]);
     }
 
     this.toastr.success('', 'Generated Powerball Play', {
@@ -125,74 +123,19 @@ export class PlayGeneratorComponent implements OnInit {
       positionClass: 'toast-bottom-right',
     });
 
-    this.newGenResults = this.pickCheckerService.checkPicks(newGenPrediction);
+    const combindPicks = [
+      ...newGenPrediction,
+      ...newPlays,
+      ...predictPlayBasedOnPredictedPowerball,
+    ];
 
-    // console.group('newGenResults');
-    // console.log(this.newGenResults);
-    // console.groupEnd();
+    this.history = combindPicks;
 
-    this.winningPicks = this.pickCheckerService.checkPicks(this.history);
-
-    // console.group('legacyGenResults: ');
-    // console.log(this.winningPicks);
-    // console.groupEnd();
-
-    const aiResults = this.pickCheckerService.checkPicks(this.aiResults);
-
-    // console.group('aiResults: ');
-    // console.log(aiResults);
-    // console.groupEnd();
-
-    const combindResults = this.pickCheckerService.checkPicks([...newGenPrediction, ...this.history, ...predictPlayBasedOnPredictedPowerball])
-    const resultsArr = [];
-    const groupedResults: any = groupBy(combindResults.sortedWins, 'year');
-    const years = Object.keys(groupedResults);
-    const organizedResults = years.map((year: any) => {
-      return groupBy(groupedResults[year], 'month');
-    });
-    // const groupedByMonth = groupBy(groupedResults['2024'], 'month');
-    // console.log(groupedByMonth);
-    console.group('combindResults');
-    console.log(combindResults);
-    console.groupEnd();
-
-    console.group('organizedResults');
-    console.log(organizedResults);
-    console.groupEnd();
-
-    // this.checkGeneratedPicks();
-  }
-
-  checkGeneratedPicks() {
+    const combindResults = this.pickCheckerService.checkPicks(combindPicks);
     const now = Date.now();
     const historyStorageKey = `generated_picks_${now}`;
 
-    this.winningPicks = this.pickCheckerService.checkPicks(this.history);
-
-    // console.group('legacyGenResults: ');
-    // console.log(this.winningPicks);
-    // console.groupEnd();
-
-    localStorage.setItem(
-      historyStorageKey,
-      JSON.stringify({
-        totalWins: this.winningPicks.totalWins,
-        pastDrawingDate: this.winningPicks.date,
-        results: this.winningPicks,
-        picks: this.history,
-        totalNewGenWins: this.newGenResults.totalWins,
-        newGenResults: this.newGenResults
-      })
-    );
-
-    let allMatchingPicks: any = [];
-    this.winningPicks.wins.forEach((win: any) => {
-      const matchingPicks = win.matching_picks;
-      allMatchingPicks = [...allMatchingPicks, ...matchingPicks];
-    });
-
-    const uniqueMatchingPicks =
-      this.pickCheckerService.removeDuplicateArrays(allMatchingPicks);
+    localStorage.setItem(historyStorageKey, JSON.stringify(combindResults));
   }
 
   open(): void {
