@@ -19,6 +19,21 @@
       </button>
     </div>
   </div>
+  <div *ngIf="recentDrawings" class="row">
+    <div class="col">
+      <!-- <p>
+        Late Drawing Date: <br />
+        <span class="bold">{{ latestDrawing.date }}</span>
+      </p>
+      <p>Last Drawing: {{ latestDrawing.numbers }}</p> -->
+      <p>
+        Total Picks Generated: <span class="bold">{{ combindResults.myPicks }}</span>
+      </p>
+      <p>
+        Matched Plays: <span class="bold">{{ combindResults.totalWins }}</span>
+      </p>
+    </div>
+  </div>
   <!-- <div class="row">
     <div class="col">
       <app-line-graph></app-line-graph>
@@ -27,6 +42,27 @@
   <div class="row">
     <div class="col">
       <app-bar-graph></app-bar-graph>
+    </div>
+  </div>
+  <div class="row">
+    <div class="col">
+      <app-ag-grid-data-table></app-ag-grid-data-table>
+    </div>
+  </div>
+  <div *ngIf="recentDrawings" class="row button-row">
+    <div class="col">
+      <button (click)="open()" class="btn btn-secondary">Ways to win!</button>
+    </div>
+  </div>
+  <div *ngIf="history.length >= 1" class="panel panel-primary history">
+    <div class="panel-heading history-heading">
+      Generated History
+      <!-- <span class="icon" (click)="copyTicketToClipboard()"><i class="fas fa-clipboard"></i></span></div> -->
+      <ul class="history">
+        <li *ngFor="let t of history">
+          <span>{{ t }}</span>
+        </li>
+      </ul>
     </div>
   </div>
   <div class="row" *ngIf="play">
@@ -38,18 +74,6 @@
           </li>
         </ul>
       </ng-container>
-    </div>
-  </div>
-  <div *ngIf="recentDrawings" class="row">
-    <div class="col">
-      <p>
-        Late Drawing Date: <br />
-        <span class="bold">{{ latestDrawing.date }}</span>
-      </p>
-      <p>Last Drawing: {{ latestDrawing.numbers }}</p>
-      <p>
-        Matched Plays: <span class="bold">{{ totalMatches }}</span>
-      </p>
     </div>
   </div>
   <div class="row" *ngIf="play">
@@ -74,15 +98,6 @@
     </div>
   </div>
   <div *ngIf="history.length >= 1" class="panel panel-primary history">
-    <div class="panel-heading history-heading">
-      Generated History
-      <!-- <span class="icon" (click)="copyTicketToClipboard()"><i class="fas fa-clipboard"></i></span></div> -->
-      <ul class="history">
-        <li *ngFor="let t of history">
-          <span>{{ t }}</span>
-        </li>
-      </ul>
-    </div>
     <!-- <div *ngIf="recentDrawings && history.length >= 1" class="row button-row">
       <div class="col">
         <button (click)="checkGeneratedPicks()" class="btn btn-secondary">
@@ -90,11 +105,6 @@
         </button>
       </div>
     </div> -->
-    <div *ngIf="recentDrawings" class="row button-row">
-      <div class="col">
-        <button (click)="open()" class="btn btn-secondary">Ways to win!</button>
-      </div>
-    </div>
     <div class="footer">
       <p>Powerball Ticket Generator &copy; {{ year }}</p>
       <p>

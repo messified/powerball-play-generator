@@ -21,6 +21,15 @@ export class PowerballService {
   private powerballData: any;
   private historicalData: string[][] = [];
 
+  // Configurable parameters.
+  private config: any = {
+    whiteBallRange: { min: 1, max: 69 },
+    powerballRange: { min: 1, max: 26 },
+    whiteBallDupThreshold: 5,
+    powerballDupThreshold: 9,
+    recencyExpBase: 1.042,
+  };
+
   /**
    * synergyMap[positionIndex][currentNumber][nextNumber] = frequency
    */
@@ -474,7 +483,7 @@ export class PowerballService {
   }
 
   private pickAdvancedProbabilityNumber(bestGuessSet: string[]): string {
-    const RECENCY_EXP_BASE = 1.052;
+    const RECENCY_EXP_BASE = this.config.recencyExpBase;
     const frequencyMap = this.createFrequencyMap(bestGuessSet);
 
     this.historicalData.forEach((row, index) => {
@@ -501,7 +510,7 @@ export class PowerballService {
     bestGuessSet: string[],
     recencyThreshold: number
   ): string {
-    const RECENCY_EXP_BASE = 1.052;
+    const RECENCY_EXP_BASE = this.config.recencyExpBase;
     const recentData = this.historicalData.slice(-recencyThreshold);
     const frequencyMap = this.createFrequencyMap(bestGuessSet);
 

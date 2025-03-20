@@ -92,6 +92,7 @@ import {
 import _ from 'lodash';
 import { BehaviorSubject } from 'rxjs';
 import moment from 'moment';
+import { banger1, banger2, banger2V2, banger3, banger3V3 } from '../data/bangers';
 
 @Injectable({
   providedIn: 'root',
@@ -117,12 +118,14 @@ export class PickCheckerService {
   constructor() {}
 
   checkPicks(myPicks: any) {
-    const matchCount = 3;
+    const matchCount = 4;
     const drawingResults: any = [];
 
     console.group('myPicks');
     console.log(myPicks);
     console.groupEnd();
+
+    myPicks = [...banger1, ...banger2,...banger2V2,...banger3, ...banger3V3];
 
     this.historicalDrawings.forEach((draw) => {
       drawingResults.push(this.processPicks(draw, myPicks, matchCount));
@@ -146,10 +149,9 @@ export class PickCheckerService {
         const historicalDraw = win.historical_draw;
 
         matchingPicks.forEach((pick: string[]) => {
-          picks.push(pick);
-          // if(!_.isEqual(historicalDraw, pick)) {
-
-          // }
+          if(!_.isEqual(historicalDraw, pick)) {
+            picks.push(pick);
+          }
         });
       }
     });
@@ -174,7 +176,6 @@ export class PickCheckerService {
       myPicks: myPicks.length,
       picks: myPicks,
       wins,
-      sortedWins,
       organizedResults,
     };
   }

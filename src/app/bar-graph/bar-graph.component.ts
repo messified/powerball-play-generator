@@ -162,8 +162,8 @@ export class BarGraphComponent implements OnInit {
         {
           label: 'Total Winners',
           data,
-          backgroundColor: 'rgba(239, 23, 185, 0.60)',
-          borderColor: 'rgba(239, 23, 185, 1)',
+          backgroundColor: '#e5193657',
+          borderColor: '#e51936',
           borderWidth: 1,
         },
       ],

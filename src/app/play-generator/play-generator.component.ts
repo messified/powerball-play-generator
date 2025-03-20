@@ -8,6 +8,7 @@ import { CommonModule } from '@angular/common';
 import { HttpClientModule } from '@angular/common/http';
 import { provideAnimations } from '@angular/platform-browser/animations';
 import { BarGraphComponent } from '../bar-graph/bar-graph.component';
+import { AgGridDataTableComponent } from '../ag-grid-data-table/ag-grid-data-table.component';
 
 @Component({
   selector: 'app-play-generator',
@@ -18,6 +19,7 @@ import { BarGraphComponent } from '../bar-graph/bar-graph.component';
     HttpClientModule,
     LightboxModule,
     BarGraphComponent,
+    AgGridDataTableComponent
   ],
   providers: [PowerballService, provideAnimations(), PredictionService],
   templateUrl: './play-generator.component.html',
@@ -39,6 +41,7 @@ export class PlayGeneratorComponent implements OnInit {
   counter: number = 0;
   newGenResults: any;
   playBasedOnPredictedPowerballResults: any;
+  combindResults: any;
 
   constructor(
     private powerballService: PowerballService,
@@ -131,11 +134,11 @@ export class PlayGeneratorComponent implements OnInit {
 
     this.history = combindPicks;
 
-    const combindResults = this.pickCheckerService.checkPicks(combindPicks);
+    this.combindResults = this.pickCheckerService.checkPicks(combindPicks);
     const now = Date.now();
     const historyStorageKey = `generated_picks_${now}`;
 
-    localStorage.setItem(historyStorageKey, JSON.stringify(combindResults));
+    localStorage.setItem(historyStorageKey, JSON.stringify(this.combindResults));
   }
 
   open(): void {
