@@ -92,7 +92,7 @@ import {
 import _ from 'lodash';
 import { BehaviorSubject } from 'rxjs';
 import moment from 'moment';
-import { banger1, banger2, banger2V2, banger3, banger3V3 } from '../data/bangers';
+import { banger1, banger2, banger2V2, banger3, banger3V3, banger4, banger4V2, banger6, bangerV5 } from '../data/bangers';
 
 @Injectable({
   providedIn: 'root',
@@ -120,12 +120,20 @@ export class PickCheckerService {
   checkPicks(myPicks: any) {
     const matchCount = 4;
     const drawingResults: any = [];
+    const picks: string[][] = [];
 
     console.group('myPicks');
     console.log(myPicks);
     console.groupEnd();
 
-    myPicks = [...banger1, ...banger2,...banger2V2,...banger3, ...banger3V3];
+    // myPicks = [...banger1, ...banger2,...banger2V2,...banger3, ...banger3V3, ...banger4, ...banger4V2, ...bangerV5];
+    // const smallSets = [...smallSetOne, ...smallSetTwo, ...smallSetThree, ...smallSetFour];
+
+    // myPicks = [...customPB, ...banger2V2, ...banger4]; // 41 wins
+
+    // myPicks = [...smallSets, ...banger2V2, ...banger4];
+
+    myPicks = banger6;
 
     this.historicalDrawings.forEach((draw) => {
       drawingResults.push(this.processPicks(draw, myPicks, matchCount));
@@ -142,7 +150,6 @@ export class PickCheckerService {
 
     const sortedWins = _.sortBy(wins, 'year');
 
-    const picks: string[][] = [];
     drawingResults.forEach((win: any) => {
       if (win && win.matching_picks) {
         const matchingPicks: string[][] = win.matching_picks;
@@ -194,11 +201,21 @@ export class PickCheckerService {
     const multiplier = draw.multiplier;
 
     // Remove duplicates from the imported array.
-    // const uniqueArrays = removeDuplicateArrays(generatedPicks);
     const uniqueArrays = this.removeDuplicateArrays(myPks);
 
+    // Remove Jackpot Matches
+    const filteredPicks = uniqueArrays.filter((pick: string[]) => {
+      if(!_.isEqual(historicalDraw, pick)) {
+        return pick;
+      }
+
+      return;
+    });
+
+    console.log(filteredPicks);
+
     const matchingPicks = this.filterArrays(
-      uniqueArrays,
+      filteredPicks,
       historicalDraw,
       matchCount
     );

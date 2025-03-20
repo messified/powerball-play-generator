@@ -48,7 +48,7 @@ export class PredictionService {
     powerballRange: { min: 1, max: 26 },
     whiteBallDupThreshold: 5,
     powerballDupThreshold: 9,
-    recencyExpBase: 1.046,
+    recencyExpBase: 1.05,
   };
 
   constructor() {}

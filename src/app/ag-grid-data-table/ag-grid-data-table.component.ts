@@ -29,8 +29,11 @@ export class AgGridDataTableComponent implements OnInit {
 
   // Define column definitions including all columns
   columnDefs: ColDef[] = [
-    { headerName: 'Month', field: 'month' },
-    { headerName: 'Year', field: 'year' },
+    {
+      headerName: 'Date',
+      field: 'date',
+      cellRenderer: (params: any) => new Date(params.value).toLocaleDateString(),
+    },
     {
       headerName: 'Historical Draw',
       field: 'historical_draw',

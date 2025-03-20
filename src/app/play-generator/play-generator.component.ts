@@ -61,7 +61,7 @@ export class PlayGeneratorComponent implements OnInit {
     this.playBasedOnPredictedPowerballResults = {};
     this.aiResults = [];
 
-    const loopCount = 3;
+    const loopCount = 20;
 
     const newGenPrediction = [];
     const predictPlayBasedOnPredictedPowerball = [];

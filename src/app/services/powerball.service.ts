@@ -27,7 +27,7 @@ export class PowerballService {
     powerballRange: { min: 1, max: 26 },
     whiteBallDupThreshold: 5,
     powerballDupThreshold: 9,
-    recencyExpBase: 1.042,
+    recencyExpBase: 1.05,
   };
 
   /**
