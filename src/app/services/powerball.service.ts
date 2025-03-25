@@ -25,8 +25,8 @@ export class PowerballService {
   private config: any = {
     whiteBallRange: { min: 1, max: 69 },
     powerballRange: { min: 1, max: 26 },
-    whiteBallDupThreshold: 5,
-    powerballDupThreshold: 9,
+    whiteBallDupThreshold: 4,
+    powerballDupThreshold: 7,
     recencyExpBase: 1.05,
   };
 
@@ -605,19 +605,19 @@ export class PowerballService {
     };
 
     const filteredNumbers: { key: string; numbers: number[] }[] = [];
-    const dupCount = 5;
+    const dupCount = this.config.whiteBallDupThreshold;
 
     for (const key in parsedNumberSets) {
       if (parsedNumberSets.hasOwnProperty(key)) {
         let result: number[] = [];
         switch (key) {
           case 'powerball':
-            const pb = this.findDuplicates(parsedNumberSets[key], 9);
+            const pb = this.findDuplicates(parsedNumberSets[key], this.config.powerballDupThreshold);
             // [1, 3, 4, 5, 8, 9, 14, 15, 16, 17, 20, 21, 22, 23]
             // console.log(pb);
             // result = [1, 9, 24, 14, 15, 18, 4, 12, 10, 23, 20, 8, 17];
-            result = [24, 3, 5, 4, 17, 9, 20, 18, 19, 9, 1];
-            // result = pb;
+            // result = [24, 3, 5, 4, 17, 9, 20, 18, 19, 9, 1];
+            result = pb;
             break;
           case 'first':
             result = this.findDuplicates(

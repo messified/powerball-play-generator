@@ -133,7 +133,7 @@ export class PickCheckerService {
 
     // myPicks = [...smallSets, ...banger2V2, ...banger4];
 
-    myPicks = banger6;
+    // myPicks = customPB;
 
     this.historicalDrawings.forEach((draw) => {
       drawingResults.push(this.processPicks(draw, myPicks, matchCount));
@@ -211,8 +211,6 @@ export class PickCheckerService {
 
       return;
     });
-
-    console.log(filteredPicks);
 
     const matchingPicks = this.filterArrays(
       filteredPicks,
