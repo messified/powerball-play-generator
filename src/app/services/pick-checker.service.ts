@@ -92,7 +92,7 @@ import {
 import _ from 'lodash';
 import { BehaviorSubject } from 'rxjs';
 import moment from 'moment';
-import { banger1, banger2, banger2V2, banger3, banger3V3, banger4, banger4V2, banger6, bangerV5 } from '../data/bangers';
+import { banger1, banger2, banger2V2, banger3, banger3V3, banger4, banger4V2, banger6, bangerV5, futureWin, futureWin2, futureWin3 } from '../data/bangers';
 
 @Injectable({
   providedIn: 'root',
@@ -118,13 +118,13 @@ export class PickCheckerService {
   constructor() {}
 
   checkPicks(myPicks: any) {
-    const matchCount = 4;
+    const matchCount = 5;
     const drawingResults: any = [];
     const picks: string[][] = [];
 
-    console.group('myPicks');
-    console.log(myPicks);
-    console.groupEnd();
+    // console.group('myPicks');
+    // console.log(myPicks);
+    // console.groupEnd();
 
     // myPicks = [...banger1, ...banger2,...banger2V2,...banger3, ...banger3V3, ...banger4, ...banger4V2, ...bangerV5];
     // const smallSets = [...smallSetOne, ...smallSetTwo, ...smallSetThree, ...smallSetFour];
@@ -133,7 +133,18 @@ export class PickCheckerService {
 
     // myPicks = [...smallSets, ...banger2V2, ...banger4];
 
-    // myPicks = customPB;
+    // myPicks = [...futureWin, ...futureWin2, ...futureWin3];
+    // const sPicks = myPicks.map((pick: any) => {
+    //   const pickIndexOne = parseInt(pick[1]) + 1;
+    //   const pickIndexTwo = parseInt(pick[2]) + 3;
+    //   const pickIndexThree = parseInt(pick[3]) - 1;
+
+    //   pick[1] = pickIndexOne.toString();
+    //   pick[2] = pickIndexTwo.toString();
+    //   pick[3] = pickIndexThree.toString();
+
+    //   return pick;
+    // });
 
     this.historicalDrawings.forEach((draw) => {
       drawingResults.push(this.processPicks(draw, myPicks, matchCount));
@@ -175,7 +186,7 @@ export class PickCheckerService {
       return _.groupBy(groupedResults[year], 'month');
     });
 
-    this.updateBarCharData(organizedResults);
+    this.updateBarChartData(organizedResults);
 
     return {
       totalWins: wins.length,
@@ -192,7 +203,7 @@ export class PickCheckerService {
     this.chartDataSubject.next(newData);
   }
 
-  updateBarCharData(newData: any): void {
+  updateBarChartData(newData: any): void {
     this.barChartDataSubject.next(newData);
   }
 

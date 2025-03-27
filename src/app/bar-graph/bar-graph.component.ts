@@ -102,9 +102,17 @@ export class BarGraphComponent implements OnInit {
   barChartType: 'bar' = 'bar';
 
   barChartOptions: ChartOptions<'bar'> = {
+    indexAxis: 'y',
     responsive: true,
     plugins: {
-      legend: { display: true },
+      legend: {
+        labels: {
+          font: {
+            size: 10,
+          },
+        },
+        display: true,
+      },
     },
   };
 
@@ -130,7 +138,7 @@ export class BarGraphComponent implements OnInit {
             });
           });
         });
-        
+
         // To sort the labels chronologically, map month names to numbers.
         const monthOrder: { [key: string]: number } = {
           January: 1,
@@ -172,9 +180,43 @@ export class BarGraphComponent implements OnInit {
           ],
         };
 
-        console.group('organizedResults');
-        console.log(chartData);
-        console.groupEnd();
+        if (
+          (chartData[1] && chartData[1]['March']) ||
+          (chartData[1] && chartData[1]['February']) ||
+          (chartData[1] && chartData[1]['January'])
+        ) {
+          const janWins = chartData[1]['January'];
+          const febWins = chartData[1]['February'];
+          const marchWins = chartData[1]['March'];
+
+          console.group('organizedResults');
+          console.log(chartData);
+          console.groupEnd();
+
+          if (janWins && janWins.length > 0) {
+            console.group('January Results');
+            janWins.forEach((jw: any) => {
+              console.log(jw);
+            });
+            console.groupEnd();
+          }
+
+          if (febWins && febWins.length > 0) {
+            console.group('February Results');
+            febWins.forEach((fw: any) => {
+              console.log(fw);
+            });
+            console.groupEnd();
+          }
+
+          if (marchWins && marchWins.length > 0) {
+            console.group('March Results');
+            marchWins.forEach((mw: any) => {
+              console.log(mw);
+            });
+            console.groupEnd();
+          }
+        }
       }
     );
   }

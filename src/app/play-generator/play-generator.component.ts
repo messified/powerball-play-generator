@@ -61,11 +61,12 @@ export class PlayGeneratorComponent implements OnInit {
     this.playBasedOnPredictedPowerballResults = {};
     this.aiResults = [];
 
-    const loopCount = 20;
+    const loopCount = 100;
 
     const newGenPrediction = [];
     const predictPlayBasedOnPredictedPowerball = [];
     const newPlays = [];
+    const highProb = [];
 
     // this.playBasedOnPredictedPowerballResults =
     //   this.pickCheckerService.checkPicks(predictPlayBasedOnPredictedPowerball);
@@ -116,9 +117,16 @@ export class PlayGeneratorComponent implements OnInit {
 
       newPlays.push([...this.play]);
 
-      this.aiResults.push([
-        ...generatePowerballPlayResults.predictiveFreqPredictedPlay,
-      ]);
+      generatePowerballPlayResults.aiPredictiveSet.forEach((set: any) => {
+        const hasDup = set.filter((item: any, index: any) => set.indexOf(item) !== index);
+        if (hasDup.length === 0) {
+          this.aiResults.push([
+            ...set,
+          ]);
+        }
+      });
+
+      highProb.push([...generatePowerballPlayResults.highestProbabilityPlay]);
     }
 
     this.toastr.success('', 'Generated Powerball Play', {
@@ -129,7 +137,7 @@ export class PlayGeneratorComponent implements OnInit {
     const combindPicks = [
       ...newGenPrediction,
       ...newPlays,
-      ...predictPlayBasedOnPredictedPowerball,
+      ...predictPlayBasedOnPredictedPowerball
     ];
 
     this.history = combindPicks;
@@ -138,7 +146,7 @@ export class PlayGeneratorComponent implements OnInit {
     const now = Date.now();
     const historyStorageKey = `generated_picks_${now}`;
 
-    localStorage.setItem(historyStorageKey, JSON.stringify(this.combindResults));
+    // localStorage.setItem(historyStorageKey, JSON.stringify(this.combindResults));
   }
 
   open(): void {

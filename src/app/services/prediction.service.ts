@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { PowerballData } from '../data/powerball-data';
 import _ from 'lodash';
 import { FutureGeneratedDraws } from '../data/future-data';
+import { PowerballDataMinusLatest } from '../data/historical-data';
 
 export interface IWinningsResponse {
   draw_date: string;
@@ -46,9 +47,9 @@ export class PredictionService {
   private config: PredictionConfig = {
     whiteBallRange: { min: 1, max: 69 },
     powerballRange: { min: 1, max: 26 },
-    whiteBallDupThreshold: 5,
-    powerballDupThreshold: 9,
-    recencyExpBase: 1.05,
+    whiteBallDupThreshold: 6,
+    powerballDupThreshold: 5,
+    recencyExpBase: 1.055,
   };
 
   constructor() {}
@@ -62,7 +63,8 @@ export class PredictionService {
    */
   async generatePowerballPlay(): Promise<string[]> {
     // Load and format historical data.
-    this.powerballData = PowerballData;
+    // this.powerballData = PowerballData;
+    this.powerballData = PowerballDataMinusLatest;
     // this.powerballData = FutureGeneratedDraws;
     const formattedData = this.powerballData.map((result: { draw_date: any; winning_numbers: string; multiplier: any; }) => ({
       date: result.draw_date,

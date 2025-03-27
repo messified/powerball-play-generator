@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { PowerballData } from '../data/powerball-data';
 import _ from 'lodash';
 import { FutureGeneratedDraws } from '../data/future-data';
+import { PowerballDataMinusLatest } from '../data/historical-data';
 
 export interface IWinningsResponse {
   draw_date: string;
@@ -25,9 +26,9 @@ export class PowerballService {
   private config: any = {
     whiteBallRange: { min: 1, max: 69 },
     powerballRange: { min: 1, max: 26 },
-    whiteBallDupThreshold: 4,
-    powerballDupThreshold: 7,
-    recencyExpBase: 1.05,
+    whiteBallDupThreshold: 5,
+    powerballDupThreshold: 5,
+    recencyExpBase: 1.046,
   };
 
   /**
@@ -47,7 +48,8 @@ export class PowerballService {
 
   async generatePowerballPlay() {
     // 1. Load historical data
-    this.powerballData = PowerballData;
+    // this.powerballData = PowerballData;
+    this.powerballData = PowerballDataMinusLatest;
     // this.powerballData = FutureGeneratedDraws;
 
     // 2. Filter based on fromDate
@@ -294,8 +296,8 @@ export class PowerballService {
 
     if (possiblePBs && possiblePBs.length) {
       const freqMap = this.createFrequencyMap(possiblePBs);
-      const weightedPBs = this.buildWeightedArrayFromMap(freqMap);
-      // const weightedPBs = ['01','24','14','15','25','04','07','12','10','23','20','08'];
+      // const weightedPBs = this.buildWeightedArrayFromMap(freqMap);
+      const weightedPBs = ['01','24','14','15','25','04','07','12','10','23','20','08'];
 
       // fallback if no weighting
       if (!weightedPBs.length) {
@@ -615,38 +617,38 @@ export class PowerballService {
             const pb = this.findDuplicates(parsedNumberSets[key], this.config.powerballDupThreshold);
             // [1, 3, 4, 5, 8, 9, 14, 15, 16, 17, 20, 21, 22, 23]
             // console.log(pb);
-            // result = [1, 9, 24, 14, 15, 18, 4, 12, 10, 23, 20, 8, 17];
+            result = [1, 9, 24, 14, 15, 18, 4, 12, 10, 23, 20, 8, 17];
             // result = [24, 3, 5, 4, 17, 9, 20, 18, 19, 9, 1];
             result = pb;
             break;
           case 'first':
             result = this.findDuplicates(
               this.filterNumbersByRange(parsedNumberSets[key]),
-              6
+              5
             );
             break;
           case 'second':
             result = this.findDuplicates(
               this.filterNumbersByRange(parsedNumberSets[key]),
-              dupCount
+              4
             );
             break;
           case 'third':
             result = this.findDuplicates(
               this.filterNumbersByRange(parsedNumberSets[key]),
-              dupCount
+              2
             );
             break;
           case 'fourth':
             result = this.findDuplicates(
               this.filterNumbersByRange(parsedNumberSets[key]),
-              dupCount
+              5
             );
             break;
           case 'fifth':
             result = this.findDuplicates(
               this.filterNumbersByRange(parsedNumberSets[key]),
-              dupCount
+              6
             );
             break;
         }
