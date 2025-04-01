@@ -93,6 +93,7 @@ import _ from 'lodash';
 import { BehaviorSubject } from 'rxjs';
 import moment from 'moment';
 import { banger1, banger2, banger2V2, banger3, banger3V3, banger4, banger4V2, banger6, bangerV5, futureWin, futureWin2, futureWin3 } from '../data/bangers';
+import { theory } from '../data/theory';
 
 @Injectable({
   providedIn: 'root',
@@ -118,7 +119,7 @@ export class PickCheckerService {
   constructor() {}
 
   checkPicks(myPicks: any) {
-    const matchCount = 5;
+    const matchCount = 3;
     const drawingResults: any = [];
     const picks: string[][] = [];
 
@@ -146,6 +147,12 @@ export class PickCheckerService {
     //   return pick;
     // });
 
+    // myPicks = theory;
+
+    // console.group('MyPicks');
+    // console.log(this.removeDuplicateArrays(myPicks));
+    // console.groupEnd();
+
     this.historicalDrawings.forEach((draw) => {
       drawingResults.push(this.processPicks(draw, myPicks, matchCount));
     });
@@ -154,6 +161,7 @@ export class PickCheckerService {
       if (win && win.matching_picks) {
         win.month = moment(win.date).format('MMMM');
         win.year = moment(win.date).format('YYYY');
+        win.picks = myPicks
 
         return win;
       }
@@ -161,18 +169,18 @@ export class PickCheckerService {
 
     const sortedWins = _.sortBy(wins, 'year');
 
-    drawingResults.forEach((win: any) => {
-      if (win && win.matching_picks) {
-        const matchingPicks: string[][] = win.matching_picks;
-        const historicalDraw = win.historical_draw;
+    // drawingResults.forEach((win: any) => {
+    //   if (win && win.matching_picks) {
+    //     const matchingPicks: string[][] = win.matching_picks;
+    //     const historicalDraw = win.historical_draw;
 
-        matchingPicks.forEach((pick: string[]) => {
-          if(!_.isEqual(historicalDraw, pick)) {
-            picks.push(pick);
-          }
-        });
-      }
-    });
+    //     matchingPicks.forEach((pick: string[]) => {
+    //       if(!_.isEqual(historicalDraw, pick)) {
+    //         picks.push(pick);
+    //       }
+    //     });
+    //   }
+    // });
 
     // console.group('PICKS');
     // console.log(this.removeDuplicateArrays(picks));
@@ -199,8 +207,8 @@ export class PickCheckerService {
   }
 
   // Function that generates new chart data and updates the subject
-  updateChartData(newData: string[][]): void {
-    this.chartDataSubject.next(newData);
+  updateChartData(chartData: any): void {
+    this.chartDataSubject.next(chartData);
   }
 
   updateBarChartData(newData: any): void {

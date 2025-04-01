@@ -7,6 +7,7 @@ import {
 } from 'ng2-charts';
 import { PickCheckerService } from '../services/pick-checker.service';
 import { Subscription } from 'rxjs';
+import _ from 'lodash';
 
 // export const chartData: any[] = [
 //   {
@@ -197,6 +198,10 @@ export class BarGraphComponent implements OnInit {
             console.group('January Results');
             janWins.forEach((jw: any) => {
               console.log(jw);
+              console.log(jw.date);
+              console.log('historical_draw: ', jw.historical_draw);
+              console.log('matching_picks: ', jw.matching_picks[0]);
+              console.log('matches: ', this.findDuplicates(jw.matching_picks, jw.historical_draw));
             });
             console.groupEnd();
           }
@@ -205,6 +210,10 @@ export class BarGraphComponent implements OnInit {
             console.group('February Results');
             febWins.forEach((fw: any) => {
               console.log(fw);
+              console.log(fw.date);
+              console.log('historical_draw: ', fw.historical_draw);
+              console.log('matching_picks: ', fw.matching_picks[0]);
+              console.log('matches: ', this.findDuplicates(fw.matching_picks, fw.historical_draw));
             });
             console.groupEnd();
           }
@@ -213,11 +222,19 @@ export class BarGraphComponent implements OnInit {
             console.group('March Results');
             marchWins.forEach((mw: any) => {
               console.log(mw);
+              console.log(mw.date);
+              console.log('historical_draw: ', mw.historical_draw);
+              console.log('matching_picks: ', mw.matching_picks[0]);
+              console.log('matches: ', this.findDuplicates(mw.matching_picks, mw.historical_draw));
             });
             console.groupEnd();
           }
         }
       }
     );
+  }
+
+  findDuplicates(arr1: string[], arr2: string[]) {
+    return;
   }
 }

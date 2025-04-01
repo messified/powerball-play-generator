@@ -26,9 +26,9 @@ export class PowerballService {
   private config: any = {
     whiteBallRange: { min: 1, max: 69 },
     powerballRange: { min: 1, max: 26 },
-    whiteBallDupThreshold: 5,
-    powerballDupThreshold: 5,
-    recencyExpBase: 1.046,
+    whiteBallDupThreshold: 6,
+    powerballDupThreshold: 8,
+    recencyExpBase: 1.05,
   };
 
   /**
@@ -296,8 +296,8 @@ export class PowerballService {
 
     if (possiblePBs && possiblePBs.length) {
       const freqMap = this.createFrequencyMap(possiblePBs);
-      // const weightedPBs = this.buildWeightedArrayFromMap(freqMap);
-      const weightedPBs = ['01','24','14','15','25','04','07','12','10','23','20','08'];
+      const weightedPBs = this.buildWeightedArrayFromMap(freqMap);
+      // const weightedPBs = ['01','24','14','15','25','04','07','12','10','23','20','08'];
 
       // fallback if no weighting
       if (!weightedPBs.length) {
@@ -617,7 +617,7 @@ export class PowerballService {
             const pb = this.findDuplicates(parsedNumberSets[key], this.config.powerballDupThreshold);
             // [1, 3, 4, 5, 8, 9, 14, 15, 16, 17, 20, 21, 22, 23]
             // console.log(pb);
-            result = [1, 9, 24, 14, 15, 18, 4, 12, 10, 23, 20, 8, 17];
+            result = [1,9,24,14,15,5,18,4,12,6,10,23,20,8,17];
             // result = [24, 3, 5, 4, 17, 9, 20, 18, 19, 9, 1];
             result = pb;
             break;
@@ -636,7 +636,7 @@ export class PowerballService {
           case 'third':
             result = this.findDuplicates(
               this.filterNumbersByRange(parsedNumberSets[key]),
-              2
+              4
             );
             break;
           case 'fourth':
@@ -648,17 +648,13 @@ export class PowerballService {
           case 'fifth':
             result = this.findDuplicates(
               this.filterNumbersByRange(parsedNumberSets[key]),
-              6
+              4
             );
             break;
         }
         filteredNumbers.push({ key, numbers: result });
       }
     }
-
-    // console.group('filteredNumbers -----');
-    // console.log(filteredNumbers);
-    // console.groupEnd();
 
     return filteredNumbers;
   }
