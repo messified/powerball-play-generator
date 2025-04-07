@@ -189,22 +189,23 @@ export class BarGraphComponent implements OnInit {
           const janWins = chartData[1]['January'];
           const febWins = chartData[1]['February'];
           const marchWins = chartData[1]['March'];
+          const aprilWins = chartData[1]['April'];
 
           console.group('organizedResults');
           console.log(chartData);
           console.groupEnd();
 
-          if (janWins && janWins.length > 0) {
-            console.group('January Results');
-            janWins.forEach((jw: any) => {
-              console.log(jw);
-              console.log(jw.date);
-              console.log('historical_draw: ', jw.historical_draw);
-              console.log('matching_picks: ', jw.matching_picks[0]);
-              console.log('matches: ', this.findDuplicates(jw.matching_picks, jw.historical_draw));
-            });
-            console.groupEnd();
-          }
+          // if (janWins && janWins.length > 0) {
+          //   console.group('January Results');
+          //   janWins.forEach((jw: any) => {
+          //     console.log(jw);
+          //     console.log(jw.date);
+          //     console.log('historical_draw: ', jw.historical_draw);
+          //     console.log('matching_picks: ', jw.matching_picks[0]);
+          //     console.log('matches: ', this.findDuplicates(jw.matching_picks, jw.historical_draw));
+          //   });
+          //   console.groupEnd();
+          // }
 
           if (febWins && febWins.length > 0) {
             console.group('February Results');
@@ -228,6 +229,22 @@ export class BarGraphComponent implements OnInit {
               console.log('matches: ', this.findDuplicates(mw.matching_picks, mw.historical_draw));
             });
             console.groupEnd();
+          }
+
+          if (aprilWins && aprilWins.length > 0) {
+            console.group('April Results');
+            aprilWins.forEach((ap: any) => {
+              console.log(ap);
+              console.log(ap.date);
+              console.log('historical_draw: ', ap.historical_draw);
+              console.log('matching_picks: ', ap.matching_picks[0]);
+              console.log('matches: ', this.findDuplicates(ap.matching_picks, ap.historical_draw));
+            });
+            console.groupEnd();
+          }
+
+          if(marchWins || aprilWins) {
+            window.alert('WINNER');
           }
         }
       }

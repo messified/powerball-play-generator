@@ -119,7 +119,7 @@ export class PickCheckerService {
   constructor() {}
 
   checkPicks(myPicks: any) {
-    const matchCount = 3;
+    const matchCount = 4;
     const drawingResults: any = [];
     const picks: string[][] = [];
 

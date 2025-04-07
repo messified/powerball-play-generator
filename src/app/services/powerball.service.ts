@@ -27,8 +27,8 @@ export class PowerballService {
     whiteBallRange: { min: 1, max: 69 },
     powerballRange: { min: 1, max: 26 },
     whiteBallDupThreshold: 5,
-    powerballDupThreshold: 8,
-    recencyExpBase: 1.052,
+    powerballDupThreshold: 9,
+    recencyExpBase: 1.041,
   };
 
   /**
@@ -624,21 +624,25 @@ export class PowerballService {
             // result = [9, 15, 16, 20, 21, 12, 14];
             break;
           case 'first':
-            result = this.findDuplicates(
-              this.filterNumbersByRange(parsedNumberSets[key]),
-              dupCount
-            );
+            // result = this.findDuplicates(
+            //   this.filterNumbersByRange(parsedNumberSets[key]),
+            //   dupCount
+            // );
+            result = [13, 1, 2, 3, 4, 12, 5, 6, 7, 8, 9];
             break;
           case 'second':
-            result = this.findDuplicates(
-              this.filterNumbersByRange(parsedNumberSets[key]),
-              4
-            );
+            // result = this.findDuplicates(
+            //   this.filterNumbersByRange(parsedNumberSets[key]),
+            //   5
+            // );
+
+            result = [42, 6, 9, 11, 12, 16, 21, 22, 23, 27, 30, 31, 34, 36, 38];
+            //result = [6, 9, 11, 12, 23,16, 17, 18, 19, 20, 21, 22, 23, 24, 26, 27, 29, 30, 31, 33, 34, 36, 38, 42]; // [27, 32, 33, 35, 40, 43, 44, 45]
             break;
           case 'third':
             result = this.findDuplicates(
               this.filterNumbersByRange(parsedNumberSets[key]),
-              4
+              dupCount
             );
             break;
           case 'fourth':
@@ -650,15 +654,16 @@ export class PowerballService {
           case 'fifth':
             result = this.findDuplicates(
               this.filterNumbersByRange(parsedNumberSets[key]),
-              dupCount
+              6
             );
+            // result = [45, 54, 56, 47, 62, 57, 58, 59, 61, 63, 64, 65, 66, 67, 69, 69];
             break;
         }
         filteredNumbers.push({ key, numbers: result });
       }
     }
 
-    console.log(filteredNumbers);
+    // console.log(filteredNumbers);
 
     return filteredNumbers;
   }
