@@ -28,7 +28,7 @@ export class PowerballService {
     powerballRange: { min: 1, max: 26 },
     whiteBallDupThreshold: 5,
     powerballDupThreshold: 9,
-    recencyExpBase: 1.041,
+    recencyExpBase: 1.045,
   };
 
   /**
@@ -621,22 +621,22 @@ export class PowerballService {
             // result = [24, 3, 5, 4, 17, 9, 20, 18, 19, 9, 1];
             // console.log(pb);
             result = pb;
-            // result = [9, 15, 16, 20, 21, 12, 14];
+            // result = [9, 15, 4, 16, 20, 21, 12, 14];
             break;
           case 'first':
-            // result = this.findDuplicates(
-            //   this.filterNumbersByRange(parsedNumberSets[key]),
-            //   dupCount
-            // );
-            result = [13, 1, 2, 3, 4, 12, 5, 6, 7, 8, 9];
+            result = this.findDuplicates(
+              this.filterNumbersByRange(parsedNumberSets[key]),
+              dupCount
+            );
+            // result = [13, 1, 2, 3, 4, 12, 5, 6, 7, 8, 9];
             break;
           case 'second':
-            // result = this.findDuplicates(
-            //   this.filterNumbersByRange(parsedNumberSets[key]),
-            //   5
-            // );
+            result = this.findDuplicates(
+              this.filterNumbersByRange(parsedNumberSets[key]),
+              dupCount
+            );
 
-            result = [42, 6, 9, 11, 12, 16, 21, 22, 23, 27, 30, 31, 34, 36, 38];
+            // result = [42, 6, 9, 11, 12, 16, 21, 22, 23, 27, 30, 31, 34, 36, 38];
             //result = [6, 9, 11, 12, 23,16, 17, 18, 19, 20, 21, 22, 23, 24, 26, 27, 29, 30, 31, 33, 34, 36, 38, 42]; // [27, 32, 33, 35, 40, 43, 44, 45]
             break;
           case 'third':
