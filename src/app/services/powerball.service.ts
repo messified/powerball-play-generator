@@ -27,8 +27,9 @@ export class PowerballService {
     whiteBallRange: { min: 1, max: 69 },
     powerballRange: { min: 1, max: 26 },
     whiteBallDupThreshold: 5,
-    powerballDupThreshold: 9,
-    recencyExpBase: 1.045,
+    powerballDupThreshold: 7,
+    recencyExpBase: 1.049,
+    logsEnabled: false
   };
 
   /**
@@ -615,19 +616,30 @@ export class PowerballService {
         switch (key) {
           case 'powerball':
             const pb = this.findDuplicates(parsedNumberSets[key], this.config.powerballDupThreshold);
-            // [1, 3, 4, 5, 8, 9, 14, 15, 16, 17, 20, 21, 22, 23]
+            // cresult = [1, 3, 4, 5, 8, 9, 14, 15, 16, 17, 20, 21, 22, 23]
             // console.log(pb);
             // result = [1,9,24,14,15,5,18,4,12,6,10,23,20,8,17];
             // result = [24, 3, 5, 4, 17, 9, 20, 18, 19, 9, 1];
             // console.log(pb);
             result = pb;
             // result = [9, 15, 4, 16, 20, 21, 12, 14];
+            if(this.config.logsEnabled) {
+              console.group('Powerball');
+              console.log(result);
+              console.groupEnd();
+            }
+
             break;
           case 'first':
             result = this.findDuplicates(
               this.filterNumbersByRange(parsedNumberSets[key]),
               dupCount
             );
+            if(this.config.logsEnabled) {
+              console.group('First');
+              console.log(result);
+              console.groupEnd();
+            }
             // result = [13, 1, 2, 3, 4, 12, 5, 6, 7, 8, 9];
             break;
           case 'second':
@@ -635,6 +647,11 @@ export class PowerballService {
               this.filterNumbersByRange(parsedNumberSets[key]),
               dupCount
             );
+            if(this.config.logsEnabled) {
+              console.group('Second');
+              console.log(result);
+              console.groupEnd();
+            }
 
             // result = [42, 6, 9, 11, 12, 16, 21, 22, 23, 27, 30, 31, 34, 36, 38];
             //result = [6, 9, 11, 12, 23,16, 17, 18, 19, 20, 21, 22, 23, 24, 26, 27, 29, 30, 31, 33, 34, 36, 38, 42]; // [27, 32, 33, 35, 40, 43, 44, 45]
@@ -644,18 +661,33 @@ export class PowerballService {
               this.filterNumbersByRange(parsedNumberSets[key]),
               dupCount
             );
+            if(this.config.logsEnabled) {
+              console.group('Third');
+              console.log(result);
+              console.groupEnd();
+            }
             break;
           case 'fourth':
             result = this.findDuplicates(
               this.filterNumbersByRange(parsedNumberSets[key]),
               dupCount
             );
+            if(this.config.logsEnabled) {
+              console.group('Fourth');
+              console.log(result);
+              console.groupEnd();
+            }
             break;
           case 'fifth':
             result = this.findDuplicates(
               this.filterNumbersByRange(parsedNumberSets[key]),
-              6
+              dupCount
             );
+            if(this.config.logsEnabled) {
+              console.group('fifth');
+              console.log(result);
+              console.groupEnd();
+            }
             // result = [45, 54, 56, 47, 62, 57, 58, 59, 61, 63, 64, 65, 66, 67, 69, 69];
             break;
         }

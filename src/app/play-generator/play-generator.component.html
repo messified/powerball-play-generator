@@ -1,12 +1,11 @@
 <div class="container">
-  <!-- <div class="jumbotron">
+  <div class="jumbotron">
     <img
       class="banner"
       src="img-responsive"
-      src="../../../assets/powerball-logo.svg"
+      src="../../../assets/powerball_logo.png"
     />
-    <h1>Ticket Generator</h1>
-  </div> -->
+  </div>
   <!-- <div class="row">
       <div class="col">
         <app-lottery-settings></app-lottery-settings>
@@ -27,7 +26,8 @@
       </p>
       <p>Last Drawing: {{ latestDrawing.numbers }}</p> -->
       <p>
-        Total Picks Generated: <span class="bold">{{ combindResults.myPicks }}</span>
+        Total Picks Generated:
+        <span class="bold">{{ combindResults.myPicks }}</span>
       </p>
       <p>
         Matched Plays: <span class="bold">{{ combindResults.totalWins }}</span>
@@ -39,21 +39,26 @@
       <app-line-graph></app-line-graph>
     </div>
   </div> -->
-  <div class="row">
+  <div class="row chart">
     <div class="col">
       <app-bar-graph></app-bar-graph>
     </div>
   </div>
-  <div class="row">
+  <div *ngIf="play" class="row button-row">
+    <div class="col">
+      <button (click)="open()" class="btn btn-secondary bottom-button">Ways to win!</button>
+    </div>
+  </div>
+  <!-- <div class="row">
     <div class="col">
       <app-ag-grid-data-table></app-ag-grid-data-table>
     </div>
-  </div>
-  <div *ngIf="recentDrawings" class="row button-row">
+  </div> -->
+  <!-- <div *ngIf="recentDrawings" class="row button-row">
     <div class="col">
       <button (click)="open()" class="btn btn-secondary">Ways to win!</button>
     </div>
-  </div>
+  </div> -->
   <div *ngIf="history.length >= 1" class="panel panel-primary history">
     <div class="panel-heading history-heading">
       Generated History
@@ -65,7 +70,7 @@
       </ul>
     </div>
   </div>
-  <div class="row" *ngIf="play">
+  <!-- <div class="row" *ngIf="play">
     <div class="panel panel-primary">
       <ng-container>
         <ul class="powerball well generated">
@@ -75,7 +80,7 @@
         </ul>
       </ng-container>
     </div>
-  </div>
+  </div> -->
   <div class="row" *ngIf="play">
     <div class="panel panel-primary">
       <div class="panel-body ticket-wrapper">

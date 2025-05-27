@@ -245,6 +245,10 @@ export class PredictionService {
       const duplicates = this.findDuplicates(arr, threshold);
       filteredNumbers.push({ key, numbers: duplicates });
     }
+    // console.group('Filtered Numbers');
+    // console.log(filteredNumbers);
+    // console.groupEnd();
+    // filteredNumbers[5].numbers = [1,9,24,14,15,5,18,4,12,6,10,23,20,8,17];
     return filteredNumbers;
   }
 

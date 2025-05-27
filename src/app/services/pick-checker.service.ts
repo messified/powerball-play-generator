@@ -93,7 +93,7 @@ import _ from 'lodash';
 import { BehaviorSubject } from 'rxjs';
 import moment from 'moment';
 import { banger1, banger2, banger2V2, banger3, banger3V3, banger4, banger4V2, banger6, bangerV5, futureWin, futureWin2, futureWin3 } from '../data/bangers';
-import { sp1, sp2, theory } from '../data/theory';
+import { April23, aprilThree, aprilTwo, pot1, sp1, sp2, theory } from '../data/theory';
 
 @Injectable({
   providedIn: 'root',

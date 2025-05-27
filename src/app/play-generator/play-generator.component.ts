@@ -61,7 +61,7 @@ export class PlayGeneratorComponent implements OnInit {
     this.playBasedOnPredictedPowerballResults = {};
     this.aiResults = [];
 
-    const loopCount = 5;
+    const loopCount = 100;
 
     const newGenPrediction = [];
     const predictPlayBasedOnPredictedPowerball = [];
@@ -115,7 +115,7 @@ export class PlayGeneratorComponent implements OnInit {
       );
       this.totalMatches = matchedSets.length;
 
-      newPlays.push([...this.play]);
+      newPlays.push(this.play);
 
       generatePowerballPlayResults.aiPredictiveSet.forEach((set: any) => {
         const hasDup = set.filter((item: any, index: any) => set.indexOf(item) !== index);
