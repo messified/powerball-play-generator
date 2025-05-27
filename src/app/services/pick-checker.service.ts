@@ -123,36 +123,6 @@ export class PickCheckerService {
     const drawingResults: any = [];
     const picks: string[][] = [];
 
-    // console.group('myPicks');
-    // console.log(myPicks);
-    // console.groupEnd();
-
-    // myPicks = [...banger1, ...banger2,...banger2V2,...banger3, ...banger3V3, ...banger4, ...banger4V2, ...bangerV5];
-    // const smallSets = [...smallSetOne, ...smallSetTwo, ...smallSetThree, ...smallSetFour];
-
-    // myPicks = [...customPB, ...banger2V2, ...banger4]; // 41 wins
-
-    // myPicks = [...smallSets, ...banger2V2, ...banger4];
-
-    // myPicks = [...futureWin, ...futureWin2, ...futureWin3];
-    // const sPicks = myPicks.map((pick: any) => {
-    //   const pickIndexOne = parseInt(pick[1]) + 1;
-    //   const pickIndexTwo = parseInt(pick[2]) + 3;
-    //   const pickIndexThree = parseInt(pick[3]) - 1;
-
-    //   pick[1] = pickIndexOne.toString();
-    //   pick[2] = pickIndexTwo.toString();
-    //   pick[3] = pickIndexThree.toString();
-
-    //   return pick;
-    // });
-
-    // myPicks = [...sp2, ...sp1];
-
-    // console.group('MyPicks');
-    // console.log(this.removeDuplicateArrays(myPicks));
-    // console.groupEnd();
-
     this.historicalDrawings.forEach((draw) => {
       drawingResults.push(this.processPicks(draw, myPicks, matchCount));
     });

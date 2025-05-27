@@ -232,22 +232,22 @@ export class BarGraphComponent implements OnInit {
           //   console.groupEnd();
           // }
 
-          if (aprilWins && aprilWins.length > 0) {
-            alert('April WINNER :)');
-            console.group('April Results');
-            aprilWins.forEach((ap: any) => {
-              console.log(ap);
-              console.log(ap.date);
-              console.log('historical_draw: ', ap.historical_draw);
-              console.log('matching_picks: ', ap.matching_picks[0]);
-              console.log('matches: ', this.findDuplicates(ap.matching_picks, ap.historical_draw));
-            });
-            console.groupEnd();
-          }
+          // if (aprilWins && aprilWins.length > 0) {
+          //   console.group('April Results');
+            
+          //   aprilWins.forEach((ap: any) => {
+          //     console.log(ap);
+          //     console.log(ap.date);
+          //     console.log('historical_draw: ', ap.historical_draw);
+          //     console.log('matching_picks: ', ap.matching_picks[0]);
+          //     console.log('matches: ', this.findDuplicates(ap.matching_picks, ap.historical_draw));
+          //   });
+          //   console.groupEnd();
+          // }
 
           if (mayWins && mayWins.length > 0) {
-            alert('May WINNER :)');
             console.group('May Results');
+            alert('May WINNER');
             mayWins.forEach((ap: any) => {
               console.log(ap);
               console.log(ap.date);
