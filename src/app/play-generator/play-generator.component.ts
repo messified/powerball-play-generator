@@ -3,7 +3,6 @@ import { PowerballService } from '../services/powerball.service';
 import { ToastrModule, ToastrService } from 'ngx-toastr';
 import { Lightbox, LightboxModule } from 'ngx-lightbox';
 import { PickCheckerService } from '../services/pick-checker.service';
-import { PredictionService } from '../services/prediction.service';
 import { CommonModule } from '@angular/common';
 import { HttpClientModule } from '@angular/common/http';
 import { provideAnimations } from '@angular/platform-browser/animations';
@@ -21,10 +20,13 @@ import { AgGridDataTableComponent } from '../ag-grid-data-table/ag-grid-data-tab
     BarGraphComponent,
     AgGridDataTableComponent
   ],
-  providers: [PowerballService, provideAnimations(), PredictionService],
+  providers: [PowerballService, provideAnimations()],
   templateUrl: './play-generator.component.html',
   styleUrl: './play-generator.component.scss',
 })
+/**
+ * Generates Powerball plays and evaluates them against recent drawings.
+ */
 export class PlayGeneratorComponent implements OnInit {
   title = 'lottery-app';
   play: any[] = [];
@@ -48,13 +50,16 @@ export class PlayGeneratorComponent implements OnInit {
     private toastr: ToastrService,
     private lightbox: Lightbox,
     private pickCheckerService: PickCheckerService,
-    private predictionService: PredictionService
   ) {}
 
   async ngOnInit(): Promise<void> {
     await this.generateTicket();
   }
 
+  /**
+   * Generates a batch of plays and compares each one against recent drawings.
+   * The results are stored in `history`, `aiResults`, and `combindResults`.
+   */
   async generateTicket(): Promise<void> {
     this.history = [];
     this.newGenResults = {};
@@ -62,52 +67,35 @@ export class PlayGeneratorComponent implements OnInit {
     this.aiResults = [];
 
     const loopCount = 20;
+    const pastDrawingCount = 200;
+    const recentDrawings = await this.powerballService.getRecentDrawings(pastDrawingCount);
+    this.latestDrawing = recentDrawings[0];
 
-    const newGenPrediction = [];
-    const predictPlayBasedOnPredictedPowerball = [];
-    const newPlays = [];
-    const highProb = [];
-
-    // this.playBasedOnPredictedPowerballResults =
-    //   this.pickCheckerService.checkPicks(predictPlayBasedOnPredictedPowerball);
+    const newPlays: string[][] = [];
 
     for (let step = 0; step < loopCount; step++) {
-      const BFPB = this.predictionService.predictPlayBasedOnPredictedPowerball();
-      predictPlayBasedOnPredictedPowerball.push([...BFPB]);
-
-      const newPrediction = await this.predictionService.generatePowerballPlay();
-      newGenPrediction.push([...newPrediction]);
-
       const generatePowerballPlayResults = await this.powerballService.generatePowerballPlay();
-      const pastDrawingCount = 200;
-      const recentDrawings = await this.powerballService.getRecentDrawings(
-        pastDrawingCount
-      );
-
-      this.latestDrawing = recentDrawings[0];
 
       // Format play results to ensure two digits
       this.play = generatePowerballPlayResults.predictiveWeightedRandomPlay.map(
-        (num: string | any[]) => (num.length === 1 ? `0${num}` : num)
+        (num: string) => (num.length === 1 ? `0${num}` : num)
       );
 
       const matchedSets: { matchedSetsIndex: number }[] = [];
 
       // Find matching sets
-      this.recentDrawings = recentDrawings.map(
-        (set: { numbers: any }, i: any) => {
-          const numbers = set.numbers;
-          const numberMatches = numbers.filter(
-            (num: string, index: number) => this.play[index] == num
-          );
+      this.recentDrawings = recentDrawings.map((set: { numbers: any }, i: number) => {
+        const numbers = set.numbers;
+        const numberMatches = numbers.filter(
+          (num: string, index: number) => this.play[index] == num
+        );
 
-          if (numberMatches.length >= 3) {
-            matchedSets.push({ matchedSetsIndex: i });
-          }
-
-          return set.numbers;
+        if (numberMatches.length >= 3) {
+          matchedSets.push({ matchedSetsIndex: i });
         }
-      );
+
+        return set.numbers;
+      });
 
       // Filter matched sets
       this.recentDrawings = this.recentDrawings.filter((set, i) =>
@@ -118,15 +106,11 @@ export class PlayGeneratorComponent implements OnInit {
       newPlays.push(this.play);
 
       generatePowerballPlayResults.aiPredictiveSet.forEach((set: any) => {
-        const hasDup = set.filter((item: any, index: any) => set.indexOf(item) !== index);
-        if (hasDup.length === 0) {
-          this.aiResults.push([
-            ...set,
-          ]);
+        const isUnique = new Set(set).size === set.length;
+        if (isUnique) {
+          this.aiResults.push([...set]);
         }
       });
-
-      highProb.push([...generatePowerballPlayResults.highestProbabilityPlay]);
     }
 
     this.toastr.success('', 'Generated Powerball Play', {
@@ -134,13 +118,9 @@ export class PlayGeneratorComponent implements OnInit {
       positionClass: 'toast-bottom-right',
     });
 
-    const combindPicks = [
-      ...newPlays
-    ];
+    this.history = [...newPlays];
 
-    this.history = combindPicks;
-
-    this.combindResults = this.pickCheckerService.checkPicks(combindPicks);
+    this.combindResults = this.pickCheckerService.checkPicks(this.history);
     const now = Date.now();
     const historyStorageKey = `generated_picks_${now}`;
 
