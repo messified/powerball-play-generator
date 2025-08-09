@@ -767,14 +767,12 @@ export class PowerballService {
   // RECENT DRAWS, RANGE, DUPLICATES
   // ------------------------------------------------------------
 
-  /**
-   * Retrieves the most recent Powerball drawings.
-   *
-   * @param count - Number of recent draws to return.
-   * @returns An array of parsed drawing objects limited to the requested count.
-   */
   async getRecentDrawings(count: number) {
-    return this.powerballData.slice(0, count).map((result: any) => ({
+    const recentDraws = [];
+    for (let i = 0; i < this.powerballData.length; i++) {
+      recentDraws.push(this.powerballData[i]);
+    }
+    return recentDraws.map((result) => ({
       date: result.draw_date,
       numbers: result.winning_numbers.split(' '),
       multiplier: result.multiplier,
