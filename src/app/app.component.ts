@@ -10,6 +10,8 @@ import { RouterOutlet } from '@angular/router';
   styleUrl: './app.component.scss',
 })
 export class AppComponent {
-  constructor(
-  ) {}
+  /** Application title displayed in the header. */
+  title = 'lottery-app';
+
+  constructor() {}
 }
