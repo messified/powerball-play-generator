@@ -190,11 +190,7 @@ export class BarGraphComponent implements OnInit {
           const febWins = chartData[1]['February'];
           const marchWins = chartData[1]['March'];
           const aprilWins = chartData[1]['April'];
-          const mayWins = chartData[1]['May'];
-
-          console.group('organizedResults');
-          console.log(chartData);
-          console.groupEnd();
+          const augustWins = chartData[1]['August'];
 
           // if (janWins && janWins.length > 0) {
           //   console.group('January Results');
@@ -245,10 +241,13 @@ export class BarGraphComponent implements OnInit {
           //   console.groupEnd();
           // }
 
-          if (mayWins && mayWins.length > 0) {
-            console.group('May Results');
-            alert('May WINNER');
-            mayWins.forEach((ap: any) => {
+          if (augustWins && augustWins.length > 0) {
+            console.group('August Results');
+            alert('August WINNER');
+            console.group('organizedResults');
+            console.log(chartData);
+            console.groupEnd();
+            augustWins.forEach((ap: any) => {
               console.log(ap);
               console.log(ap.date);
               console.log('historical_draw: ', ap.historical_draw);

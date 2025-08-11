@@ -40,7 +40,6 @@ import {
   sixty,
   threeFifty,
 } from '../data/generated-picks';
-import { PastTwoMonthsHistoricalData } from '../data/historical-data';
 import {
   sundayFunday,
   theGoat,
@@ -119,7 +118,7 @@ export class PickCheckerService {
   constructor() {}
 
   checkPicks(myPicks: any) {
-    const matchCount = 4;
+    const matchCount = 3;
     const drawingResults: any = [];
     const picks: string[][] = [];
 

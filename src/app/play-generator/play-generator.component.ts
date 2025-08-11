@@ -72,11 +72,11 @@ export class PlayGeneratorComponent implements OnInit {
     //   this.pickCheckerService.checkPicks(predictPlayBasedOnPredictedPowerball);
 
     for (let step = 0; step < loopCount; step++) {
-      const BFPB = this.predictionService.predictPlayBasedOnPredictedPowerball();
-      predictPlayBasedOnPredictedPowerball.push([...BFPB]);
+      // const BFPB = this.predictionService.predictPlayBasedOnPredictedPowerball();
+      // predictPlayBasedOnPredictedPowerball.push([...BFPB]);
 
-      const newPrediction = await this.predictionService.generatePowerballPlay();
-      newGenPrediction.push([...newPrediction]);
+      // const newPrediction = await this.predictionService.generatePowerballPlay();
+      // newGenPrediction.push([...newPrediction]);
 
       const generatePowerballPlayResults = await this.powerballService.generatePowerballPlay();
       const pastDrawingCount = 200;
@@ -117,16 +117,16 @@ export class PlayGeneratorComponent implements OnInit {
 
       newPlays.push(this.play);
 
-      generatePowerballPlayResults.aiPredictiveSet.forEach((set: any) => {
-        const hasDup = set.filter((item: any, index: any) => set.indexOf(item) !== index);
-        if (hasDup.length === 0) {
-          this.aiResults.push([
-            ...set,
-          ]);
-        }
-      });
+    //   generatePowerballPlayResults.aiPredictiveSet.forEach((set: any) => {
+    //     const hasDup = set.filter((item: any, index: any) => set.indexOf(item) !== index);
+    //     if (hasDup.length === 0) {
+    //       this.aiResults.push([
+    //         ...set,
+    //       ]);
+    //     }
+    //   });
 
-      highProb.push([...generatePowerballPlayResults.highestProbabilityPlay]);
+    //   highProb.push([...generatePowerballPlayResults.highestProbabilityPlay]);
     }
 
     this.toastr.success('', 'Generated Powerball Play', {

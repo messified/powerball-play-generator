@@ -26,9 +26,9 @@ export class PowerballService {
   private config: any = {
     whiteBallRange: { min: 1, max: 69 },
     powerballRange: { min: 1, max: 26 },
-    whiteBallDupThreshold: 4,
+    whiteBallDupThreshold: 5,
     powerballDupThreshold: 4,
-    recencyExpBase: 1.049,
+    recencyExpBase: 1.05,
     logsEnabled: false
   };
 
