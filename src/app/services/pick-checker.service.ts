@@ -1,98 +1,9 @@
 import { Injectable } from '@angular/core';
 import { PowerballData } from '../data/powerball-data';
-import {
-  anotherSet,
-  anotherSixty,
-  customPB,
-  customPB10,
-  customPB11,
-  customPB12,
-  customPB13,
-  customPB5,
-  customPB6,
-  customPB7,
-  customPB9,
-  customPBFour,
-  customPBThree,
-  customPBTwo,
-  generatedPicks,
-  lastSixty,
-  latestPicks,
-  mergedPicks,
-  mixedDupCount60,
-  morePicks,
-  newDay,
-  newDay11,
-  newDayEight,
-  newDayFive,
-  newDayFour,
-  newDayNine,
-  newDaySeven,
-  newDaySix,
-  newDayTen,
-  newDayThree,
-  newDayTwo,
-  newPredictRandom,
-  oneTwenty,
-  potentialOne,
-  potentialTwo,
-  predictPlay,
-  sixty,
-  threeFifty,
-} from '../data/generated-picks';
-import {
-  sundayFunday,
-  theGoat,
-  UniquePicks,
-  UniquePicksTwo,
-  sundayUni,
-  sunday2,
-  sundayUniTwo,
-  sundayUniThree,
-  march22,
-  march22V2,
-  march19,
-  march22V3,
-  smallSetOne,
-  smallSetTwo,
-  smallSetThree,
-  smallSetFour,
-} from '../data/todays-picks';
-import {
-  defLastSixty,
-  firstThreeSets,
-  lastThreeSets,
-  my85,
-  myLastSixtySets,
-  myNextSixtySets,
-  mySixtySets,
-  newMy85,
-  sixSets,
-  sixthSet,
-  sixtyIteration,
-} from '../data/more-picks';
-import { promising40 } from '../data/new-gen-picks';
-import {
-  allThePicks,
-  allThePicksFiltered,
-  promising40Two,
-  quickPicks,
-  quickPicksTwo,
-  saturdayPicks,
-  wednesdayPicks,
-  wednesdayPicksTwo,
-} from '../data/wednesday-picks';
-import {
-  FDRAWS,
-  FutureGeneratedDraws,
-  NewFutureDraws,
-  NewFutureDrawsTwo,
-} from '../data/future-data';
 import _ from 'lodash';
 import { BehaviorSubject } from 'rxjs';
 import moment from 'moment';
-import { banger1, banger2, banger2V2, banger3, banger3V3, banger4, banger4V2, banger6, bangerV5, futureWin, futureWin2, futureWin3 } from '../data/bangers';
-import { April23, aprilThree, aprilTwo, pot1, sp1, sp2, theory } from '../data/theory';
+import { allLatestPicks } from '../data/test-latest';
 
 @Injectable({
   providedIn: 'root',
@@ -122,6 +33,8 @@ export class PickCheckerService {
     const drawingResults: any = [];
     const picks: string[][] = [];
 
+    myPicks = allLatestPicks;
+
     this.historicalDrawings.forEach((draw) => {
       drawingResults.push(this.processPicks(draw, myPicks, matchCount));
     });
@@ -135,25 +48,6 @@ export class PickCheckerService {
         return win;
       }
     });
-
-    const sortedWins = _.sortBy(wins, 'year');
-
-    // drawingResults.forEach((win: any) => {
-    //   if (win && win.matching_picks) {
-    //     const matchingPicks: string[][] = win.matching_picks;
-    //     const historicalDraw = win.historical_draw;
-
-    //     matchingPicks.forEach((pick: string[]) => {
-    //       if(!_.isEqual(historicalDraw, pick)) {
-    //         picks.push(pick);
-    //       }
-    //     });
-    //   }
-    // });
-
-    // console.group('PICKS');
-    // console.log(this.removeDuplicateArrays(picks));
-    // console.groupEnd();
 
     this.updateChartData(wins);
 

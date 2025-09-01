@@ -8,7 +8,14 @@ import { CommonModule } from '@angular/common';
 import { HttpClientModule } from '@angular/common/http';
 import { provideAnimations } from '@angular/platform-browser/animations';
 import { BarGraphComponent } from '../bar-graph/bar-graph.component';
-import { AgGridDataTableComponent } from '../ag-grid-data-table/ag-grid-data-table.component';
+import { AiPowerballService } from '../services/ai-powerball.service';
+import { PowerballDataMinusLatest } from '../data/historical-data';
+
+export interface PowerballDraw {
+  draw_date: string;
+  winning_numbers: string;
+  multiplier: string;
+}
 
 @Component({
   selector: 'app-play-generator',
@@ -19,9 +26,13 @@ import { AgGridDataTableComponent } from '../ag-grid-data-table/ag-grid-data-tab
     HttpClientModule,
     LightboxModule,
     BarGraphComponent,
-    AgGridDataTableComponent
   ],
-  providers: [PowerballService, provideAnimations(), PredictionService],
+  providers: [
+    PowerballService,
+    provideAnimations(),
+    PredictionService,
+    AiPowerballService,
+  ],
   templateUrl: './play-generator.component.html',
   styleUrl: './play-generator.component.scss',
 })
@@ -38,113 +49,123 @@ export class PlayGeneratorComponent implements OnInit {
   matchingSets: { index: number }[] = [];
   latestDrawing: any = {};
   winningPicks: any;
-  counter: number = 0;
+  counter: number = 15;
   newGenResults: any;
   playBasedOnPredictedPowerballResults: any;
   combindResults: any;
+  prediction: any;
 
   constructor(
     private powerballService: PowerballService,
     private toastr: ToastrService,
     private lightbox: Lightbox,
     private pickCheckerService: PickCheckerService,
-    private predictionService: PredictionService
+    private aiService: AiPowerballService
   ) {}
 
   async ngOnInit(): Promise<void> {
     await this.generateTicket();
   }
 
-  async generateTicket(): Promise<void> {
-    this.history = [];
-    this.newGenResults = {};
-    this.playBasedOnPredictedPowerballResults = {};
-    this.aiResults = [];
+async generateTicket(): Promise<void> {
+  this.history = [];
+  this.aiResults = [];
+  this.newGenResults = {};
+  this.playBasedOnPredictedPowerballResults = {};
+  this.totalMatches = 0;
 
-    const loopCount = 20;
+  // 1) Prep historical draws (minus latest — leakage-safe)
+  const parsedDraws = this.parseDrawHistoryForModel(PowerballDataMinusLatest);
 
-    const newGenPrediction = [];
-    const predictPlayBasedOnPredictedPowerball = [];
-    const newPlays = [];
-    const highProb = [];
+  // 2) (Optional) kick the mock train
+  this.aiService.trainModel(parsedDraws).then((status) => {
+    console.log('Training status:', status);
+  });
 
-    // this.playBasedOnPredictedPowerballResults =
-    //   this.pickCheckerService.checkPicks(predictPlayBasedOnPredictedPowerball);
+  const legacyPlays = [];
 
-    for (let step = 0; step < loopCount; step++) {
-      // const BFPB = this.predictionService.predictPlayBasedOnPredictedPowerball();
-      // predictPlayBasedOnPredictedPowerball.push([...BFPB]);
+  // 3) Call your legacy local generator once (keeps current UI vibe)
+  for(let i = 0; i<this.counter; i++) {
+    const legacy = await this.powerballService.generatePowerballPlay();
+    // Choose the set you like most from your legacy outputs:
+    // Here we keep predictiveWeightedRandomPlay as before.
+    legacyPlays.push(legacy?.highestProbabilityPlay);
+    legacyPlays.push(legacy?.predictiveFreqPredictedPlay);
 
-      // const newPrediction = await this.predictionService.generatePowerballPlay();
-      // newGenPrediction.push([...newPrediction]);
+    const legacyPlay: string[] = (legacy?.predictiveWeightedRandomPlay || []).map(
+      (num: string) => (num.length === 1 ? `0${num}` : num)
+    );
 
-      const generatePowerballPlayResults = await this.powerballService.generatePowerballPlay();
-      const pastDrawingCount = 200;
-      const recentDrawings = await this.powerballService.getRecentDrawings(
-        pastDrawingCount
-      );
+    legacyPlays.push(legacyPlay);
+  }
 
-      this.latestDrawing = recentDrawings[0];
+  console.log(legacyPlays)
 
-      // Format play results to ensure two digits
-      this.play = generatePowerballPlayResults.predictiveWeightedRandomPlay.map(
-        (num: string | any[]) => (num.length === 1 ? `0${num}` : num)
-      );
+  // 4) Batch-generate ML tickets (weighted random + diversity)
+  const seed = Date.now() % 1_000_000_000; // reproducible-ish per click
+  const batch = await this.aiService.generateBatch(parsedDraws, {
+    num_tickets: 30,
+    diversity_min_hamming: 3,
+    recency_decay: 0.98,
+    alpha_smooth: 0.5,
+    temperature: 0.9,
+    seed,
+  });
 
-      const matchedSets: { matchedSetsIndex: number }[] = [];
+  const mlTickets: string[][] =
+    batch?.tickets?.map(t => t.full_set) ?? [];
 
-      // Find matching sets
-      this.recentDrawings = recentDrawings.map(
-        (set: { numbers: any }, i: any) => {
-          const numbers = set.numbers;
-          const numberMatches = numbers.filter(
-            (num: string, index: number) => this.play[index] == num
-          );
+  console.log(mlTickets);
+  // 5) Merge legacy + ML results for your pick checker
+  const combined = [...legacyPlays, ...mlTickets];
 
-          if (numberMatches.length >= 3) {
-            matchedSets.push({ matchedSetsIndex: i });
-          }
+  // 6) Compute matches against recent draws (same logic you had)
+  const pastDrawingCount = 200;
+  const recentDrawings = await this.powerballService.getRecentDrawings(pastDrawingCount);
+  this.latestDrawing = recentDrawings[0];
 
-          return set.numbers;
-        }
-      );
-
-      // Filter matched sets
-      this.recentDrawings = this.recentDrawings.filter((set, i) =>
-        matchedSets.some((match) => match.matchedSetsIndex == i)
-      );
-      this.totalMatches = matchedSets.length;
-
-      newPlays.push(this.play);
-
-    //   generatePowerballPlayResults.aiPredictiveSet.forEach((set: any) => {
-    //     const hasDup = set.filter((item: any, index: any) => set.indexOf(item) !== index);
-    //     if (hasDup.length === 0) {
-    //       this.aiResults.push([
-    //         ...set,
-    //       ]);
-    //     }
-    //   });
-
-    //   highProb.push([...generatePowerballPlayResults.highestProbabilityPlay]);
-    }
-
-    this.toastr.success('', 'Generated Powerball Play', {
-      timeOut: 1500,
-      positionClass: 'toast-bottom-right',
+  const matchedSetsIdx: number[] = [];
+  recentDrawings.forEach((set, i) => {
+    const matches = set.numbers.filter((num: string, idx: number) => {
+      // compare to the *first* ticket in combined (legacyPlay),
+      // or swap to any ticket you want to analyze
+      return (combined[0]?.[idx] ?? '') === num;
     });
+    if (matches.length >= 4) matchedSetsIdx.push(i);
+  });
 
-    const combindPicks = [
-      ...newPlays
-    ];
+  this.recentDrawings = recentDrawings
+    .filter((_, i) => matchedSetsIdx.includes(i))
+    .map(s => s.numbers);
+  this.totalMatches = matchedSetsIdx.length;
 
-    this.history = combindPicks;
+  // 7) Update UI data & run your checker
+  this.play = legacyPlays[0];              // what you currently show as "the" play
+  this.aiResults = mlTickets;          // keep around if you want to render them
+  this.history = combined;             // existing UI expects history to be list of plays
+  this.combindResults = this.pickCheckerService.checkPicks(combined);
 
-    this.combindResults = this.pickCheckerService.checkPicks(combindPicks);
-    const now = Date.now();
-    const historyStorageKey = `generated_picks_${now}`;
+  this.toastr.success('', 'Generated Powerball Plays', {
+    timeOut: 1500,
+    positionClass: 'toast-bottom-right',
+  });
 
-    // localStorage.setItem(historyStorageKey, JSON.stringify(this.combindResults));
+  // console.log({ seed, legacyPlay, mlTickets, batchMeta: batch?.meta });
+}
+
+  /**
+   * Converts raw historical draw data into a number[][] format
+   * required by the AI prediction backend.
+   *
+   * Each inner array is [white1, white2, white3, white4, white5, powerball]
+   */
+  parseDrawHistoryForModel(draws: PowerballDraw[]): number[][] {
+    return draws.map((draw) => {
+      const numbers = draw.winning_numbers
+        .split(' ')
+        .map((n) => parseInt(n, 10));
+      return numbers;
+    });
   }
 
   open(): void {

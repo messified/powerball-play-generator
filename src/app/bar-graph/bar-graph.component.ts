@@ -182,64 +182,9 @@ export class BarGraphComponent implements OnInit {
         };
 
         if (
-          (chartData[1] && chartData[1]['March']) ||
-          (chartData[1] && chartData[1]['February']) ||
-          (chartData[1] && chartData[1]['January'])
+          (chartData[1])
         ) {
-          const janWins = chartData[1]['January'];
-          const febWins = chartData[1]['February'];
-          const marchWins = chartData[1]['March'];
-          const aprilWins = chartData[1]['April'];
           const augustWins = chartData[1]['August'];
-
-          // if (janWins && janWins.length > 0) {
-          //   console.group('January Results');
-          //   janWins.forEach((jw: any) => {
-          //     console.log(jw);
-          //     console.log(jw.date);
-          //     console.log('historical_draw: ', jw.historical_draw);
-          //     console.log('matching_picks: ', jw.matching_picks[0]);
-          //     console.log('matches: ', this.findDuplicates(jw.matching_picks, jw.historical_draw));
-          //   });
-          //   console.groupEnd();
-          // }
-
-          // if (febWins && febWins.length > 0) {
-          //   console.group('February Results');
-          //   febWins.forEach((fw: any) => {
-          //     console.log(fw);
-          //     console.log(fw.date);
-          //     console.log('historical_draw: ', fw.historical_draw);
-          //     console.log('matching_picks: ', fw.matching_picks[0]);
-          //     console.log('matches: ', this.findDuplicates(fw.matching_picks, fw.historical_draw));
-          //   });
-          //   console.groupEnd();
-          // }
-
-          // if (marchWins && marchWins.length > 0) {
-          //   console.group('March Results');
-          //   marchWins.forEach((mw: any) => {
-          //     console.log(mw);
-          //     console.log(mw.date);
-          //     console.log('historical_draw: ', mw.historical_draw);
-          //     console.log('matching_picks: ', mw.matching_picks[0]);
-          //     console.log('matches: ', this.findDuplicates(mw.matching_picks, mw.historical_draw));
-          //   });
-          //   console.groupEnd();
-          // }
-
-          // if (aprilWins && aprilWins.length > 0) {
-          //   console.group('April Results');
-            
-          //   aprilWins.forEach((ap: any) => {
-          //     console.log(ap);
-          //     console.log(ap.date);
-          //     console.log('historical_draw: ', ap.historical_draw);
-          //     console.log('matching_picks: ', ap.matching_picks[0]);
-          //     console.log('matches: ', this.findDuplicates(ap.matching_picks, ap.historical_draw));
-          //   });
-          //   console.groupEnd();
-          // }
 
           if (augustWins && augustWins.length > 0) {
             console.group('August Results');
@@ -252,7 +197,6 @@ export class BarGraphComponent implements OnInit {
               console.log(ap.date);
               console.log('historical_draw: ', ap.historical_draw);
               console.log('matching_picks: ', ap.matching_picks[0]);
-              console.log('matches: ', this.findDuplicates(ap.matching_picks, ap.historical_draw));
             });
             console.groupEnd();
           }

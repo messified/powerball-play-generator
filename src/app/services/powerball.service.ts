@@ -26,10 +26,10 @@ export class PowerballService {
   private config: any = {
     whiteBallRange: { min: 1, max: 69 },
     powerballRange: { min: 1, max: 26 },
-    whiteBallDupThreshold: 5,
+    whiteBallDupThreshold: 4,
     powerballDupThreshold: 4,
-    recencyExpBase: 1.05,
-    logsEnabled: false
+    recencyExpBase: 1.052,
+    logsEnabled: true
   };
 
   /**
@@ -622,7 +622,6 @@ export class PowerballService {
             // result = [24, 3, 5, 4, 17, 9, 20, 18, 19, 9, 1];
             // console.log(pb);
             result = pb;
-            // result = [9, 15, 4, 16, 20, 21, 12, 14];
             if(this.config.logsEnabled) {
               console.group('Powerball');
               console.log(result);
@@ -633,7 +632,7 @@ export class PowerballService {
           case 'first':
             result = this.findDuplicates(
               this.filterNumbersByRange(parsedNumberSets[key]),
-              dupCount
+              5
             );
             if(this.config.logsEnabled) {
               console.group('First');
@@ -645,7 +644,7 @@ export class PowerballService {
           case 'second':
             result = this.findDuplicates(
               this.filterNumbersByRange(parsedNumberSets[key]),
-              dupCount
+              3
             );
             if(this.config.logsEnabled) {
               console.group('Second');
@@ -656,7 +655,7 @@ export class PowerballService {
           case 'third':
             result = this.findDuplicates(
               this.filterNumbersByRange(parsedNumberSets[key]),
-              dupCount
+              5
             );
             if(this.config.logsEnabled) {
               console.group('Third');
@@ -678,7 +677,7 @@ export class PowerballService {
           case 'fifth':
             result = this.findDuplicates(
               this.filterNumbersByRange(parsedNumberSets[key]),
-              dupCount
+              5
             );
             if(this.config.logsEnabled) {
               console.group('fifth');
