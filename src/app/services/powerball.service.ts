@@ -26,10 +26,10 @@ export class PowerballService {
   private config: any = {
     whiteBallRange: { min: 1, max: 69 },
     powerballRange: { min: 1, max: 26 },
-    whiteBallDupThreshold: 4,
-    powerballDupThreshold: 4,
-    recencyExpBase: 1.052,
-    logsEnabled: true
+    whiteBallDupThreshold: 2,
+    powerballDupThreshold: 5,
+    recencyExpBase: 1.051,
+    logsEnabled: false
   };
 
   /**
@@ -621,18 +621,17 @@ export class PowerballService {
             // result = [1,9,24,14,15,5,18,4,12,6,10,23,20,8,17];
             // result = [24, 3, 5, 4, 17, 9, 20, 18, 19, 9, 1];
             // console.log(pb);
+            // result = [18, 18, 25, 9, 7, 25,12, 1, 4, 16, 26, 23];
             result = pb;
-            if(this.config.logsEnabled) {
-              console.group('Powerball');
-              console.log(result);
-              console.groupEnd();
-            }
+              // console.group('Powerball');
+              // console.log(result);
+              // console.groupEnd();
 
             break;
           case 'first':
             result = this.findDuplicates(
               this.filterNumbersByRange(parsedNumberSets[key]),
-              5
+              dupCount
             );
             if(this.config.logsEnabled) {
               console.group('First');
@@ -644,7 +643,7 @@ export class PowerballService {
           case 'second':
             result = this.findDuplicates(
               this.filterNumbersByRange(parsedNumberSets[key]),
-              3
+              dupCount
             );
             if(this.config.logsEnabled) {
               console.group('Second');
@@ -655,8 +654,9 @@ export class PowerballService {
           case 'third':
             result = this.findDuplicates(
               this.filterNumbersByRange(parsedNumberSets[key]),
-              5
+              dupCount
             );
+
             if(this.config.logsEnabled) {
               console.group('Third');
               console.log(result);
@@ -677,7 +677,7 @@ export class PowerballService {
           case 'fifth':
             result = this.findDuplicates(
               this.filterNumbersByRange(parsedNumberSets[key]),
-              5
+              dupCount
             );
             if(this.config.logsEnabled) {
               console.group('fifth');

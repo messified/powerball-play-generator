@@ -49,7 +49,7 @@ export class PlayGeneratorComponent implements OnInit {
   matchingSets: { index: number }[] = [];
   latestDrawing: any = {};
   winningPicks: any;
-  counter: number = 15;
+  counter: number = 60;
   newGenResults: any;
   playBasedOnPredictedPowerballResults: any;
   combindResults: any;
@@ -87,11 +87,6 @@ async generateTicket(): Promise<void> {
   // 3) Call your legacy local generator once (keeps current UI vibe)
   for(let i = 0; i<this.counter; i++) {
     const legacy = await this.powerballService.generatePowerballPlay();
-    // Choose the set you like most from your legacy outputs:
-    // Here we keep predictiveWeightedRandomPlay as before.
-    legacyPlays.push(legacy?.highestProbabilityPlay);
-    legacyPlays.push(legacy?.predictiveFreqPredictedPlay);
-
     const legacyPlay: string[] = (legacy?.predictiveWeightedRandomPlay || []).map(
       (num: string) => (num.length === 1 ? `0${num}` : num)
     );
@@ -99,13 +94,11 @@ async generateTicket(): Promise<void> {
     legacyPlays.push(legacyPlay);
   }
 
-  console.log(legacyPlays)
-
   // 4) Batch-generate ML tickets (weighted random + diversity)
   const seed = Date.now() % 1_000_000_000; // reproducible-ish per click
   const batch = await this.aiService.generateBatch(parsedDraws, {
-    num_tickets: 30,
-    diversity_min_hamming: 3,
+    num_tickets: 60,
+    diversity_min_hamming: 8,
     recency_decay: 0.98,
     alpha_smooth: 0.5,
     temperature: 0.9,
@@ -115,9 +108,8 @@ async generateTicket(): Promise<void> {
   const mlTickets: string[][] =
     batch?.tickets?.map(t => t.full_set) ?? [];
 
-  console.log(mlTickets);
   // 5) Merge legacy + ML results for your pick checker
-  const combined = [...legacyPlays, ...mlTickets];
+  const combined = [...mlTickets, ...legacyPlays];
 
   // 6) Compute matches against recent draws (same logic you had)
   const pastDrawingCount = 200;
@@ -149,8 +141,6 @@ async generateTicket(): Promise<void> {
     timeOut: 1500,
     positionClass: 'toast-bottom-right',
   });
-
-  // console.log({ seed, legacyPlay, mlTickets, batchMeta: batch?.meta });
 }
 
   /**

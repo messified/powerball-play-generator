@@ -29,11 +29,25 @@ export class PickCheckerService {
   constructor() {}
 
   checkPicks(myPicks: any) {
-    const matchCount = 3;
+    const matchCount = 4;
     const drawingResults: any = [];
     const picks: string[][] = [];
 
-    myPicks = allLatestPicks;
+    type Ticket = (string | number)[];
+
+    const options = ['25','05','04', '18', '25', '09', '07', '25', '12', '01', '04', '16', '26', '23', '24', '05'];
+
+    myPicks = myPicks.map((p: Ticket) => {
+      const next = [...p]; // avoid mutating the original
+      const randomIndex = Math.floor(Math.random() * options.length);
+      const chosen = options[randomIndex];
+
+      // Ensure PB is zero-padded string (01..26)
+      next[5] = chosen.toString().padStart(2, '0');
+      return next;
+    });
+
+    // myPicks = allLatestPicks;
 
     this.historicalDrawings.forEach((draw) => {
       drawingResults.push(this.processPicks(draw, myPicks, matchCount));
