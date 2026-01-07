@@ -53,8 +53,6 @@ export class LotterySettingsComponent implements OnInit {
       console.log('Ticket Count:', formValues.ticketCount);
 
       // You can now pass these values to your service or further logic
-      // e.g. this.powerballService.setRecencyBase(formValues.recencyExpBase);
-      //      this.powerballService.setTicketCount(formValues.ticketCount);
     } else {
       // Handle invalid form (show errors, etc.)
       console.warn('Form is invalid. Please check your inputs.');

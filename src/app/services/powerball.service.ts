@@ -3,6 +3,9 @@ import { PowerballData } from '../data/powerball-data';
 import _ from 'lodash';
 import { FutureGeneratedDraws } from '../data/future-data';
 import { PowerballDataMinusLatest } from '../data/historical-data';
+import { PowerballConfigService } from './powerball-config.service';
+import { GenerationContext } from './strategies/generation-strategy.interface';
+import { StrategyFactoryService } from './strategies/strategy-factory.service';
 
 export interface IWinningsResponse {
   draw_date: string;
@@ -16,21 +19,12 @@ export interface IParsedWinningsResponse {
   multiplier: string;
 }
 
-@Injectable()
+@Injectable({
+  providedIn: 'root',
+})
 export class PowerballService {
-  private fromDate: Date = new Date('2019-01-04T00:00:00');
   private powerballData: any;
   private historicalData: string[][] = [];
-
-  // Configurable parameters.
-  private config: any = {
-    whiteBallRange: { min: 1, max: 69 },
-    powerballRange: { min: 1, max: 26 },
-    whiteBallDupThreshold: 2,
-    powerballDupThreshold: 5,
-    recencyExpBase: 1.051,
-    logsEnabled: false
-  };
 
   /**
    * synergyMap[positionIndex][currentNumber][nextNumber] = frequency
@@ -41,23 +35,26 @@ export class PowerballService {
     };
   } = {};
 
-  constructor() {}
+  constructor(
+    private configService: PowerballConfigService,
+    private strategyFactory: StrategyFactoryService
+  ) {}
 
   // ------------------------------------------------------------
   // MAIN ENTRY
   // ------------------------------------------------------------
 
-  async generatePowerballPlay() {
+  async generatePowerballPlay(trainingData?: any[]) {
     // 1. Load historical data
-    // this.powerballData = PowerballData;
-    this.powerballData = PowerballDataMinusLatest;
-    // this.powerballData = FutureGeneratedDraws;
+    // If trainingData is provided (for backtesting), use it; otherwise use default
+    this.powerballData = trainingData || PowerballDataMinusLatest;
 
     // 2. Filter based on fromDate
+    const fromDate = this.configService.get('fromDate');
     const filtered = this.powerballData.filter(
       (el: { draw_date: string | number | Date }) => {
         const drawDate = new Date(el.draw_date);
-        return drawDate >= this.fromDate;
+        return drawDate >= fromDate;
       }
     );
 
@@ -80,151 +77,61 @@ export class PowerballService {
     // 5. Filter duplicates/frequencies
     const filteredParsedSets = await this.filterParsedNumberSets(parsedsets);
 
-    // 6. Highest Probability
-    const highestProbabilityPlay = filteredParsedSets.map((set) => {
-      const numbers = set.numbers;
-      const strNums: string[] = [];
+    // 6. Build generation context
+    const context = this.buildGenerationContext(filteredParsedSets);
 
-      numbers.forEach((num: any) => {
-        const strN = num.length === 1 ? `0${num}` : num.toString();
-        strNums.push(strN);
-      });
+    // 7. Generate plays using strategies
+    const initialRandomStrategy = this.strategyFactory.getStrategy('initialRandom')!;
+    const predictiveFrequencyStrategy = this.strategyFactory.getStrategy('predictiveFrequency')!;
+    const predictiveWeightedRandomStrategy = this.strategyFactory.getStrategy('predictiveWeightedRandom')!;
+    const highestProbabilityStrategy = this.strategyFactory.getStrategy('highestProbability')!;
+    const aiPredictiveStrategy = this.strategyFactory.getStrategy('aiPredictive')!;
 
-      // Weighted pick with recency
-      return this.pickAdvancedProbabilityNumberWithRecency(strNums, 50);
-    });
+    // Generate all plays in parallel for better performance
+    const [
+      sortedInitialPlay,
+      sortedPredictiveFreqPredictedPlay,
+      sortedPredictiveWeightedRandomPlay,
+      sortedHighestProbabilityPlay,
+      sortedAiPredictiveSet
+    ] = await Promise.all([
+      initialRandomStrategy.generate(context),
+      predictiveFrequencyStrategy.generate(context),
+      predictiveWeightedRandomStrategy.generate(context),
+      highestProbabilityStrategy.generate(context),
+      aiPredictiveStrategy.generate(context)
+    ]);
 
-    // 7. Initial Random
-    const initialPlay = filteredParsedSets.map((set) => {
-      const numbers = set.numbers;
-      const randomNumber = numbers[Math.floor(Math.random() * numbers.length)];
-      return typeof randomNumber === 'number'
-        ? randomNumber.toString()
-        : randomNumber;
-    });
-
-    // 8. Two different seeded plays
-    const firstFreqPredictedNumber = this.pickMostFrequentFirstNumber();
-    const firstPredictedNumber = this.pickWeightedRandomFirstNumber();
-
-    const predictiveFreqPredictedPlay = this.buildWithTheFirst(
-      firstFreqPredictedNumber,
-      initialPlay
-    );
-    const predictiveWeightedRandomPlay = this.buildWithTheFirst(
-      firstPredictedNumber,
-      initialPlay
-    );
-
-    /**
-     * 9. AI Predictive Set
-     *    This merges synergy-based logic with advanced recency weighting,
-     *    plus fallback logic and a mild random offset to avoid repetitive "01" sets.
-     */
-    const aiPredictiveSet = filteredParsedSets.map((set) => {
-      // We'll generate 6 numbers (index 0..5)
-      // If set.numbers is empty or invalid, fallback to random picks
-      if (!set.numbers || !set.numbers.length) {
-        return this.generateFallbackSet();
-      }
-
-      const synergyBasedPick: string[] = [];
-      // Start with a random seed from the set
-      let currentPick =
-        set.numbers[Math.floor(Math.random() * set.numbers.length)].toString();
-
-      // We'll fill first 5 positions using synergy + recency weighting
-      for (let i = 0; i < 5; i++) {
-        // synergy approach
-        const synergyCandidates = this.generateNextNumberArray(currentPick, i);
-
-        // fallback if synergy is empty
-        if (!synergyCandidates || !synergyCandidates.length) {
-          // fallback to random from 1..69
-          const fallback = this.randomNumberInRange(1, 69);
-          synergyBasedPick.push(fallback);
-          currentPick = fallback;
-          continue;
-        }
-
-        const uniqueCandidates = _.uniq(
-          this.removeDuplicateStrings(synergyCandidates)
-        );
-
-        // use advanced recency weighting
-        let chosen = this.pickAdvancedProbabilityNumber(uniqueCandidates);
-
-        // fallback if chosen is empty
-        if (!chosen) {
-          chosen = this.randomNumberInRange(1, 69);
-        }
-
-        // mild random offset chance (e.g. 15% chance we pick random out-of-band)
-        if (Math.random() < 0.1) {
-          const randomAlt = this.randomNumberInRange(1, 69);
-          chosen = randomAlt;
-        }
-
-        synergyBasedPick.push(chosen);
-        currentPick = chosen;
-      }
-
-      // Choose powerball with synergy or random
-      const chosenPB = this.pickPowerballAi();
-
-      // console.group('chosenPB');
-      // console.log(chosenPB);
-      // console.groupEnd();
-
-      // Enforce PB range
-      const numericPB = parseInt(chosenPB, 10);
-      const validPB =
-        numericPB < 1 || numericPB > 26
-          ? this.fallbackPowerballValue(numericPB)
-          : chosenPB;
-
-      return [...synergyBasedPick, validPB];
-    });
-
-    // 10. Sort the first five numbers in each set
-    const sortedInitialPlay = this.sortGeneratedSet(initialPlay);
-    const sortedPredictiveFreqPredictedPlay = this.sortGeneratedSet(
-      predictiveFreqPredictedPlay
-    );
-    const sortedPredictiveWeightedRandomPlay = this.sortGeneratedSet(
-      predictiveWeightedRandomPlay
-    );
-    const sortedHighestProbabilityPlay = this.sortGeneratedSet(
-      highestProbabilityPlay
-    );
-    // Sort the new AI set
-    const sortedAiPredictiveSet = this.sortGeneratedSet(aiPredictiveSet);
-
-    // const testData = this.generateFutureTestData(150);
-
-    // console.log(testData);
-
-    // 11. Log resulting sets, now including aiPredictiveSet
-    // console.group('All Generated Plays');
-    // console.log(
-    //   {
-    //     initialPlay: sortedInitialPlay,
-    //     predictiveFreqPredictedPlay: sortedPredictiveFreqPredictedPlay,
-    //     predictiveWeightedRandomPlay: sortedPredictiveWeightedRandomPlay,
-    //     highestProbabilityPlay: sortedHighestProbabilityPlay,
-    //     aiPredictiveSet: sortedAiPredictiveSet,
-    //   }
-    // );
-    // console.groupEnd()
-
-    // Return whichever set you want. Here we return the new AI set
-    // return sortedAiPredictiveSet[Math.floor(Math.random() * sortedAiPredictiveSet.length)];
     return {
       initialPlay: sortedInitialPlay,
       predictiveFreqPredictedPlay: sortedPredictiveFreqPredictedPlay,
       predictiveWeightedRandomPlay: sortedPredictiveWeightedRandomPlay,
       highestProbabilityPlay: sortedHighestProbabilityPlay,
       aiPredictiveSet: sortedAiPredictiveSet,
+    };
+  }
+
+  /**
+   * Builds the generation context that strategies need to generate plays.
+   */
+  private buildGenerationContext(filteredParsedSets: Array<{ key: string; numbers: number[] }>): GenerationContext {
+    return {
+      historicalData: this.historicalData,
+      filteredParsedSets: filteredParsedSets,
+      synergyMap: this.synergyMap,
+      pickAdvancedProbabilityNumber: (bestGuessSet: string[]) => this.pickAdvancedProbabilityNumber(bestGuessSet),
+      pickAdvancedProbabilityNumberWithRecency: (bestGuessSet: string[], recencyThreshold: number) => 
+        this.pickAdvancedProbabilityNumberWithRecency(bestGuessSet, recencyThreshold),
+      pickMostFrequentFirstNumber: (powerball?: boolean) => this.pickMostFrequentFirstNumber(powerball),
+      pickWeightedRandomFirstNumber: (powerball?: boolean) => this.pickWeightedRandomFirstNumber(powerball),
+      generateNextNumberArray: (selectedNumber: string, customIndex?: number) => 
+        this.generateNextNumberArray(selectedNumber, customIndex),
+      randomNumberInRange: (min: number, max: number) => this.randomNumberInRange(min, max),
+      buildWithTheFirst: (firstPredictedNumber: string, initialPlay: any) => 
+        this.buildWithTheFirst(firstPredictedNumber, initialPlay),
+      pickPowerballAi: () => this.pickPowerballAi(),
+      generateFallbackSet: () => this.generateFallbackSet(),
+      sortGeneratedSet: (generated: any) => this.sortGeneratedSet(generated),
     };
   }
 
@@ -298,7 +205,6 @@ export class PowerballService {
     if (possiblePBs && possiblePBs.length) {
       const freqMap = this.createFrequencyMap(possiblePBs);
       const weightedPBs = this.buildWeightedArrayFromMap(freqMap);
-      // const weightedPBs = ['01','24','14','15','25','04','07','12','10','23','20','08'];
 
       // fallback if no weighting
       if (!weightedPBs.length) {
@@ -362,7 +268,6 @@ export class PowerballService {
         return this.randomNumberInRange(1, 69);
       }
       const picked = this.pickAdvancedProbabilityNumber(bestGuessSet);
-      // const picked = this.pickHighestProbabilityNumber(bestGuessSet);
       // fallback if none picked
       if (!picked) {
         return this.randomNumberInRange(1, 69);
@@ -486,7 +391,7 @@ export class PowerballService {
   }
 
   private pickAdvancedProbabilityNumber(bestGuessSet: string[]): string {
-    const RECENCY_EXP_BASE = this.config.recencyExpBase;
+    const RECENCY_EXP_BASE = this.configService.get('recencyExpBase');
     const frequencyMap = this.createFrequencyMap(bestGuessSet);
 
     this.historicalData.forEach((row, index) => {
@@ -501,10 +406,6 @@ export class PowerballService {
 
     const weightedArray = this.buildWeightedArrayFromMap(frequencyMap);
 
-    // console.group('weightedArray ----');
-    // console.log(weightedArray);
-    // console.groupEnd();
-
     return this.pickRandomFromWeightedArray(weightedArray, bestGuessSet);
   }
 
@@ -513,7 +414,7 @@ export class PowerballService {
     bestGuessSet: string[],
     recencyThreshold: number
   ): string {
-    const RECENCY_EXP_BASE = this.config.recencyExpBase;
+    const RECENCY_EXP_BASE = this.configService.get('recencyExpBase');
     const recentData = this.historicalData.slice(-recencyThreshold);
     const frequencyMap = this.createFrequencyMap(bestGuessSet);
 
@@ -608,44 +509,32 @@ export class PowerballService {
     };
 
     const filteredNumbers: { key: string; numbers: number[] }[] = [];
-    const dupCount = this.config.whiteBallDupThreshold;
+    const dupCount = this.configService.get('whiteBallDupThreshold');
 
     for (const key in parsedNumberSets) {
       if (parsedNumberSets.hasOwnProperty(key)) {
         let result: number[] = [];
         switch (key) {
           case 'powerball':
-            const pb = this.findDuplicates(parsedNumberSets[key], this.config.powerballDupThreshold);
-            // cresult = [1, 3, 4, 5, 8, 9, 14, 15, 16, 17, 20, 21, 22, 23]
-            // console.log(pb);
-            // result = [1,9,24,14,15,5,18,4,12,6,10,23,20,8,17];
-            // result = [24, 3, 5, 4, 17, 9, 20, 18, 19, 9, 1];
-            // console.log(pb);
-            // result = [18, 18, 25, 9, 7, 25,12, 1, 4, 16, 26, 23];
-            result = pb;
-              // console.group('Powerball');
-              // console.log(result);
-              // console.groupEnd();
-
+            result = this.findDuplicates(parsedNumberSets[key], this.configService.get('powerballDupThreshold'));
             break;
           case 'first':
             result = this.findDuplicates(
               this.filterNumbersByRange(parsedNumberSets[key]),
               dupCount
             );
-            if(this.config.logsEnabled) {
+            if(this.configService.get('logsEnabled')) {
               console.group('First');
               console.log(result);
               console.groupEnd();
             }
-            // result = [13, 1, 2, 3, 4, 12, 5, 6, 7, 8, 9];
             break;
           case 'second':
             result = this.findDuplicates(
               this.filterNumbersByRange(parsedNumberSets[key]),
               dupCount
             );
-            if(this.config.logsEnabled) {
+            if(this.configService.get('logsEnabled')) {
               console.group('Second');
               console.log(result);
               console.groupEnd();
@@ -657,7 +546,7 @@ export class PowerballService {
               dupCount
             );
 
-            if(this.config.logsEnabled) {
+            if(this.configService.get('logsEnabled')) {
               console.group('Third');
               console.log(result);
               console.groupEnd();
@@ -668,7 +557,7 @@ export class PowerballService {
               this.filterNumbersByRange(parsedNumberSets[key]),
               dupCount
             );
-            if(this.config.logsEnabled) {
+            if(this.configService.get('logsEnabled')) {
               console.group('Fourth');
               console.log(result);
               console.groupEnd();
@@ -679,7 +568,7 @@ export class PowerballService {
               this.filterNumbersByRange(parsedNumberSets[key]),
               dupCount
             );
-            if(this.config.logsEnabled) {
+            if(this.configService.get('logsEnabled')) {
               console.group('fifth');
               console.log(result);
               console.groupEnd();
@@ -689,8 +578,6 @@ export class PowerballService {
         filteredNumbers.push({ key, numbers: result });
       }
     }
-
-    // console.log(filteredNumbers);
 
     return filteredNumbers;
   }
@@ -811,7 +698,7 @@ export class PowerballService {
     const frequencyMap = this.createFrequencyMap(firstNumbers);
 
     let mostFrequentNumber = firstNumbers[0] || '01';
-    let maxCount = 5;
+    let maxCount = this.configService.get('minFrequencyThreshold');
 
     for (const number in frequencyMap) {
       if (frequencyMap[number] > maxCount) {
@@ -920,9 +807,11 @@ export class PowerballService {
 
       // Ensure uniqueness: if we've already used nextPick, we re-roll
       let attempts = 0;
-      while (whiteBalls.includes(nextPick) && attempts < 20) {
+      const maxAttempts = this.configService.get('maxUniquenessAttempts');
+      while (whiteBalls.includes(nextPick) && attempts < maxAttempts) {
         // Try synergy again or fallback to random
-        nextPick = this.randomNumberInRange(1, 69);
+        const whiteBallRange = this.configService.get('whiteBallRange');
+        nextPick = this.randomNumberInRange(whiteBallRange.min, whiteBallRange.max);
         attempts++;
       }
 

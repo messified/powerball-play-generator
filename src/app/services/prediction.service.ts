@@ -3,6 +3,7 @@ import { PowerballData } from '../data/powerball-data';
 import _ from 'lodash';
 import { FutureGeneratedDraws } from '../data/future-data';
 import { PowerballDataMinusLatest } from '../data/historical-data';
+import { PowerballConfigService } from './powerball-config.service';
 
 export interface IWinningsResponse {
   draw_date: string;
@@ -14,14 +15,6 @@ export interface IParsedWinningsResponse {
   date: string;
   numbers: string[];
   multiplier: string;
-}
-
-interface PredictionConfig {
-  whiteBallRange: { min: number; max: number };
-  powerballRange: { min: number; max: number };
-  whiteBallDupThreshold: number;
-  powerballDupThreshold: number;
-  recencyExpBase: number;
 }
 
 @Injectable({
@@ -43,16 +36,10 @@ export class PredictionService {
    */
   private higherOrderSynergyMap: { [pairKey: string]: { [next: string]: number } } = {};
 
-  // Configurable parameters.
-  private config: PredictionConfig = {
-    whiteBallRange: { min: 1, max: 69 },
-    powerballRange: { min: 1, max: 26 },
-    whiteBallDupThreshold: 6,
-    powerballDupThreshold: 5,
-    recencyExpBase: 1.055,
-  };
+  // Service-specific config (uses prediction service overrides)
+  private config = this.configService.getServiceConfig('prediction');
 
-  constructor() {}
+  constructor(private configService: PowerballConfigService) {}
 
   /**
    * Main entry point.
@@ -60,12 +47,13 @@ export class PredictionService {
    * 2. Builds both first‑order and higher‑order synergy maps.
    * 3. Constructs a play using the Higher‑Order Markov Chain approach.
    * 4. Returns the final, formatted set of numbers.
+   * 
+   * @param trainingData Optional training data for backtesting. If not provided, uses PowerballDataMinusLatest.
    */
-  async generatePowerballPlay(): Promise<string[]> {
+  async generatePowerballPlay(trainingData?: any[]): Promise<string[]> {
     // Load and format historical data.
-    // this.powerballData = PowerballData;
-    this.powerballData = PowerballDataMinusLatest;
-    // this.powerballData = FutureGeneratedDraws;
+    // If trainingData is provided (for backtesting), use it; otherwise use default
+    this.powerballData = trainingData || PowerballDataMinusLatest;
     const formattedData = this.powerballData.map((result: { draw_date: any; winning_numbers: string; multiplier: any; }) => ({
       date: result.draw_date,
       numbers: result.winning_numbers.split(' '),
@@ -144,7 +132,8 @@ export class PredictionService {
         firstOrderCandidates
       );
     } else {
-      secondWhiteBall = this.randomNumberInRange(this.config.whiteBallRange.min, this.config.whiteBallRange.max);
+      const whiteBallRange = this.config.whiteBallRange!;
+      secondWhiteBall = this.randomNumberInRange(whiteBallRange.min, whiteBallRange.max);
     }
     whiteBalls.push(secondWhiteBall);
 
@@ -166,18 +155,20 @@ export class PredictionService {
    * The powerball (6th number) is processed separately.
    */
   private sortAndEnforceRange(play: string[]): string[] {
+    const whiteBallRange = this.config.whiteBallRange!;
+    const powerballRange = this.config.powerballRange!;
     const whiteBalls = play.slice(0, 5).map(num => {
       let n = parseInt(num, 10);
-      if (n < this.config.whiteBallRange.min) n = this.config.whiteBallRange.min;
-      if (n > this.config.whiteBallRange.max) n = this.config.whiteBallRange.max;
+      if (n < whiteBallRange.min) n = whiteBallRange.min;
+      if (n > whiteBallRange.max) n = whiteBallRange.max;
       return n;
     });
     whiteBalls.sort((a, b) => a - b);
     const formattedWhiteBalls = whiteBalls.map(n => n.toString().padStart(2, '0'));
 
     let pb = parseInt(play[5], 10);
-    if (pb < this.config.powerballRange.min) pb = this.config.powerballRange.min;
-    if (pb > this.config.powerballRange.max) pb = this.config.powerballRange.max;
+    if (pb < powerballRange.min) pb = powerballRange.min;
+    if (pb > powerballRange.max) pb = powerballRange.max;
     const formattedPb = pb.toString().padStart(2, '0');
 
     return [...formattedWhiteBalls, formattedPb];
@@ -233,22 +224,22 @@ export class PredictionService {
       parsedNumberSets['powerball'].push(parseInt(set.numbers[5], 10));
     }
 
+    const whiteBallRange = this.config.whiteBallRange!;
+    const powerballRange = this.config.powerballRange!;
+    const whiteBallDupThreshold = this.config.whiteBallDupThreshold!;
+    const powerballDupThreshold = this.config.powerballDupThreshold!;
     const filteredNumbers: { key: string; numbers: number[] }[] = [];
     for (const key of positions) {
       const arr = parsedNumberSets[key].filter(num => {
         if (key === 'powerball') {
-          return num >= this.config.powerballRange.min && num <= this.config.powerballRange.max;
+          return num >= powerballRange.min && num <= powerballRange.max;
         }
-        return num >= this.config.whiteBallRange.min && num <= this.config.whiteBallRange.max;
+        return num >= whiteBallRange.min && num <= whiteBallRange.max;
       });
-      const threshold = key === 'powerball' ? this.config.powerballDupThreshold : this.config.whiteBallDupThreshold;
+      const threshold = key === 'powerball' ? powerballDupThreshold : whiteBallDupThreshold;
       const duplicates = this.findDuplicates(arr, threshold);
       filteredNumbers.push({ key, numbers: duplicates });
     }
-    // console.group('Filtered Numbers');
-    // console.log(filteredNumbers);
-    // console.groupEnd();
-    // filteredNumbers[5].numbers = [1,9,24,14,15,5,18,4,12,6,10,23,20,8,17];
     return filteredNumbers;
   }
 
@@ -325,7 +316,8 @@ export class PredictionService {
         return candidates[Math.floor(Math.random() * candidates.length)];
       }
     }
-    return this.randomNumberInRange(this.config.whiteBallRange.min, this.config.whiteBallRange.max);
+    const whiteBallRange = this.config.whiteBallRange!;
+    return this.randomNumberInRange(whiteBallRange.min, whiteBallRange.max);
   }
 
   // ------------- Utility Methods -------------

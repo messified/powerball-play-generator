@@ -10,6 +10,7 @@ import { provideAnimations } from '@angular/platform-browser/animations';
 import { BarGraphComponent } from '../bar-graph/bar-graph.component';
 import { AiPowerballService } from '../services/ai-powerball.service';
 import { PowerballDataMinusLatest } from '../data/historical-data';
+import { PowerballConfigService } from '../services/powerball-config.service';
 
 export interface PowerballDraw {
   draw_date: string;
@@ -28,10 +29,7 @@ export interface PowerballDraw {
     BarGraphComponent,
   ],
   providers: [
-    PowerballService,
     provideAnimations(),
-    PredictionService,
-    AiPowerballService,
   ],
   templateUrl: './play-generator.component.html',
   styleUrl: './play-generator.component.scss',
@@ -49,7 +47,6 @@ export class PlayGeneratorComponent implements OnInit {
   matchingSets: { index: number }[] = [];
   latestDrawing: any = {};
   winningPicks: any;
-  counter: number = 60;
   newGenResults: any;
   playBasedOnPredictedPowerballResults: any;
   combindResults: any;
@@ -60,7 +57,8 @@ export class PlayGeneratorComponent implements OnInit {
     private toastr: ToastrService,
     private lightbox: Lightbox,
     private pickCheckerService: PickCheckerService,
-    private aiService: AiPowerballService
+    private aiService: AiPowerballService,
+    private configService: PowerballConfigService
   ) {}
 
   async ngOnInit(): Promise<void> {
@@ -85,7 +83,8 @@ async generateTicket(): Promise<void> {
   const legacyPlays = [];
 
   // 3) Call your legacy local generator once (keeps current UI vibe)
-  for(let i = 0; i<this.counter; i++) {
+  const counter = this.configService.get('generation').counter;
+  for(let i = 0; i<counter; i++) {
     const legacy = await this.powerballService.generatePowerballPlay();
     const legacyPlay: string[] = (legacy?.predictiveWeightedRandomPlay || []).map(
       (num: string) => (num.length === 1 ? `0${num}` : num)
@@ -96,12 +95,13 @@ async generateTicket(): Promise<void> {
 
   // 4) Batch-generate ML tickets (weighted random + diversity)
   const seed = Date.now() % 1_000_000_000; // reproducible-ish per click
+  const mlConfig = this.configService.get('mlGeneration');
   const batch = await this.aiService.generateBatch(parsedDraws, {
-    num_tickets: 60,
-    diversity_min_hamming: 8,
-    recency_decay: 0.98,
-    alpha_smooth: 0.5,
-    temperature: 0.9,
+    num_tickets: mlConfig.numTickets,
+    diversity_min_hamming: mlConfig.diversityMinHamming,
+    recency_decay: mlConfig.recencyDecay,
+    alpha_smooth: mlConfig.alphaSmooth,
+    temperature: mlConfig.temperature,
     seed,
   });
 
@@ -112,7 +112,7 @@ async generateTicket(): Promise<void> {
   const combined = [...mlTickets, ...legacyPlays];
 
   // 6) Compute matches against recent draws (same logic you had)
-  const pastDrawingCount = 200;
+  const pastDrawingCount = this.configService.get('generation').pastDrawingCount;
   const recentDrawings = await this.powerballService.getRecentDrawings(pastDrawingCount);
   this.latestDrawing = recentDrawings[0];
 

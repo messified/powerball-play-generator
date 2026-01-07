@@ -3009,6 +3009,3 @@ export const FDRAWS = [
     multiplier: '10',
   },
 ];
-
-
-// const output  = ;

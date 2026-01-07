@@ -2,6 +2,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
+import { PowerballConfigService } from './powerball-config.service';
 
 export interface PowerballPredictionResponse {
   white_balls: string[];
@@ -54,11 +55,18 @@ export interface BacktestResponse {
   detail: BacktestStep[];
 }
 
-@Injectable()
+@Injectable({
+  providedIn: 'root',
+})
 export class AiPowerballService {
-  private apiUrl = 'http://localhost:8000';
+  constructor(
+    private http: HttpClient,
+    private configService: PowerballConfigService
+  ) {}
 
-  constructor(private http: HttpClient) {}
+  private get apiUrl(): string {
+    return this.configService.get('apiUrl');
+  }
 
   // Existing single-play endpoint (works with the upgraded backend)
   async getAiPrediction(historicalDraws: number[][]): Promise<PowerballPredictionResponse | null> {

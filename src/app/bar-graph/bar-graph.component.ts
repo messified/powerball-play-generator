@@ -7,7 +7,6 @@ import {
 } from 'ng2-charts';
 import { PickCheckerService } from '../services/pick-checker.service';
 import { Subscription } from 'rxjs';
-import _ from 'lodash';
 
 @Component({
   selector: 'app-bar-graph',
@@ -102,9 +101,9 @@ export class BarGraphComponent implements OnInit {
         if (
           (chartData[1])
         ) {
-          const augustWins = chartData[1]['August'];
+          const augustWins = chartData[1]['December'];
           if (augustWins && augustWins.length > 0) {
-            console.group('August Results');
+            console.group('December Results');
             alert('Yay!!!');
             console.group('organizedResults');
             console.log(chartData);
