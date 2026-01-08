@@ -12,12 +12,7 @@ import {
 } from 'ng2-charts';
 import { PickCheckerService } from '../services/pick-checker.service';
 import { Subscription } from 'rxjs';
-
-interface Win {
-  date: string;
-  matching_picks_count: number;
-  // add other properties as needed
-}
+import { Win } from '../models/powerball-draw.interface';
 
 @Component({
   selector: 'app-line-graph',
@@ -28,7 +23,7 @@ interface Win {
   styleUrl: './line-graph.component.scss',
 })
 export class LineGraphComponent implements OnInit {
-  wins: any[] = [
+  wins: Win[] = [
     {
       date: '2025-02-17T00:00:00.000',
       historical_draw: ['04', '44', '47', '52', '57', '09'],
@@ -147,7 +142,7 @@ export class LineGraphComponent implements OnInit {
         const labels = sortedData.map((entry) =>
           new Date(entry.date).toLocaleDateString()
         );
-        const matchingPicks = this.wins.map((entry) => Number(entry.matching_picks_count));
+        const matchingPicks = this.wins.map((entry: Win) => Number(entry.matching_picks_count));
 
         // Build the dataset compatible with Chart.js
         this.chartData = {

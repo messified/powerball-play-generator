@@ -32,10 +32,8 @@ export class HighestProbabilityStrategy implements GenerationStrategy {
         );
       }
 
-      numbers.forEach((num: any) => {
-        const strN = typeof num === 'number' 
-          ? num.toString().padStart(2, '0')
-          : (num.length === 1 ? `0${num}` : num.toString());
+      numbers.forEach((num: number) => {
+        const strN = num.toString().padStart(2, '0');
         strNums.push(strN);
       });
 

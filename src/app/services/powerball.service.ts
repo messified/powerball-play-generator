@@ -6,24 +6,21 @@ import { PowerballDataMinusLatest } from '../data/historical-data';
 import { PowerballConfigService } from './powerball-config.service';
 import { GenerationContext } from './strategies/generation-strategy.interface';
 import { StrategyFactoryService } from './strategies/strategy-factory.service';
-
-export interface IWinningsResponse {
-  draw_date: string;
-  winning_numbers: string;
-  multiplier: string;
-}
-
-export interface IParsedWinningsResponse {
-  date: string;
-  numbers: any[];
-  multiplier: string;
-}
+import { 
+  PowerballDraw, 
+  ParsedPowerballDraw, 
+  PowerballNumberSet, 
+  FilteredNumberSet,
+  GeneratedPlay,
+  RecentDrawing,
+  FutureTestData
+} from '../models/powerball-draw.interface';
 
 @Injectable({
   providedIn: 'root',
 })
 export class PowerballService {
-  private powerballData: any;
+  private powerballData: PowerballDraw[] = [];
   private historicalData: string[][] = [];
 
   /**
@@ -44,71 +41,117 @@ export class PowerballService {
   // MAIN ENTRY
   // ------------------------------------------------------------
 
-  async generatePowerballPlay(trainingData?: any[]) {
-    // 1. Load historical data
-    // If trainingData is provided (for backtesting), use it; otherwise use default
-    this.powerballData = trainingData || PowerballDataMinusLatest;
+  async generatePowerballPlay(trainingData?: PowerballDraw[]): Promise<GeneratedPlay> {
+    try {
+      // 1. Load historical data
+      // If trainingData is provided (for backtesting), use it; otherwise use default
+      this.powerballData = trainingData || PowerballDataMinusLatest;
 
-    // 2. Filter based on fromDate
-    const fromDate = this.configService.get('fromDate');
-    const filtered = this.powerballData.filter(
-      (el: { draw_date: string | number | Date }) => {
-        const drawDate = new Date(el.draw_date);
-        return drawDate >= fromDate;
+      if (!this.powerballData || this.powerballData.length === 0) {
+        throw new Error('No historical data available for generation');
       }
-    );
 
-    // 3. Map the filtered data
-    const formattedData = filtered.map(
-      (result: {
-        draw_date: any;
-        winning_numbers: string;
-        multiplier: any;
-      }) => ({
-        date: result.draw_date,
-        numbers: result.winning_numbers.split(' '),
-        multiplier: result.multiplier,
-      })
-    );
+      // 2. Filter based on fromDate
+      const fromDate = this.configService.get('fromDate');
+      const filtered = this.powerballData.filter(
+        (el: PowerballDraw) => {
+          try {
+            const drawDate = new Date(el.draw_date);
+            return drawDate >= fromDate;
+          } catch (error) {
+            console.warn('Invalid date format in draw:', el.draw_date);
+            return false;
+          }
+        }
+      );
 
-    // 4. Parse winning numbers
-    const parsedsets = await this.parseWinningNumbers(formattedData);
+      if (filtered.length === 0) {
+        throw new Error('No data available after filtering by date');
+      }
 
-    // 5. Filter duplicates/frequencies
-    const filteredParsedSets = await this.filterParsedNumberSets(parsedsets);
+      // 3. Map the filtered data
+      const formattedData: ParsedPowerballDraw[] = filtered.map(
+        (result: PowerballDraw) => ({
+          date: result.draw_date,
+          numbers: result.winning_numbers.split(' '),
+          multiplier: result.multiplier || '1',
+        })
+      );
 
-    // 6. Build generation context
-    const context = this.buildGenerationContext(filteredParsedSets);
+      // 4. Parse winning numbers
+      const parsedsets = await this.parseWinningNumbers(formattedData);
 
-    // 7. Generate plays using strategies
-    const initialRandomStrategy = this.strategyFactory.getStrategy('initialRandom')!;
-    const predictiveFrequencyStrategy = this.strategyFactory.getStrategy('predictiveFrequency')!;
-    const predictiveWeightedRandomStrategy = this.strategyFactory.getStrategy('predictiveWeightedRandom')!;
-    const highestProbabilityStrategy = this.strategyFactory.getStrategy('highestProbability')!;
-    const aiPredictiveStrategy = this.strategyFactory.getStrategy('aiPredictive')!;
+      // 5. Filter duplicates/frequencies
+      const filteredParsedSets = await this.filterParsedNumberSets(parsedsets);
 
-    // Generate all plays in parallel for better performance
-    const [
-      sortedInitialPlay,
-      sortedPredictiveFreqPredictedPlay,
-      sortedPredictiveWeightedRandomPlay,
-      sortedHighestProbabilityPlay,
-      sortedAiPredictiveSet
-    ] = await Promise.all([
-      initialRandomStrategy.generate(context),
-      predictiveFrequencyStrategy.generate(context),
-      predictiveWeightedRandomStrategy.generate(context),
-      highestProbabilityStrategy.generate(context),
-      aiPredictiveStrategy.generate(context)
-    ]);
+      if (!filteredParsedSets || filteredParsedSets.length === 0) {
+        throw new Error('No valid number sets after filtering');
+      }
 
-    return {
-      initialPlay: sortedInitialPlay,
-      predictiveFreqPredictedPlay: sortedPredictiveFreqPredictedPlay,
-      predictiveWeightedRandomPlay: sortedPredictiveWeightedRandomPlay,
-      highestProbabilityPlay: sortedHighestProbabilityPlay,
-      aiPredictiveSet: sortedAiPredictiveSet,
-    };
+      // 6. Build generation context
+      const context = this.buildGenerationContext(filteredParsedSets);
+
+      // 7. Generate plays using strategies
+      const initialRandomStrategy = this.strategyFactory.getStrategy('initialRandom');
+      const predictiveFrequencyStrategy = this.strategyFactory.getStrategy('predictiveFrequency');
+      const predictiveWeightedRandomStrategy = this.strategyFactory.getStrategy('predictiveWeightedRandom');
+      const highestProbabilityStrategy = this.strategyFactory.getStrategy('highestProbability');
+      const aiPredictiveStrategy = this.strategyFactory.getStrategy('aiPredictive');
+
+      if (!initialRandomStrategy || !predictiveFrequencyStrategy || !predictiveWeightedRandomStrategy || 
+          !highestProbabilityStrategy || !aiPredictiveStrategy) {
+        throw new Error('One or more generation strategies are not available');
+      }
+
+      // Generate all plays in parallel for better performance
+      const [
+        sortedInitialPlay,
+        sortedPredictiveFreqPredictedPlay,
+        sortedPredictiveWeightedRandomPlay,
+        sortedHighestProbabilityPlay,
+        sortedAiPredictiveSet
+      ] = await Promise.all([
+        initialRandomStrategy.generate(context).catch(err => {
+          console.error('Error in initialRandom strategy:', err);
+          return this.generateFallbackSet();
+        }),
+        predictiveFrequencyStrategy.generate(context).catch(err => {
+          console.error('Error in predictiveFrequency strategy:', err);
+          return this.generateFallbackSet();
+        }),
+        predictiveWeightedRandomStrategy.generate(context).catch(err => {
+          console.error('Error in predictiveWeightedRandom strategy:', err);
+          return this.generateFallbackSet();
+        }),
+        highestProbabilityStrategy.generate(context).catch(err => {
+          console.error('Error in highestProbability strategy:', err);
+          return this.generateFallbackSet();
+        }),
+        aiPredictiveStrategy.generate(context).catch(err => {
+          console.error('Error in aiPredictive strategy:', err);
+          return this.generateFallbackSet();
+        })
+      ]);
+
+      return {
+        initialPlay: Array.isArray(sortedInitialPlay) ? sortedInitialPlay : [],
+        predictiveFreqPredictedPlay: Array.isArray(sortedPredictiveFreqPredictedPlay) ? sortedPredictiveFreqPredictedPlay : [],
+        predictiveWeightedRandomPlay: Array.isArray(sortedPredictiveWeightedRandomPlay) ? sortedPredictiveWeightedRandomPlay : [],
+        highestProbabilityPlay: Array.isArray(sortedHighestProbabilityPlay) ? sortedHighestProbabilityPlay : [],
+        aiPredictiveSet: Array.isArray(sortedAiPredictiveSet) ? sortedAiPredictiveSet : [],
+      };
+    } catch (error) {
+      console.error('Error generating Powerball play:', error);
+      // Return fallback plays if generation fails
+      const fallback = this.generateFallbackSet();
+      return {
+        initialPlay: fallback,
+        predictiveFreqPredictedPlay: fallback,
+        predictiveWeightedRandomPlay: fallback,
+        highestProbabilityPlay: fallback,
+        aiPredictiveSet: fallback,
+      };
+    }
   }
 
   /**
@@ -127,11 +170,19 @@ export class PowerballService {
       generateNextNumberArray: (selectedNumber: string, customIndex?: number) => 
         this.generateNextNumberArray(selectedNumber, customIndex),
       randomNumberInRange: (min: number, max: number) => this.randomNumberInRange(min, max),
-      buildWithTheFirst: (firstPredictedNumber: string, initialPlay: any) => 
+      buildWithTheFirst: (firstPredictedNumber: string, initialPlay: string[]) =>
         this.buildWithTheFirst(firstPredictedNumber, initialPlay),
       pickPowerballAi: () => this.pickPowerballAi(),
       generateFallbackSet: () => this.generateFallbackSet(),
-      sortGeneratedSet: (generated: any) => this.sortGeneratedSet(generated),
+      sortGeneratedSet: (generated: string[] | string[][]) => {
+        const result = this.sortGeneratedSet(generated);
+        // Strategies expect string[] back, so if we get string[][], return the first array
+        // This handles the case where a strategy passes string[] but the method might return string[][]
+        if (Array.isArray(result) && result.length > 0 && Array.isArray(result[0])) {
+          return (result as string[][])[0];
+        }
+        return result as string[];
+      },
     };
   }
 
@@ -148,10 +199,10 @@ export class PowerballService {
    *     multiplier: '3'
    *   }
    */
-  generateFutureTestData(count: number, startDate?: Date): any[] {
+  generateFutureTestData(count: number, startDate?: Date): FutureTestData[] {
     // Fallback to "today" if no startDate is given.
     const baseDate = startDate || new Date();
-    const results: any[] = [];
+    const results: FutureTestData[] = [];
 
     // We'll define a day increment between future draws (e.g., every 2 days).
     // You can adjust this to daily, weekly, or any custom spacing.
@@ -247,7 +298,7 @@ export class PowerballService {
 
   private buildWithTheFirst(
     firstPredictedNumber: string,
-    initialPlay: any
+    initialPlay: string[]
   ): string[] {
     const firstNumber = firstPredictedNumber;
 
@@ -310,25 +361,34 @@ export class PowerballService {
     return enforcedRange;
   }
 
-  private sortGeneratedSet(generated: any): any {
-    if (Array.isArray(generated) && Array.isArray(generated[0])) {
-      // Array of arrays
-      return generated.map((g) => this.sortSingleSet(g));
+  private sortGeneratedSet(generated: string[] | string[][]): string[] | string[][] {
+    // Check if it's an array of arrays (string[][])
+    if (Array.isArray(generated) && generated.length > 0 && Array.isArray(generated[0])) {
+      // Array of arrays - map each sub-array
+      return (generated as string[][]).map((g: string[]) => this.sortSingleSet(g));
     }
-    if (Array.isArray(generated) && generated.length === 6) {
+    // Check if it's a single array of 6 strings (string[])
+    if (Array.isArray(generated) && generated.length === 6 && typeof generated[0] === 'string') {
       // Single set
-      return this.sortSingleSet(generated);
+      return this.sortSingleSet(generated as string[]);
     }
+    // Fallback: if it's an array but doesn't match above patterns, try to handle it
     if (Array.isArray(generated)) {
-      // Possibly an array of strings or nested arrays
-      return generated.map((item) => {
-        if (Array.isArray(item) && item.length === 6) {
-          return this.sortSingleSet(item);
-        }
-        return item;
-      });
+      // Check if all items are arrays (nested arrays case)
+      const allArrays = (generated as any[]).every(item => Array.isArray(item));
+      if (allArrays) {
+        return (generated as string[][]).map((item: string[]) => {
+          if (item.length === 6) {
+            return this.sortSingleSet(item);
+          }
+          return item;
+        });
+      }
+      // If it's a single array but not 6 elements, return as-is
+      return generated as string[];
     }
-    return generated; // Fallback
+    // Fallback: return empty array if type is unexpected
+    return [];
   }
 
   private sortSingleSet(setOfSix: string[]): string[] {
@@ -436,46 +496,53 @@ export class PowerballService {
   // DATA PARSING + FILTERS
   // ------------------------------------------------------------
 
-  private async parseWinningNumbers(results: any[]) {
-    const plays = results.map((set: { numbers: any }) => set.numbers);
-    this.historicalData = _.clone(plays);
+  private async parseWinningNumbers(results: ParsedPowerballDraw[]): Promise<PowerballNumberSet[]> {
+    try {
+      const plays = results.map((set: ParsedPowerballDraw) => set.numbers);
+      this.historicalData = _.clone(plays);
 
-    // Initialize synergy
-    for (let i = 0; i < 5; i++) {
-      this.synergyMap[i] = {};
-    }
-
-    // Build synergy data
-    for (const row of plays) {
-      for (let i = 0; i < 4; i++) {
-        const current = row[i];
-        const next = row[i + 1];
-        if (!this.synergyMap[i][current]) {
-          this.synergyMap[i][current] = {};
-        }
-        if (!this.synergyMap[i][current][next]) {
-          this.synergyMap[i][current][next] = 0;
-        }
-        this.synergyMap[i][current][next]++;
+      // Initialize synergy
+      for (let i = 0; i < 5; i++) {
+        this.synergyMap[i] = {};
       }
-    }
 
-    return plays.map((set: any[]) =>
-      Object.assign(
-        {},
-        {
-          first: set[0],
-          second: set[1],
-          third: set[2],
-          fourth: set[3],
-          fifth: set[4],
-          powerball: set[5],
+      // Build synergy data
+      for (const row of plays) {
+        if (!row || row.length < 6) {
+          console.warn('Invalid row data, skipping:', row);
+          continue;
         }
-      )
-    );
+        for (let i = 0; i < 4; i++) {
+          const current = row[i];
+          const next = row[i + 1];
+          if (!current || !next) {
+            continue;
+          }
+          if (!this.synergyMap[i][current]) {
+            this.synergyMap[i][current] = {};
+          }
+          if (!this.synergyMap[i][current][next]) {
+            this.synergyMap[i][current][next] = 0;
+          }
+          this.synergyMap[i][current][next]++;
+        }
+      }
+
+      return plays.map((set: string[]): PowerballNumberSet => ({
+        first: set[0] || '01',
+        second: set[1] || '01',
+        third: set[2] || '01',
+        fourth: set[3] || '01',
+        fifth: set[4] || '01',
+        powerball: set[5] || '01',
+      }));
+    } catch (error) {
+      console.error('Error parsing winning numbers:', error);
+      throw new Error('Failed to parse winning numbers from historical data');
+    }
   }
 
-  private async filterParsedNumberSets(numberSets: any = []) {
+  private async filterParsedNumberSets(numberSets: PowerballNumberSet[] = []): Promise<FilteredNumberSet[]> {
     const firsts: number[] = [];
     const seconds: number[] = [];
     const thirds: number[] = [];
@@ -485,7 +552,7 @@ export class PowerballService {
 
     const completeSets = [];
 
-    numberSets.forEach((set: any) => {
+    numberSets.forEach((set: PowerballNumberSet) => {
       firsts.push(parseInt(set.first, 10));
       seconds.push(parseInt(set.second, 10));
       thirds.push(parseInt(set.third, 10));
@@ -653,12 +720,13 @@ export class PowerballService {
   // RECENT DRAWS, RANGE, DUPLICATES
   // ------------------------------------------------------------
 
-  async getRecentDrawings(count: number) {
-    const recentDraws = [];
-    for (let i = 0; i < this.powerballData.length; i++) {
+  async getRecentDrawings(count: number): Promise<RecentDrawing[]> {
+    const recentDraws: PowerballDraw[] = [];
+    const endIndex = Math.min(count, this.powerballData.length);
+    for (let i = 0; i < endIndex; i++) {
       recentDraws.push(this.powerballData[i]);
     }
-    return recentDraws.map((result) => ({
+    return recentDraws.map((result): RecentDrawing => ({
       date: result.draw_date,
       numbers: result.winning_numbers.split(' '),
       multiplier: result.multiplier,

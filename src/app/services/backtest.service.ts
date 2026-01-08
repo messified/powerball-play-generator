@@ -4,12 +4,7 @@ import { PredictionService } from './prediction.service';
 import { AiPowerballService } from './ai-powerball.service';
 import { PowerballConfigService } from './powerball-config.service';
 import { PowerballDataMinusLatest } from '../data/historical-data';
-
-export interface PowerballDraw {
-  draw_date: string;
-  winning_numbers: string;
-  multiplier: string;
-}
+import { PowerballDraw } from '../models/powerball-draw.interface';
 
 export interface BacktestStrategy {
   name: string;

@@ -1,4 +1,5 @@
 import { Injectable } from '@angular/core';
+import { environment } from '../../environments/environment';
 
 /**
  * Centralized configuration interface for Powerball generation services.
@@ -105,13 +106,11 @@ export class PowerballConfigService {
   constructor() {}
 
   /**
-   * Gets the API URL, checking for environment variable override.
-   * Falls back to localhost for development.
+   * Gets the API URL from environment configuration.
+   * Falls back to localhost for development if not configured.
    */
   private getApiUrl(): string {
-    // In a production setup, you could check environment variables here
-    // For now, default to localhost
-    return 'http://localhost:8000';
+    return environment.apiUrl || 'http://localhost:8000';
   }
 
   /**

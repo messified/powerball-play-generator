@@ -4,24 +4,13 @@ import _ from 'lodash';
 import { FutureGeneratedDraws } from '../data/future-data';
 import { PowerballDataMinusLatest } from '../data/historical-data';
 import { PowerballConfigService } from './powerball-config.service';
-
-export interface IWinningsResponse {
-  draw_date: string;
-  winning_numbers: string;
-  multiplier: string;
-}
-
-export interface IParsedWinningsResponse {
-  date: string;
-  numbers: string[];
-  multiplier: string;
-}
+import { PowerballDraw, ParsedPowerballDraw, PowerballNumberSet, FilteredNumberSet } from '../models/powerball-draw.interface';
 
 @Injectable({
   providedIn: 'root',
 })
 export class PredictionService {
-  private powerballData: any[] = [];
+  private powerballData: PowerballDraw[] = [];
   private historicalData: string[][] = [];
 
   /**
@@ -50,31 +39,61 @@ export class PredictionService {
    * 
    * @param trainingData Optional training data for backtesting. If not provided, uses PowerballDataMinusLatest.
    */
-  async generatePowerballPlay(trainingData?: any[]): Promise<string[]> {
-    // Load and format historical data.
-    // If trainingData is provided (for backtesting), use it; otherwise use default
-    this.powerballData = trainingData || PowerballDataMinusLatest;
-    const formattedData = this.powerballData.map((result: { draw_date: any; winning_numbers: string; multiplier: any; }) => ({
-      date: result.draw_date,
-      numbers: result.winning_numbers.split(' '),
-      multiplier: result.multiplier || '01',
-    }));
+  async generatePowerballPlay(trainingData?: PowerballDraw[]): Promise<string[]> {
+    try {
+      // Load and format historical data.
+      // If trainingData is provided (for backtesting), use it; otherwise use default
+      this.powerballData = trainingData || PowerballDataMinusLatest;
+      
+      if (!this.powerballData || this.powerballData.length === 0) {
+        throw new Error('No historical data available for generation');
+      }
 
-    // Parse winning numbers and build the first-order synergy map.
-    const parsedSets = await this.parseWinningNumbers(formattedData);
-    // (Optional) filter historical sets.
-    await this.filterParsedNumberSets(parsedSets);
+      const formattedData: ParsedPowerballDraw[] = this.powerballData.map((result: PowerballDraw) => ({
+        date: result.draw_date,
+        numbers: result.winning_numbers.split(' '),
+        multiplier: result.multiplier || '01',
+      }));
 
-    // Build the higher‑order synergy map.
-    this.buildHigherOrderSynergyMap();
+      // Parse winning numbers and build the first-order synergy map.
+      const parsedSets = await this.parseWinningNumbers(formattedData);
+      // (Optional) filter historical sets.
+      await this.filterParsedNumberSets(parsedSets);
 
-    // Pick the first white ball using a weighted random selection.
-    const firstWhiteBall = this.pickWeightedRandomFirstNumber();
+      // Build the higher‑order synergy map.
+      this.buildHigherOrderSynergyMap();
 
-    // Build the full play using our Higher‑Order Markov Chain approach.
-    const play = this.buildPlayWithSynergy(firstWhiteBall);
+      // Pick the first white ball using a weighted random selection.
+      const firstWhiteBall = this.pickWeightedRandomFirstNumber();
 
-    // Sort the white balls and enforce valid ranges.
+      if (!firstWhiteBall) {
+        throw new Error('Failed to select first white ball');
+      }
+
+      // Build the full play using our Higher‑Order Markov Chain approach.
+      const play = this.buildPlayWithSynergy(firstWhiteBall);
+
+      if (!play || play.length !== 6) {
+        throw new Error('Generated play is invalid');
+      }
+
+      // Sort the white balls and enforce valid ranges.
+      return this.sortAndEnforceRange(play);
+    } catch (error) {
+      console.error('Error generating Powerball play in PredictionService:', error);
+      // Return a fallback play
+      return this.generateFallbackPlay();
+    }
+  }
+
+  private generateFallbackPlay(): string[] {
+    const play: string[] = [];
+    const whiteBallRange = this.config.whiteBallRange || { min: 1, max: 69 };
+    const powerballRange = this.config.powerballRange || { min: 1, max: 26 };
+    for (let i = 0; i < 5; i++) {
+      play.push(this.randomNumberInRange(whiteBallRange.min, whiteBallRange.max));
+    }
+    play.push(this.randomNumberInRange(powerballRange.min, powerballRange.max));
     return this.sortAndEnforceRange(play);
   }
 
@@ -132,7 +151,7 @@ export class PredictionService {
         firstOrderCandidates
       );
     } else {
-      const whiteBallRange = this.config.whiteBallRange!;
+      const whiteBallRange = this.config.whiteBallRange || { min: 1, max: 69 };
       secondWhiteBall = this.randomNumberInRange(whiteBallRange.min, whiteBallRange.max);
     }
     whiteBalls.push(secondWhiteBall);
@@ -155,8 +174,8 @@ export class PredictionService {
    * The powerball (6th number) is processed separately.
    */
   private sortAndEnforceRange(play: string[]): string[] {
-    const whiteBallRange = this.config.whiteBallRange!;
-    const powerballRange = this.config.powerballRange!;
+    const whiteBallRange = this.config.whiteBallRange || { min: 1, max: 69 };
+    const powerballRange = this.config.powerballRange || { min: 1, max: 26 };
     const whiteBalls = play.slice(0, 5).map(num => {
       let n = parseInt(num, 10);
       if (n < whiteBallRange.min) n = whiteBallRange.min;
@@ -177,34 +196,50 @@ export class PredictionService {
   /**
    * Parses historical results to store draws and build the first‑order synergy map.
    */
-  private async parseWinningNumbers(results: any[]): Promise<any[]> {
-    const plays = results.map(set => set.numbers);
-    this.historicalData = _.cloneDeep(plays);
+  private async parseWinningNumbers(results: ParsedPowerballDraw[]): Promise<PowerballNumberSet[]> {
+    try {
+      const plays = results.map(set => set.numbers);
+      this.historicalData = _.cloneDeep(plays);
 
-    // Initialize the first‑order synergy map for white-ball positions.
-    for (let i = 0; i < 5; i++) {
-      this.synergyMap[i] = {};
-    }
-    for (const row of plays) {
-      for (let pos = 0; pos < 4; pos++) {
-        const current = row[pos];
-        const next = row[pos + 1];
-        if (!this.synergyMap[pos][current]) {
-          this.synergyMap[pos][current] = {};
-        }
-        this.synergyMap[pos][current][next] = (this.synergyMap[pos][current][next] || 0) + 1;
+      // Initialize the first‑order synergy map for white-ball positions.
+      for (let i = 0; i < 5; i++) {
+        this.synergyMap[i] = {};
       }
+      for (const row of plays) {
+        if (!row || row.length < 6) {
+          console.warn('Invalid row data, skipping:', row);
+          continue;
+        }
+        for (let pos = 0; pos < 4; pos++) {
+          const current = row[pos];
+          const next = row[pos + 1];
+          if (!current || !next) {
+            continue;
+          }
+          if (!this.synergyMap[pos][current]) {
+            this.synergyMap[pos][current] = {};
+          }
+          this.synergyMap[pos][current][next] = (this.synergyMap[pos][current][next] || 0) + 1;
+        }
+      }
+      return plays.map(set => ({
+        first: set[0] || '01',
+        second: set[1] || '01',
+        third: set[2] || '01',
+        fourth: set[3] || '01',
+        fifth: set[4] || '01',
+        powerball: set[5] || '01',
+      }));
+    } catch (error) {
+      console.error('Error parsing winning numbers:', error);
+      throw new Error('Failed to parse winning numbers from historical data');
     }
-    return plays.map(set => ({
-      numbers: set,
-      powerball: set[5],
-    }));
   }
 
   /**
    * Optionally filters the parsed sets based on duplicate-occurrence thresholds.
    */
-  private async filterParsedNumberSets(numberSets: any[] = []): Promise<{ key: string; numbers: number[] }[]> {
+  private async filterParsedNumberSets(numberSets: PowerballNumberSet[] = []): Promise<FilteredNumberSet[]> {
     const positions = ['first', 'second', 'third', 'fourth', 'fifth', 'powerball'];
     const parsedNumberSets: Record<string, number[]> = {
       first: [],
@@ -216,18 +251,18 @@ export class PredictionService {
     };
 
     for (const set of numberSets) {
-      parsedNumberSets['first'].push(parseInt(set.numbers[0], 10));
-      parsedNumberSets['second'].push(parseInt(set.numbers[1], 10));
-      parsedNumberSets['third'].push(parseInt(set.numbers[2], 10));
-      parsedNumberSets['fourth'].push(parseInt(set.numbers[3], 10));
-      parsedNumberSets['fifth'].push(parseInt(set.numbers[4], 10));
-      parsedNumberSets['powerball'].push(parseInt(set.numbers[5], 10));
+      parsedNumberSets['first'].push(parseInt(set.first, 10));
+      parsedNumberSets['second'].push(parseInt(set.second, 10));
+      parsedNumberSets['third'].push(parseInt(set.third, 10));
+      parsedNumberSets['fourth'].push(parseInt(set.fourth, 10));
+      parsedNumberSets['fifth'].push(parseInt(set.fifth, 10));
+      parsedNumberSets['powerball'].push(parseInt(set.powerball, 10));
     }
 
-    const whiteBallRange = this.config.whiteBallRange!;
-    const powerballRange = this.config.powerballRange!;
-    const whiteBallDupThreshold = this.config.whiteBallDupThreshold!;
-    const powerballDupThreshold = this.config.powerballDupThreshold!;
+    const whiteBallRange = this.config.whiteBallRange || { min: 1, max: 69 };
+    const powerballRange = this.config.powerballRange || { min: 1, max: 26 };
+    const whiteBallDupThreshold = this.config.whiteBallDupThreshold || 2;
+    const powerballDupThreshold = this.config.powerballDupThreshold || 5;
     const filteredNumbers: { key: string; numbers: number[] }[] = [];
     for (const key of positions) {
       const arr = parsedNumberSets[key].filter(num => {
@@ -316,7 +351,7 @@ export class PredictionService {
         return candidates[Math.floor(Math.random() * candidates.length)];
       }
     }
-    const whiteBallRange = this.config.whiteBallRange!;
+    const whiteBallRange = this.config.whiteBallRange || { min: 1, max: 69 };
     return this.randomNumberInRange(whiteBallRange.min, whiteBallRange.max);
   }
 

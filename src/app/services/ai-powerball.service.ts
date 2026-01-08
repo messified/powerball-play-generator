@@ -85,6 +85,12 @@ export class AiPowerballService {
   // New: batch generator (weighted random play with diversity)
   async generateBatch(historicalDraws: number[][], opts: GenerateOptions = {}): Promise<BatchResponse | null> {
     try {
+      if (!this.apiUrl) {
+        throw new Error('API URL is not configured');
+      }
+      if (!historicalDraws || historicalDraws.length === 0) {
+        throw new Error('Historical draws data is required');
+      }
       const body = {
         historical_draws: historicalDraws,
         ...opts,
@@ -92,8 +98,10 @@ export class AiPowerballService {
       return await firstValueFrom(
         this.http.post<BatchResponse>(`${this.apiUrl}/generate`, body)
       );
-    } catch (error) {
-      console.error('AI batch generation failed', error);
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      console.error('AI batch generation failed:', errorMessage, error);
+      // Return null to allow fallback to local generation
       return null;
     }
   }
@@ -101,6 +109,12 @@ export class AiPowerballService {
   // New: leakage-safe walk-forward backtest
   async backtest(historicalDraws: number[][], opts: BacktestRequestBody = {}): Promise<BacktestResponse | null> {
     try {
+      if (!this.apiUrl) {
+        throw new Error('API URL is not configured');
+      }
+      if (!historicalDraws || historicalDraws.length === 0) {
+        throw new Error('Historical draws data is required for backtesting');
+      }
       const body = {
         historical_draws: historicalDraws,
         ...opts,
@@ -108,23 +122,34 @@ export class AiPowerballService {
       return await firstValueFrom(
         this.http.post<BacktestResponse>(`${this.apiUrl}/backtest`, body)
       );
-    } catch (error) {
-      console.error('Backtest failed', error);
-      return null;
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      console.error('Backtest failed:', errorMessage, error);
+      throw new Error(`Backtest failed: ${errorMessage}`);
     }
   }
 
   // (Optional) still OK to keep your mocked train; backend returns {status:"ok"}
   async trainModel(historicalDraws: number[][]): Promise<string | null> {
     try {
+      if (!this.apiUrl) {
+        console.warn('API URL is not configured, skipping model training');
+        return null;
+      }
+      if (!historicalDraws || historicalDraws.length === 0) {
+        console.warn('No historical draws provided, skipping model training');
+        return null;
+      }
       const res = await firstValueFrom(
         this.http.post<{ status: string }>(`${this.apiUrl}/train`, {
           historical_draws: historicalDraws,
         })
       );
       return res.status;
-    } catch (error) {
-      console.error('Model training failed', error);
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      console.error('Model training failed:', errorMessage, error);
+      // Return null to allow app to continue without training
       return null;
     }
   }

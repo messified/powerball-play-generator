@@ -40,8 +40,8 @@ export interface GenerationContext {
   pickWeightedRandomFirstNumber: (powerball?: boolean) => string;
   generateNextNumberArray: (selectedNumber: string, customIndex?: number) => string[];
   randomNumberInRange: (min: number, max: number) => string;
-  buildWithTheFirst: (firstPredictedNumber: string, initialPlay: any) => string[];
+  buildWithTheFirst: (firstPredictedNumber: string, initialPlay: string[]) => string[];
   pickPowerballAi: () => string;
   generateFallbackSet: () => string[];
-  sortGeneratedSet: (generated: any) => any;
+  sortGeneratedSet: (generated: string[] | string[][]) => string[];
 }

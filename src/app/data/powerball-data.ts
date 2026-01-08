@@ -1,5 +1,35 @@
 export const PowerballData = [
   {
+    draw_date: '2026-01-05T00:00:00.000',
+    winning_numbers: '04 18 24 51 56 14',
+    multiplier: '2',
+  },
+  {
+    draw_date: '2026-01-03T00:00:00.000',
+    winning_numbers: '18 21 40 53 60 23',
+    multiplier: '3',
+  },
+  {
+    draw_date: '2025-12-31T00:00:00.000',
+    winning_numbers: '11 18 21 24 38 26',
+    multiplier: '10',
+  },
+  {
+    draw_date: '2025-12-29T00:00:00.000',
+    winning_numbers: '11 19 34 48 53 21',
+    multiplier: '2',
+  },
+  {
+    draw_date: '2025-12-27T00:00:00.000',
+    winning_numbers: '05 20 34 39 62 01',
+    multiplier: '2',
+  },
+  {
+    draw_date: '2025-12-24T00:00:00.000',
+    winning_numbers: '04 25 31 52 59 19',
+    multiplier: '2',
+  },
+  {
     draw_date: '2025-12-22T00:00:00.000',
     winning_numbers: '03 18 36 41 54 07',
     multiplier: '2',

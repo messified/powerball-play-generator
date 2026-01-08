@@ -7,6 +7,7 @@ import {
 } from 'ng2-charts';
 import { PickCheckerService } from '../services/pick-checker.service';
 import { Subscription } from 'rxjs';
+import { Win } from '../models/powerball-draw.interface';
 
 @Component({
   selector: 'app-bar-graph',
@@ -41,14 +42,14 @@ export class BarGraphComponent implements OnInit {
 
   ngOnInit(): void {
     this.subscription = this.pickCheckerService.barChartData$.subscribe(
-      (chartData: any[]) => {
+      (chartData: Array<Record<string, Win[]>>) => {
         const aggregated: { [label: string]: number } = {};
 
-        chartData.forEach((obj) => {
+        chartData.forEach((obj: Record<string, Win[]>) => {
           Object.keys(obj).forEach((month) => {
             const wins = obj[month];
 
-            wins.forEach((win: any) => {
+            wins.forEach((win: Win) => {
               const label = `${win.month} ${win.year}`;
 
               aggregated[label] =
@@ -101,14 +102,30 @@ export class BarGraphComponent implements OnInit {
         if (
           (chartData[1])
         ) {
-          const augustWins = chartData[1]['December'];
-          if (augustWins && augustWins.length > 0) {
+          const decemberWins = chartData[1]['December'];
+          if (decemberWins && decemberWins.length > 0) {
             console.group('December Results');
             alert('Yay!!!');
             console.group('organizedResults');
             console.log(chartData);
             console.groupEnd();
-            augustWins.forEach((ap: any) => {
+            decemberWins.forEach((ap: Win) => {
+              console.log(ap);
+              console.log(ap.date);
+              console.log('historical_draw: ', ap.historical_draw);
+              console.log('matching_picks: ', ap.matching_picks[0]);
+            });
+            console.groupEnd();
+          }
+
+          const januaryWins = chartData[1]['January'];
+          if (januaryWins && januaryWins.length > 0) {
+            console.group('January Results');
+            alert('Yay!!!');
+            console.group('organizedResults');
+            console.log(chartData);
+            console.groupEnd();
+            januaryWins.forEach((ap: Win) => {
               console.log(ap);
               console.log(ap.date);
               console.log('historical_draw: ', ap.historical_draw);

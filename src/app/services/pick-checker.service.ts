@@ -3,13 +3,18 @@ import { PowerballData } from '../data/powerball-data';
 import _ from 'lodash';
 import { BehaviorSubject } from 'rxjs';
 import moment from 'moment';
-import { allLatestPicks } from '../data/test-latest';
+import { 
+  HistoricalDrawing, 
+  DrawingResult, 
+  Win, 
+  CheckPicksResult 
+} from '../models/powerball-draw.interface';
 
 @Injectable({
   providedIn: 'root',
 })
 export class PickCheckerService {
-  historicalDrawings = PowerballData.map((obj: any) => {
+  historicalDrawings: HistoricalDrawing[] = PowerballData.map((obj) => {
     return {
       date: obj.draw_date,
       numbers: obj.winning_numbers.split(' '),
@@ -17,10 +22,10 @@ export class PickCheckerService {
     };
   });
 
-  winningPicks: any = [];
+  winningPicks: string[][] = [];
 
-  private chartDataSubject = new BehaviorSubject<string[][]>([]);
-  private barChartDataSubject = new BehaviorSubject<string[][]>([]);
+  private chartDataSubject = new BehaviorSubject<Win[]>([]);
+  private barChartDataSubject = new BehaviorSubject<Array<Record<string, Win[]>>>([]);
 
   // Expose the chart data as an Observable
   chartData$ = this.chartDataSubject.asObservable();
@@ -28,30 +33,30 @@ export class PickCheckerService {
 
   constructor() {}
 
-  checkPicks(myPicks: any) {
+  checkPicks(myPicks: string[][]): CheckPicksResult {
     const matchCount = 5;
-    const drawingResults: any = [];
-    const picks: string[][] = [];
+    const drawingResults: (DrawingResult | undefined)[] = [];
 
     this.historicalDrawings.forEach((draw) => {
       drawingResults.push(this.processPicks(draw, myPicks, matchCount));
     });
 
-    const wins = drawingResults.filter((win: any) => {
-      if (win && win.matching_picks) {
-        win.month = moment(win.date).format('MMMM');
-        win.year = moment(win.date).format('YYYY');
-        win.picks = myPicks
-
-        return win;
-      }
+    const wins: Win[] = drawingResults.filter((win): win is DrawingResult => {
+      return win !== undefined && win.matching_picks !== undefined;
+    }).map((win) => {
+      return {
+        ...win,
+        month: moment(win.date).format('MMMM'),
+        year: moment(win.date).format('YYYY'),
+        picks: myPicks,
+      };
     });
 
     this.updateChartData(wins);
 
-    const groupedResults: any = _.groupBy(wins, 'year');
+    const groupedResults: Record<string, Win[]> = _.groupBy(wins, 'year');
     const years = Object.keys(groupedResults);
-    const organizedResults = years.map((year: any) => {
+    const organizedResults = years.map((year) => {
       return _.groupBy(groupedResults[year], 'month');
     });
 
@@ -68,15 +73,19 @@ export class PickCheckerService {
   }
 
   // Function that generates new chart data and updates the subject
-  updateChartData(chartData: any): void {
+  updateChartData(chartData: Win[]): void {
     this.chartDataSubject.next(chartData);
   }
 
-  updateBarChartData(newData: any): void {
+  updateBarChartData(newData: Array<Record<string, Win[]>>): void {
     this.barChartDataSubject.next(newData);
   }
 
-  processPicks(draw: any, myPks: any, matchCount: number): any {
+  processPicks(
+    draw: HistoricalDrawing, 
+    myPks: string[][], 
+    matchCount: number
+  ): DrawingResult | undefined {
     const historicalDraw = draw.numbers;
     const multiplier = draw.multiplier;
 
@@ -99,7 +108,7 @@ export class PickCheckerService {
     );
 
     if (matchingPicks.length > 0) {
-      const result = {
+      const result: DrawingResult = {
         date: draw.date,
         historical_draw: historicalDraw,
         matching_picks_count: matchingPicks.length,
@@ -109,6 +118,8 @@ export class PickCheckerService {
 
       return result;
     }
+
+    return undefined;
   }
 
   /**

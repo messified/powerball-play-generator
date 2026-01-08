@@ -1,8 +1,9 @@
 import { Component, OnInit } from '@angular/core';
-import { ColDef, GridReadyEvent } from 'ag-grid-community';
+import { ColDef, GridReadyEvent, ICellRendererParams } from 'ag-grid-community';
 import { AgGridModule } from 'ag-grid-angular';
 import { chartData } from '../data/chart-data';
 import { PickCheckerService } from '../services/pick-checker.service';
+import { Win } from '../models/powerball-draw.interface';
 
 // Define an interface for our flattened row data
 export interface ChartEntry {
@@ -32,24 +33,24 @@ export class AgGridDataTableComponent implements OnInit {
     {
       headerName: 'Date',
       field: 'date',
-      cellRenderer: (params: any) => new Date(params.value).toLocaleDateString(),
+      cellRenderer: (params: ICellRendererParams) => new Date(params.value as string).toLocaleDateString(),
     },
     {
       headerName: 'Historical Draw',
       field: 'historical_draw',
-      cellRenderer: (params: any) =>
-        params.value ? params.value.join(', ') : '',
+      cellRenderer: (params: ICellRendererParams) =>
+        params.value ? (params.value as string[]).join(', ') : '',
     },
     {
       headerName: 'Matching Picks',
       field: 'matching_picks',
-      cellRenderer: (params: any) => {
+      cellRenderer: (params: ICellRendererParams) => {
         if (!params.value) {
           return '';
         }
         // For each matching pick (which is an array), join the numbers with a comma,
         // then join the inner arrays with a " | " separator.
-        return params.value.map((arr: string[]) => arr.join(', ')).join(' | ');
+        return (params.value as string[][]).map((arr: string[]) => arr.join(', ')).join(' | ');
       },
     },
   ];
@@ -67,12 +68,12 @@ export class AgGridDataTableComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    this.pickCheckerService.barChartData$.subscribe((chartData: any[] = []) => {
+    this.pickCheckerService.barChartData$.subscribe((chartData: Array<Record<string, Win[]>> = []) => {
       // Flatten the nested chartData structure into a simple array.
       // Each top-level object contains keys (e.g., 'December', 'August', etc.)
       // whose values are arrays of ChartEntry objects.
       this.flattenedData = [];
-      chartData.forEach((item: any) => {
+      chartData.forEach((item: Record<string, Win[]>) => {
         Object.keys(item).forEach((key) => {
           const entries = item[key] as ChartEntry[];
           this.flattenedData.push(...entries);
