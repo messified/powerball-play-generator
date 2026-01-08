@@ -99,9 +99,11 @@ export class BarGraphComponent implements OnInit {
           ],
         };
 
-        if (
-          (chartData[1])
-        ) {
+        console.group('chartData');
+        console.log(chartData);
+        console.groupEnd();
+
+        if (chartData[1]) {
           const decemberWins = chartData[1]['December'];
           if (decemberWins && decemberWins.length > 0) {
             console.group('December Results');
