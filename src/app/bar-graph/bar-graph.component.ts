@@ -107,7 +107,7 @@ export class BarGraphComponent implements OnInit {
           const decemberWins = chartData[1]['December'];
           if (decemberWins && decemberWins.length > 0) {
             console.group('December Results');
-            alert('Yay!!!');
+            // alert('Yay!!!');
             console.group('organizedResults');
             console.log(chartData);
             console.groupEnd();
@@ -123,7 +123,7 @@ export class BarGraphComponent implements OnInit {
           const januaryWins = chartData[1]['January'];
           if (januaryWins && januaryWins.length > 0) {
             console.group('January Results');
-            alert('Yay!!!');
+            // alert('Yay!!!');
             console.group('organizedResults');
             console.log(chartData);
             console.groupEnd();
