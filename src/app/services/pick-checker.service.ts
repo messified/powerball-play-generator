@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { PowerballData } from '../data/powerball-data';
-import _ from 'lodash';
+import { groupBy, isEqual, cloneDeep } from 'lodash';
 import { BehaviorSubject } from 'rxjs';
 import moment from 'moment';
 import {
@@ -39,7 +39,7 @@ export class PickCheckerService {
     const matchCount = 4;
     const drawingResults: (DrawingResult | undefined)[] = [];
 
-    myPicks = [
+    /**myPicks = [
       ['23', '31', '35', '45', '62', '21'],
       ['04', '13', '22', '54', '69', '04'],
       ['06', '29', '35', '40', '43', '20'],
@@ -120,7 +120,7 @@ export class PickCheckerService {
       ['20', '24', '42', '44', '65', '13'],
       ['10', '21', '43', '48', '52', '14'],
       ['02', '23', '35', '64', '67', '15'],
-    ];
+    ];*/
     this.historicalDrawings.forEach((draw) => {
       drawingResults.push(this.processPicks(draw, myPicks, matchCount));
     });
@@ -140,10 +140,10 @@ export class PickCheckerService {
 
     this.updateChartData(wins);
 
-    const groupedResults: Record<string, Win[]> = _.groupBy(wins, 'year');
+    const groupedResults: Record<string, Win[]> = groupBy(wins, 'year');
     const years = Object.keys(groupedResults);
     const organizedResults = years.map((year) => {
-      return _.groupBy(groupedResults[year], 'month');
+      return groupBy(groupedResults[year], 'month');
     });
 
     this.updateBarChartData(organizedResults);
@@ -180,7 +180,7 @@ export class PickCheckerService {
 
     // Remove Jackpot Matches
     const filteredPicks = uniqueArrays.filter((pick: string[]) => {
-      if (!_.isEqual(historicalDraw, pick)) {
+      if (!isEqual(historicalDraw, pick)) {
         return pick;
       }
 

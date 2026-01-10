@@ -11,13 +11,14 @@ import { BarGraphComponent } from '../bar-graph/bar-graph.component';
 import { AiPowerballService } from '../services/ai-powerball.service';
 import { PowerballDataMinusLatest } from '../data/historical-data';
 import { PowerballConfigService } from '../services/powerball-config.service';
-import { 
-  PowerballDraw, 
-  RecentDrawing, 
+import {
+  PowerballDraw,
+  RecentDrawing,
   CheckPicksResult,
   GeneratedPlay,
-  Win
+  Win,
 } from '../models/powerball-draw.interface';
+import { BacktestService } from '../services/backtest.service';
 
 @Component({
   selector: 'app-play-generator',
@@ -29,9 +30,7 @@ import {
     LightboxModule,
     BarGraphComponent,
   ],
-  providers: [
-    provideAnimations(),
-  ],
+  providers: [provideAnimations()],
   templateUrl: './play-generator.component.html',
   styleUrl: './play-generator.component.scss',
 })
@@ -59,152 +58,189 @@ export class PlayGeneratorComponent implements OnInit {
     private lightbox: Lightbox,
     private pickCheckerService: PickCheckerService,
     private aiService: AiPowerballService,
-    private configService: PowerballConfigService
+    private configService: PowerballConfigService,
+    private backtestService: BacktestService
   ) {}
 
   async ngOnInit(): Promise<void> {
     await this.generateTicket();
+    await this.runBacktest();
   }
 
-async generateTicket(): Promise<void> {
-  try {
-    this.history = [];
-    this.aiResults = [];
-    this.newGenResults = null;
-    this.playBasedOnPredictedPowerballResults = [];
-    this.totalMatches = 0;
-
-    // 1) Prep historical draws (minus latest — leakage-safe)
-    const parsedDraws = this.parseDrawHistoryForModel(PowerballDataMinusLatest);
-
-    if (!parsedDraws || parsedDraws.length === 0) {
-      throw new Error('No historical data available');
-    }
-
-    // 2) (Optional) kick the mock train
-    this.aiService.trainModel(parsedDraws).then((status) => {
-      if (status) {
-        console.log('Training status:', status);
-      } else {
-        console.warn('Model training was skipped or failed');
-      }
-    }).catch((error) => {
-      console.warn('Model training error (non-critical):', error);
-    });
-
-    const legacyPlays: string[][] = [];
-
-    // 3) Call your legacy local generator once (keeps current UI vibe)
-    const counter = this.configService.get('generation').counter;
-    for(let i = 0; i<counter; i++) {
-      try {
-        const legacy = await this.powerballService.generatePowerballPlay();
-        const legacyPlay: string[] = (legacy?.predictiveWeightedRandomPlay || []).map(
-          (num: string) => (num.length === 1 ? `0${num}` : num)
-        );
-
-        if (legacyPlay && legacyPlay.length === 6) {
-          legacyPlays.push(legacyPlay);
-        }
-      } catch (error) {
-        console.error(`Error generating legacy play ${i + 1}:`, error);
-        // Continue with next iteration
-      }
-    }
-
-    if (legacyPlays.length === 0) {
-      throw new Error('Failed to generate any legacy plays');
-    }
-
-    // 4) Batch-generate ML tickets (weighted random + diversity)
-    const seed = Date.now() % 1_000_000_000; // reproducible-ish per click
-    const mlConfig = this.configService.get('mlGeneration');
-    let batch;
+  async generateTicket(): Promise<void> {
     try {
-      batch = await this.aiService.generateBatch(parsedDraws, {
-        num_tickets: mlConfig.numTickets,
-        diversity_min_hamming: mlConfig.diversityMinHamming,
-        recency_decay: mlConfig.recencyDecay,
-        alpha_smooth: mlConfig.alphaSmooth,
-        temperature: mlConfig.temperature,
-        seed,
-      });
-    } catch (error) {
-      console.warn('ML batch generation failed, continuing with legacy plays only:', error);
-      batch = null;
-    }
+      this.history = [];
+      this.aiResults = [];
+      this.newGenResults = null;
+      this.playBasedOnPredictedPowerballResults = [];
+      this.totalMatches = 0;
 
-    const mlTickets: string[][] =
-      batch?.tickets?.map(t => t.full_set) ?? [];
+      // 1) Prep historical draws (minus latest — leakage-safe)
+      const parsedDraws = this.parseDrawHistoryForModel(
+        PowerballDataMinusLatest
+      );
 
-    // 5) Merge legacy + ML results for your pick checker
-    const combined = [...mlTickets, ...legacyPlays];
+      if (!parsedDraws || parsedDraws.length === 0) {
+        throw new Error('No historical data available');
+      }
 
-    if (combined.length === 0) {
-      throw new Error('No plays generated');
-    }
-
-    // 6) Compute matches against recent draws (same logic you had)
-    const pastDrawingCount = this.configService.get('generation').pastDrawingCount;
-    let recentDrawings: RecentDrawing[] = [];
-    try {
-      recentDrawings = await this.powerballService.getRecentDrawings(pastDrawingCount);
-    } catch (error) {
-      console.error('Error fetching recent drawings:', error);
-      recentDrawings = [];
-    }
-
-    this.latestDrawing = recentDrawings[0] || { date: '', numbers: [], multiplier: '' };
-
-    const matchedSetsIdx: number[] = [];
-    recentDrawings.forEach((set, i) => {
-      if (combined[0] && set.numbers) {
-        const matches = set.numbers.filter((num: string, idx: number) => {
-          // compare to the *first* ticket in combined (legacyPlay),
-          // or swap to any ticket you want to analyze
-          return (combined[0]?.[idx] ?? '') === num;
+      // 2) (Optional) kick the mock train
+      this.aiService
+        .trainModel(parsedDraws)
+        .then((status) => {
+          if (status) {
+            console.log('Training status:', status);
+          } else {
+            console.warn('Model training was skipped or failed');
+          }
+        })
+        .catch((error) => {
+          console.warn('Model training error (non-critical):', error);
         });
-        if (matches.length >= 4) matchedSetsIdx.push(i);
+
+      const legacyPlays: string[][] = [];
+
+      // 3) Call your legacy local generator once (keeps current UI vibe)
+      const counter = this.configService.get('generation').counter;
+      for (let i = 0; i < counter; i++) {
+        try {
+          const legacy = await this.powerballService.generatePowerballPlay();
+          const legacyPlay: string[] = (
+            legacy?.predictiveWeightedRandomPlay || []
+          ).map((num: string) => (num.length === 1 ? `0${num}` : num));
+
+          if (legacyPlay && legacyPlay.length === 6) {
+            legacyPlays.push(legacyPlay);
+          }
+        } catch (error) {
+          console.error(`Error generating legacy play ${i + 1}:`, error);
+          // Continue with next iteration
+        }
       }
-    });
 
-    this.recentDrawings = recentDrawings
-      .filter((_, i) => matchedSetsIdx.includes(i))
-      .map(s => s.numbers);
-    this.totalMatches = matchedSetsIdx.length;
+      if (legacyPlays.length === 0) {
+        throw new Error('Failed to generate any legacy plays');
+      }
 
-    // 7) Update UI data & run your checker
-    this.play = legacyPlays[0];              // what you currently show as "the" play
-    this.aiResults = mlTickets;          // keep around if you want to render them
-    this.history = combined;             // existing UI expects history to be list of plays
-    
-    try {
-      this.combindResults = this.pickCheckerService.checkPicks(combined);
-    } catch (error) {
-      console.error('Error checking picks:', error);
-      this.combindResults = { 
-        totalWins: 0, 
-        totalDraws: 0, 
-        myPicks: combined.length, 
-        picks: combined, 
-        wins: [],
-        organizedResults: [] as Array<Record<string, Win[]>>
+      // 4) Batch-generate ML tickets (weighted random + diversity)
+      const seed = Date.now() % 1_000_000_000; // reproducible-ish per click
+      const mlConfig = this.configService.get('mlGeneration');
+      let batch;
+      try {
+        batch = await this.aiService.generateBatch(parsedDraws, {
+          num_tickets: mlConfig.numTickets,
+          diversity_min_hamming: mlConfig.diversityMinHamming,
+          recency_decay: mlConfig.recencyDecay,
+          alpha_smooth: mlConfig.alphaSmooth,
+          temperature: mlConfig.temperature,
+          seed,
+        });
+      } catch (error) {
+        console.warn(
+          'ML batch generation failed, continuing with legacy plays only:',
+          error
+        );
+        batch = null;
+      }
+
+      const mlTickets: string[][] =
+        batch?.tickets?.map((t) => t.full_set) ?? [];
+
+      // 5) Merge legacy + ML results for your pick checker
+      const combined = [...mlTickets, ...legacyPlays];
+
+      if (combined.length === 0) {
+        throw new Error('No plays generated');
+      }
+
+      // 6) Compute matches against recent draws (same logic you had)
+      const pastDrawingCount =
+        this.configService.get('generation').pastDrawingCount;
+      let recentDrawings: RecentDrawing[] = [];
+      try {
+        recentDrawings = await this.powerballService.getRecentDrawings(
+          pastDrawingCount
+        );
+      } catch (error) {
+        console.error('Error fetching recent drawings:', error);
+        recentDrawings = [];
+      }
+
+      this.latestDrawing = recentDrawings[0] || {
+        date: '',
+        numbers: [],
+        multiplier: '',
       };
-    }
 
-    this.toastr.success('', 'Generated Powerball Plays', {
-      timeOut: 1500,
-      positionClass: 'toast-bottom-right',
-    });
-  } catch (error: unknown) {
-    const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred while generating plays';
-    console.error('Error generating ticket:', error);
-    this.toastr.error(errorMessage, 'Generation Failed', {
-      timeOut: 3000,
-      positionClass: 'toast-bottom-right',
-    });
+      const matchedSetsIdx: number[] = [];
+      recentDrawings.forEach((set, i) => {
+        if (combined[0] && set.numbers) {
+          const matches = set.numbers.filter((num: string, idx: number) => {
+            // compare to the *first* ticket in combined (legacyPlay),
+            // or swap to any ticket you want to analyze
+            return (combined[0]?.[idx] ?? '') === num;
+          });
+          if (matches.length >= 4) matchedSetsIdx.push(i);
+        }
+      });
+
+      this.recentDrawings = recentDrawings
+        .filter((_, i) => matchedSetsIdx.includes(i))
+        .map((s) => s.numbers);
+      this.totalMatches = matchedSetsIdx.length;
+
+      // 7) Update UI data & run your checker
+      this.play = legacyPlays[0]; // what you currently show as "the" play
+      this.aiResults = mlTickets; // keep around if you want to render them
+      this.history = combined; // existing UI expects history to be list of plays
+
+      try {
+        this.combindResults = this.pickCheckerService.checkPicks(combined);
+      } catch (error) {
+        console.error('Error checking picks:', error);
+        this.combindResults = {
+          totalWins: 0,
+          totalDraws: 0,
+          myPicks: combined.length,
+          picks: combined,
+          wins: [],
+          organizedResults: [] as Array<Record<string, Win[]>>,
+        };
+      }
+
+      this.toastr.success('', 'Generated Powerball Plays', {
+        timeOut: 1500,
+        positionClass: 'toast-bottom-right',
+      });
+    } catch (error: unknown) {
+      const errorMessage =
+        error instanceof Error
+          ? error.message
+          : 'An unknown error occurred while generating plays';
+      console.error('Error generating ticket:', error);
+      this.toastr.error(errorMessage, 'Generation Failed', {
+        timeOut: 3000,
+        positionClass: 'toast-bottom-right',
+      });
+    }
   }
-}
+
+  async runBacktest() {
+    const results = await this.backtestService.runBacktest({
+      initialTrainingSize: 100,
+      stepSize: 1,
+      holdoutSize: 1,
+      strategies: ['legacy', 'prediction', 'ai'],
+      ticketsPerStrategy: 20,
+      maxSteps: 50,
+    });
+
+    console.log(this.backtestService.formatResultsForConsole(results));
+
+    // Or export to JSON
+    const json = this.backtestService.exportToJson(results);
+    console.log(json);
+  }
 
   /**
    * Converts raw historical draw data into a number[][] format
