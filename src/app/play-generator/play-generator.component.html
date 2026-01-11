@@ -11,7 +11,64 @@
         <app-lottery-settings></app-lottery-settings>
       </div>
     </div> -->
-  <div *ngIf="play" class="row button-row">
+  <div class="row" style="margin-bottom: 20px;">
+    <div class="col">
+      <div class="panel panel-default">
+        <div class="panel-heading">
+          <h4 class="panel-title">Target Win Optimization</h4>
+        </div>
+        <div class="panel-body">
+          <div class="form-group">
+            <label>
+              <input
+                type="checkbox"
+                [(ngModel)]="targetWinOptimizationEnabled"
+                (change)="onTargetWinOptimizationToggle()"
+              />
+              Enable Target Win Optimization
+            </label>
+          </div>
+          <div *ngIf="targetWinOptimizationEnabled" class="form-group" style="margin-top: 15px;">
+            <label>Target Win Type:</label>
+            <div class="radio" style="margin-top: 10px;">
+              <label>
+                <input
+                  type="radio"
+                  [(ngModel)]="targetWinType"
+                  value="fourWhite"
+                  (change)="onTargetWinTypeChange()"
+                />
+                4 White Ball Matches
+              </label>
+            </div>
+            <div class="radio">
+              <label>
+                <input
+                  type="radio"
+                  [(ngModel)]="targetWinType"
+                  value="threeWhitePowerball"
+                  (change)="onTargetWinTypeChange()"
+                />
+                3 White Ball + Powerball Matches
+              </label>
+            </div>
+            <div class="radio">
+              <label>
+                <input
+                  type="radio"
+                  [(ngModel)]="targetWinType"
+                  value="both"
+                  (change)="onTargetWinTypeChange()"
+                />
+                Both Targets
+              </label>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="row button-row">
     <div class="col">
       <button class="btn btn-primary bottom-button" (click)="generateTicket()">
         Generate Numbers
@@ -25,6 +82,7 @@
         <span class="bold">{{ latestDrawing.date }}</span>
       </p>
       <p>Last Drawing: {{ latestDrawing.numbers }}</p> -->
+      <p>'15 28 57 58 63 23'</p>
       <p>
         Total Picks Generated:
         <span class="bold">{{ combindResults.myPicks }}</span>
@@ -32,6 +90,17 @@
       <p>
         Matched Plays: <span class="bold">{{ combindResults.totalWins }}</span>
       </p>
+      <div *ngIf="combindResults.targetWins" style="margin-top: 15px;">
+        <p style="font-weight: bold; margin-bottom: 10px;">Target Win Statistics:</p>
+        <p>
+          4 White Ball Matches:
+          <span class="bold">{{ combindResults.targetWins.fourWhite.length }}</span>
+        </p>
+        <p>
+          3 White Ball + Powerball Matches:
+          <span class="bold">{{ combindResults.targetWins.threeWhitePowerball.length }}</span>
+        </p>
+      </div>
     </div>
   </div>
   <!-- <div class="row">

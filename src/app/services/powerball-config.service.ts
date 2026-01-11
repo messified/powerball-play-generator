@@ -46,6 +46,14 @@ export interface PowerballConfig {
     alphaSmooth: number;
     temperature: number;
   };
+
+  // Target win optimization
+  targetWinOptimization: {
+    enabled: boolean;
+    targetType: 'fourWhite' | 'threeWhitePowerball' | 'both';
+    patternAnalysisWindow: number; // How many historical draws to analyze
+    coOccurrenceThreshold: number; // Minimum frequency for pattern inclusion
+  };
 }
 
 /**
@@ -64,8 +72,8 @@ export class PowerballConfigService {
     // Duplicate thresholds
     // Note: Different services may use different thresholds
     // This is the default; services can override if needed
-    whiteBallDupThreshold: 2,
-    powerballDupThreshold: 5,
+    whiteBallDupThreshold: 4,
+    powerballDupThreshold: 4,
 
     // Recency weighting
     // Standardized to 1.051 (can be adjusted based on testing)
@@ -100,6 +108,14 @@ export class PowerballConfigService {
       recencyDecay: 0.98,
       alphaSmooth: 0.5,
       temperature: 0.9,
+    },
+
+    // Target win optimization
+    targetWinOptimization: {
+      enabled: false,
+      targetType: 'both',
+      patternAnalysisWindow: 200, // Analyze last 200 draws for patterns
+      coOccurrenceThreshold: 2, // Minimum frequency for pattern inclusion
     },
   };
 

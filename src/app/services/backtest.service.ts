@@ -5,6 +5,7 @@ import { AiPowerballService } from './ai-powerball.service';
 import { PowerballConfigService } from './powerball-config.service';
 import { PowerballDataMinusLatest } from '../data/historical-data';
 import { PowerballDraw } from '../models/powerball-draw.interface';
+import { PowerballData } from '../data/powerball-data';
 
 export interface BacktestStrategy {
   name: string;
@@ -39,6 +40,8 @@ export interface BacktestSummary {
       worstWhiteHits: number;
       perfectMatches: number; // 5 white + powerball
       nearMisses: number; // 4 white + powerball or 5 white
+      fourWhiteMatches: number; // Exactly 4 white matches (regardless of powerball)
+      threeWhitePowerballMatches: number; // Exactly 3 white matches + powerball match
     };
   };
   overallMetrics: {
@@ -96,7 +99,7 @@ export class BacktestService {
    */
   async runBacktest(
     config: Partial<BacktestConfig> = {},
-    historicalData: PowerballDraw[] = PowerballDataMinusLatest
+    historicalData: PowerballDraw[] = PowerballData
   ): Promise<BacktestResult> {
     const fullConfig: BacktestConfig = {
       initialTrainingSize: 100,
@@ -104,7 +107,7 @@ export class BacktestService {
       holdoutSize: 1,
       minTrainingSize: 50,
       strategies: ['all'],
-      ticketsPerStrategy: 20,
+      ticketsPerStrategy: 40,
       ...config,
     };
 
@@ -389,6 +392,8 @@ export class BacktestService {
         worstWhiteHits: number;
         perfectMatches: number;
         nearMisses: number;
+        fourWhiteMatches: number;
+        threeWhitePowerballMatches: number;
         stepCount: number;
       };
     } = {};
@@ -409,6 +414,8 @@ export class BacktestService {
             worstWhiteHits: 5,
             perfectMatches: 0,
             nearMisses: 0,
+            fourWhiteMatches: 0,
+            threeWhitePowerballMatches: 0,
             stepCount: 0,
           };
         }
@@ -440,6 +447,16 @@ export class BacktestService {
           stats.nearMisses++;
         }
 
+        // Target win: Exactly 4 white matches (regardless of powerball)
+        if (match.whiteHits === 4) {
+          stats.fourWhiteMatches++;
+        }
+
+        // Target win: Exactly 3 white matches + powerball match
+        if (match.whiteHits === 3 && match.powerballHit) {
+          stats.threeWhitePowerballMatches++;
+        }
+
         totalTickets += pred.tickets.length;
         totalPredictions++;
       });
@@ -458,6 +475,8 @@ export class BacktestService {
         worstWhiteHits: stats.worstWhiteHits,
         perfectMatches: stats.perfectMatches,
         nearMisses: stats.nearMisses,
+        fourWhiteMatches: stats.fourWhiteMatches,
+        threeWhitePowerballMatches: stats.threeWhitePowerballMatches,
       };
     });
 
@@ -498,7 +517,9 @@ export class BacktestService {
       output += `    Best White Hits: ${stats.bestWhiteHits}\n`;
       output += `    Worst White Hits: ${stats.worstWhiteHits}\n`;
       output += `    Perfect Matches (5+PB): ${stats.perfectMatches}\n`;
-      output += `    Near Misses (4+PB or 5): ${stats.nearMisses}\n\n`;
+      output += `    Near Misses (4+PB or 5): ${stats.nearMisses}\n`;
+      output += `    Target Wins - 4 White Matches: ${stats.fourWhiteMatches}\n`;
+      output += `    Target Wins - 3 White + Powerball: ${stats.threeWhitePowerballMatches}\n\n`;
     });
 
     return output;

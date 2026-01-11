@@ -6,6 +6,7 @@ import { PickCheckerService } from '../services/pick-checker.service';
 import { PredictionService } from '../services/prediction.service';
 import { CommonModule } from '@angular/common';
 import { HttpClientModule } from '@angular/common/http';
+import { FormsModule } from '@angular/forms';
 import { provideAnimations } from '@angular/platform-browser/animations';
 import { BarGraphComponent } from '../bar-graph/bar-graph.component';
 import { AiPowerballService } from '../services/ai-powerball.service';
@@ -19,6 +20,8 @@ import {
   Win,
 } from '../models/powerball-draw.interface';
 import { BacktestService } from '../services/backtest.service';
+import { StrategyFactoryService } from '../services/strategies/strategy-factory.service';
+import { GenerationContext } from '../services/strategies/generation-strategy.interface';
 
 @Component({
   selector: 'app-play-generator',
@@ -29,6 +32,7 @@ import { BacktestService } from '../services/backtest.service';
     HttpClientModule,
     LightboxModule,
     BarGraphComponent,
+    FormsModule,
   ],
   providers: [provideAnimations()],
   templateUrl: './play-generator.component.html',
@@ -52,6 +56,10 @@ export class PlayGeneratorComponent implements OnInit {
   combindResults: CheckPicksResult | null = null;
   prediction: string[] = [];
 
+  // Target win optimization settings
+  targetWinOptimizationEnabled: boolean = false;
+  targetWinType: 'fourWhite' | 'threeWhitePowerball' | 'both' = 'both';
+
   constructor(
     private powerballService: PowerballService,
     private toastr: ToastrService,
@@ -59,8 +67,14 @@ export class PlayGeneratorComponent implements OnInit {
     private pickCheckerService: PickCheckerService,
     private aiService: AiPowerballService,
     private configService: PowerballConfigService,
-    private backtestService: BacktestService
-  ) {}
+    private backtestService: BacktestService,
+    private strategyFactory: StrategyFactoryService
+  ) {
+    // Load initial settings from config
+    const targetConfig = this.configService.get('targetWinOptimization');
+    this.targetWinOptimizationEnabled = targetConfig.enabled;
+    this.targetWinType = targetConfig.targetType;
+  }
 
   async ngOnInit(): Promise<void> {
     await this.generateTicket();
@@ -89,7 +103,7 @@ export class PlayGeneratorComponent implements OnInit {
         .trainModel(parsedDraws)
         .then((status) => {
           if (status) {
-            console.log('Training status:', status);
+            // console.log('Training status:', status);
           } else {
             console.warn('Model training was skipped or failed');
           }
@@ -100,26 +114,102 @@ export class PlayGeneratorComponent implements OnInit {
 
       const legacyPlays: string[][] = [];
 
-      // 3) Call your legacy local generator once (keeps current UI vibe)
-      const counter = this.configService.get('generation').counter;
-      for (let i = 0; i < counter; i++) {
-        try {
-          const legacy = await this.powerballService.generatePowerballPlay();
-          const legacyPlay: string[] = (
-            legacy?.predictiveWeightedRandomPlay || []
-          ).map((num: string) => (num.length === 1 ? `0${num}` : num));
+      // Update config with current UI settings
+      this.configService.set('targetWinOptimization', {
+        enabled: this.targetWinOptimizationEnabled,
+        targetType: this.targetWinType,
+        patternAnalysisWindow: this.configService.get('targetWinOptimization').patternAnalysisWindow,
+        coOccurrenceThreshold: this.configService.get('targetWinOptimization').coOccurrenceThreshold,
+      });
 
-          if (legacyPlay && legacyPlay.length === 6) {
-            legacyPlays.push(legacyPlay);
+      // 3) Generate plays - use target win strategy if enabled, otherwise use legacy generator
+      const counter = this.configService.get('generation').counter;
+      
+      if (this.targetWinOptimizationEnabled) {
+        // Use target win strategy
+        try {
+          // Build generation context similar to PowerballService
+          const parsedDrawsForContext = this.parseDrawHistoryForModel(
+            PowerballDataMinusLatest
+          );
+          
+          // We need to get the context from PowerballService or build it ourselves
+          // For now, we'll generate directly using the strategy with minimal context
+          const targetWinStrategy = this.strategyFactory.getStrategy('targetWin');
+          
+          if (targetWinStrategy) {
+            // Create a minimal context - the strategy will handle data conversion internally
+            const context = this.buildGenerationContext(parsedDrawsForContext);
+            
+            for (let i = 0; i < counter; i++) {
+              try {
+                const targetPlay = await targetWinStrategy.generate(context);
+                const formattedPlay: string[] = targetPlay.map((num: string) => 
+                  (num.length === 1 ? `0${num}` : num)
+                );
+
+                if (formattedPlay && formattedPlay.length === 6) {
+                  legacyPlays.push(formattedPlay);
+                }
+              } catch (error) {
+                console.error(`Error generating target win play ${i + 1}:`, error);
+                // Fallback to legacy if target win fails
+                try {
+                  const legacy = await this.powerballService.generatePowerballPlay();
+                  const legacyPlay: string[] = (
+                    legacy?.predictiveWeightedRandomPlay || []
+                  ).map((num: string) => (num.length === 1 ? `0${num}` : num));
+
+                  if (legacyPlay && legacyPlay.length === 6) {
+                    legacyPlays.push(legacyPlay);
+                  }
+                } catch (fallbackError) {
+                  console.error(`Error in fallback generation ${i + 1}:`, fallbackError);
+                }
+              }
+            }
+          } else {
+            throw new Error('Target win strategy not available');
           }
         } catch (error) {
-          console.error(`Error generating legacy play ${i + 1}:`, error);
-          // Continue with next iteration
+          console.error('Error in target win strategy generation, falling back to legacy:', error);
+          // Fallback to legacy generation
+          for (let i = 0; i < counter; i++) {
+            try {
+              const legacy = await this.powerballService.generatePowerballPlay();
+              const legacyPlay: string[] = (
+                legacy?.predictiveWeightedRandomPlay || []
+              ).map((num: string) => (num.length === 1 ? `0${num}` : num));
+
+              if (legacyPlay && legacyPlay.length === 6) {
+                legacyPlays.push(legacyPlay);
+              }
+            } catch (fallbackError) {
+              console.error(`Error generating legacy play ${i + 1}:`, fallbackError);
+            }
+          }
+        }
+      } else {
+        // Use legacy generator
+        for (let i = 0; i < counter; i++) {
+          try {
+            const legacy = await this.powerballService.generatePowerballPlay();
+            const legacyPlay: string[] = (
+              legacy?.predictiveWeightedRandomPlay || []
+            ).map((num: string) => (num.length === 1 ? `0${num}` : num));
+
+            if (legacyPlay && legacyPlay.length === 6) {
+              legacyPlays.push(legacyPlay);
+            }
+          } catch (error) {
+            console.error(`Error generating legacy play ${i + 1}:`, error);
+            // Continue with next iteration
+          }
         }
       }
 
       if (legacyPlays.length === 0) {
-        throw new Error('Failed to generate any legacy plays');
+        throw new Error('Failed to generate any plays');
       }
 
       // 4) Batch-generate ML tickets (weighted random + diversity)
@@ -205,6 +295,10 @@ export class PlayGeneratorComponent implements OnInit {
           picks: combined,
           wins: [],
           organizedResults: [] as Array<Record<string, Win[]>>,
+          targetWins: {
+            fourWhite: [],
+            threeWhitePowerball: [],
+          },
         };
       }
 
@@ -230,7 +324,7 @@ export class PlayGeneratorComponent implements OnInit {
       initialTrainingSize: 100,
       stepSize: 1,
       holdoutSize: 1,
-      strategies: ['legacy', 'prediction', 'ai'],
+      strategies: ['all'],
       ticketsPerStrategy: 20,
       maxSteps: 50,
     });
@@ -239,7 +333,7 @@ export class PlayGeneratorComponent implements OnInit {
 
     // Or export to JSON
     const json = this.backtestService.exportToJson(results);
-    console.log(json);
+
   }
 
   /**
@@ -274,5 +368,288 @@ export class PlayGeneratorComponent implements OnInit {
 
   close(): void {
     this.lightbox.close();
+  }
+
+  /**
+   * Builds a generation context for strategies.
+   * This creates a minimal context that strategies need.
+   * For full context features, we'd need access to PowerballService's internal methods,
+   * but we'll use a simplified version here.
+   */
+  private buildGenerationContext(historicalData: number[][]): GenerationContext {
+    // Convert historical data to string format
+    const historicalDataStrings: string[][] = historicalData.map(draw => 
+      draw.map(num => num.toString().padStart(2, '0'))
+    );
+
+    // Build a basic synergy map
+    const synergyMap: {
+      [positionIndex: number]: {
+        [currentNum: string]: { [nextNum: string]: number };
+      };
+    } = {};
+
+    // Initialize synergy map positions
+    for (let i = 0; i < 5; i++) {
+      synergyMap[i] = {};
+    }
+
+    // Build synergy data from historical draws
+    for (const row of historicalDataStrings) {
+      if (!row || row.length < 6) continue;
+      for (let i = 0; i < 4; i++) {
+        const current = row[i];
+        const next = row[i + 1];
+        if (!current || !next) continue;
+        if (!synergyMap[i][current]) {
+          synergyMap[i][current] = {};
+        }
+        if (!synergyMap[i][current][next]) {
+          synergyMap[i][current][next] = 0;
+        }
+        synergyMap[i][current][next]++;
+      }
+    }
+
+    // Build filtered parsed sets (simplified - just extract numbers)
+    const filteredParsedSets: Array<{ key: string; numbers: number[] }> = [];
+    const positions = ['first', 'second', 'third', 'fourth', 'fifth', 'powerball'];
+    
+    for (const position of positions) {
+      const numbers: number[] = [];
+      for (const draw of historicalData) {
+        const idx = positions.indexOf(position);
+        if (idx >= 0 && idx < draw.length) {
+          numbers.push(draw[idx]);
+        }
+      }
+      filteredParsedSets.push({ key: position, numbers });
+    }
+
+    // Create helper methods that delegate to PowerballService-like logic
+    // For simplicity, we'll use basic implementations
+    return {
+      historicalData: historicalDataStrings,
+      filteredParsedSets,
+      synergyMap,
+      pickAdvancedProbabilityNumber: (bestGuessSet: string[]) => {
+        // Simple weighted random selection
+        if (!bestGuessSet || bestGuessSet.length === 0) {
+          const min = 1;
+          const max = 69;
+          const rand = Math.floor(Math.random() * (max - min + 1)) + min;
+          return rand.toString().padStart(2, '0');
+        }
+        const frequencies: Record<string, number> = {};
+        for (const num of bestGuessSet) {
+          frequencies[num] = 0;
+        }
+        
+        // Count occurrences in historical data
+        for (const draw of historicalDataStrings) {
+          for (const num of draw.slice(0, 5)) {
+            if (bestGuessSet.includes(num)) {
+              frequencies[num] = (frequencies[num] || 0) + 1;
+            }
+          }
+        }
+
+        // Build weighted array
+        const weightedArray: string[] = [];
+        for (const [num, count] of Object.entries(frequencies)) {
+          for (let i = 0; i < (count || 1); i++) {
+            weightedArray.push(num);
+          }
+        }
+
+        return weightedArray.length > 0
+          ? weightedArray[Math.floor(Math.random() * weightedArray.length)]
+          : bestGuessSet[Math.floor(Math.random() * bestGuessSet.length)];
+      },
+      pickAdvancedProbabilityNumberWithRecency: (bestGuessSet: string[], recencyThreshold: number) => {
+        // Use the basic method for now - could enhance with recency weighting later
+        if (!bestGuessSet || bestGuessSet.length === 0) {
+          const min = 1;
+          const max = 69;
+          const rand = Math.floor(Math.random() * (max - min + 1)) + min;
+          return rand.toString().padStart(2, '0');
+        }
+        const frequencies: Record<string, number> = {};
+        for (const num of bestGuessSet) {
+          frequencies[num] = 0;
+        }
+        
+        // Count occurrences in recent historical data only
+        const recentData = historicalDataStrings.slice(-recencyThreshold);
+        for (const draw of recentData) {
+          for (const num of draw.slice(0, 5)) {
+            if (bestGuessSet.includes(num)) {
+              frequencies[num] = (frequencies[num] || 0) + 1;
+            }
+          }
+        }
+
+        const weightedArray: string[] = [];
+        for (const [num, count] of Object.entries(frequencies)) {
+          for (let i = 0; i < (count || 1); i++) {
+            weightedArray.push(num);
+          }
+        }
+
+        return weightedArray.length > 0
+          ? weightedArray[Math.floor(Math.random() * weightedArray.length)]
+          : bestGuessSet[Math.floor(Math.random() * bestGuessSet.length)];
+      },
+      pickMostFrequentFirstNumber: (powerball?: boolean) => {
+        const index = powerball ? 5 : 0;
+        const firstNumbers = historicalDataStrings.map(draw => draw[index] || '01');
+        const frequencies: Record<string, number> = {};
+        for (const num of firstNumbers) {
+          frequencies[num] = (frequencies[num] || 0) + 1;
+        }
+        let mostFrequent = '01';
+        let maxCount = 0;
+        for (const [num, count] of Object.entries(frequencies)) {
+          if (count > maxCount) {
+            maxCount = count;
+            mostFrequent = num;
+          }
+        }
+        return mostFrequent;
+      },
+      pickWeightedRandomFirstNumber: (powerball?: boolean) => {
+        const index = powerball ? 5 : 0;
+        const firstNumbers = historicalDataStrings.map(draw => draw[index] || '01');
+        const frequencies: Record<string, number> = {};
+        for (const num of firstNumbers) {
+          frequencies[num] = (frequencies[num] || 0) + 1;
+        }
+        const weightedArray: string[] = [];
+        for (const [num, count] of Object.entries(frequencies)) {
+          for (let i = 0; i < count; i++) {
+            weightedArray.push(num);
+          }
+        }
+        return weightedArray.length > 0
+          ? weightedArray[Math.floor(Math.random() * weightedArray.length)]
+          : '01';
+      },
+      generateNextNumberArray: (selectedNumber: string, customIndex?: number) => {
+        const index = customIndex || 0;
+        const nextNumbers: string[] = [];
+        for (const draw of historicalDataStrings) {
+          if (draw[index] === selectedNumber && index < 4) {
+            nextNumbers.push(draw[index + 1]);
+          }
+        }
+        if (nextNumbers.length === 0) {
+          const min = 1;
+          const max = 69;
+          const rand = Math.floor(Math.random() * (max - min + 1)) + min;
+          return [rand.toString().padStart(2, '0')];
+        }
+        return nextNumbers;
+      },
+      randomNumberInRange: (min: number, max: number) => {
+        const rand = Math.floor(Math.random() * (max - min + 1)) + min;
+        return rand.toString().padStart(2, '0');
+      },
+      buildWithTheFirst: (firstPredictedNumber: string, initialPlay: string[]) => {
+        // Simplified implementation
+        const play = [firstPredictedNumber];
+        while (play.length < 5) {
+          const nextNum = this.generateHelperRandomNumber(1, 69);
+          if (!play.includes(nextNum)) {
+            play.push(nextNum);
+          }
+        }
+        if (play.length === 5) {
+          play.push(this.generateHelperRandomNumber(1, 26));
+        }
+        return play.length === 6 ? play : [...play.slice(0, 5), this.generateHelperRandomNumber(1, 26)];
+      },
+      pickPowerballAi: () => {
+        const powerballs = historicalDataStrings.map(draw => draw[5] || '01');
+        const frequencies: Record<string, number> = {};
+        for (const pb of powerballs) {
+          frequencies[pb] = (frequencies[pb] || 0) + 1;
+        }
+        const weightedArray: string[] = [];
+        for (const [pb, count] of Object.entries(frequencies)) {
+          for (let i = 0; i < count; i++) {
+            weightedArray.push(pb);
+          }
+        }
+        if (weightedArray.length > 0) {
+          return weightedArray[Math.floor(Math.random() * weightedArray.length)];
+        }
+        const min = 1;
+        const max = 26;
+        const rand = Math.floor(Math.random() * (max - min + 1)) + min;
+        return rand.toString().padStart(2, '0');
+      },
+      generateFallbackSet: () => {
+        const fallback: string[] = [];
+        for (let i = 0; i < 5; i++) {
+          fallback.push(this.generateHelperRandomNumber(1, 69));
+        }
+        fallback.push(this.generateHelperRandomNumber(1, 26));
+        return fallback;
+      },
+      sortGeneratedSet: (generated: string[] | string[][]) => {
+        if (Array.isArray(generated) && generated.length > 0) {
+          if (Array.isArray(generated[0])) {
+            // Array of arrays - sort first array and return it
+            return this.sortPlayHelper((generated as string[][])[0]);
+          } else if (generated.length === 6) {
+            // Single play
+            return this.sortPlayHelper(generated as string[]);
+          }
+        }
+        return (generated as string[]).length === 6 ? (generated as string[]) : [];
+      },
+    };
+  }
+
+  /**
+   * Sorts a play: white balls ascending, powerball last.
+   */
+  private sortPlayHelper(play: string[]): string[] {
+    if (!play || play.length !== 6) return play;
+    const whiteBalls = play.slice(0, 5)
+      .map(num => parseInt(num, 10))
+      .sort((a, b) => a - b)
+      .map(num => num.toString().padStart(2, '0'));
+    return [...whiteBalls, play[5]];
+  }
+
+  /**
+   * Helper method to generate a random number in range as a zero-padded string.
+   */
+  private generateHelperRandomNumber(min: number, max: number): string {
+    const rand = Math.floor(Math.random() * (max - min + 1)) + min;
+    return rand.toString().padStart(2, '0');
+  }
+
+  /**
+   * Handles target win optimization toggle.
+   */
+  onTargetWinOptimizationToggle(): void {
+    this.configService.set('targetWinOptimization', {
+      ...this.configService.get('targetWinOptimization'),
+      enabled: this.targetWinOptimizationEnabled,
+      targetType: this.targetWinType,
+    });
+  }
+
+  /**
+   * Handles target win type change.
+   */
+  onTargetWinTypeChange(): void {
+    this.configService.set('targetWinOptimization', {
+      ...this.configService.get('targetWinOptimization'),
+      enabled: this.targetWinOptimizationEnabled,
+      targetType: this.targetWinType,
+    });
   }
 }

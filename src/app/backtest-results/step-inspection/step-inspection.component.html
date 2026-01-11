@@ -1,0 +1,297 @@
+<div class="step-inspection-container">
+  <!-- Header with Breadcrumb -->
+  <div class="header-section">
+    <nav class="breadcrumb">
+      <a routerLink="/backtest" class="breadcrumb-link">Backtest Overview</a>
+      <span class="breadcrumb-separator">›</span>
+      <span class="breadcrumb-current">Step-by-Step Inspection</span>
+    </nav>
+
+    <div class="header-content">
+      <h1>Step-by-Step Inspection</h1>
+      <p class="header-subtitle">
+        Examine individual walk-forward step results in detail. These results are from historical simulation only.
+      </p>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div class="loading-state" *ngIf="loading">
+    <p>Loading backtest results...</p>
+  </div>
+
+  <!-- Error State -->
+  <div class="error-state" *ngIf="error && !loading">
+    <p class="error-message">{{ error }}</p>
+    <button class="btn-retry" (click)="loadBacktestResults()">Retry</button>
+  </div>
+
+  <!-- Main Content -->
+  <div class="inspection-layout" *ngIf="backtestResult && !loading && !error && currentStep">
+    <!-- Left Panel: Step Selector -->
+    <aside class="step-selector-panel">
+      <div class="panel-header">
+        <h2>Steps</h2>
+        <span class="step-count">{{ getTotalSteps() }} total</span>
+      </div>
+
+      <div class="step-list-container">
+        <div
+          class="step-list-item"
+          *ngFor="let stepItem of stepList"
+          [class.active]="isStepHighlighted(stepItem)"
+          [class.perfect-match]="stepItem.hasPerfectMatch"
+          [class.near-miss]="stepItem.hasNearMiss"
+          (click)="goToStep(stepItem.step)"
+        >
+          <div class="step-number">Step {{ stepItem.step }}</div>
+          <div class="step-date">{{ formatDate(stepItem.date) }}</div>
+          <div class="step-metrics">
+            <span class="metric training-size">Training: {{ stepItem.trainingSize }}</span>
+            <span class="metric best-hits">Best: {{ stepItem.bestWhiteHits }} hits</span>
+          </div>
+          <div class="step-badges" *ngIf="stepItem.hasPerfectMatch || stepItem.hasNearMiss">
+            <span class="badge perfect" *ngIf="stepItem.hasPerfectMatch">Perfect Match</span>
+            <span class="badge near" *ngIf="stepItem.hasNearMiss && !stepItem.hasPerfectMatch">Near Miss</span>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Right Panel: Step Details -->
+    <main class="step-details-panel">
+      <!-- Navigation Controls -->
+      <div class="step-navigation">
+        <button
+          class="nav-btn prev"
+          (click)="previousStep()"
+          [disabled]="!canGoPrevious()"
+          title="Previous Step"
+        >
+          ‹ Previous
+        </button>
+
+        <div class="step-info">
+          <span class="step-indicator">
+            Step {{ getCurrentStepNumber() }} of {{ getTotalSteps() - 1 }}
+          </span>
+          <button class="btn-jump" (click)="jumpToStep()" title="Jump to Step">
+            Jump to Step
+          </button>
+        </div>
+
+        <button
+          class="nav-btn next"
+          (click)="nextStep()"
+          [disabled]="!canGoNext()"
+          title="Next Step"
+        >
+          Next ›
+        </button>
+      </div>
+
+      <!-- Test Draw Information -->
+      <section class="test-draw-section">
+        <h2>Test Draw</h2>
+        <div class="test-draw-card">
+          <div class="draw-date">
+            <span class="label">Date:</span>
+            <span class="value">{{ formatDate(currentStep.testDraw.draw_date) }}</span>
+          </div>
+          <div class="draw-numbers">
+            <span class="label">Winning Numbers:</span>
+            <div class="number-display">
+              <span
+                class="number white"
+                *ngFor="let num of getFormattedActualWhiteNumbers()"
+              >
+                {{ num }}
+              </span>
+              <span
+                class="number powerball"
+                *ngFor="let num of getFormattedActualPowerballNumbers()"
+              >
+                {{ num }}
+              </span>
+            </div>
+          </div>
+          <div class="draw-multiplier" *ngIf="currentStep.testDraw.multiplier">
+            <span class="label">Multiplier:</span>
+            <span class="value">{{ currentStep.testDraw.multiplier }}x</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Training Context -->
+      <section class="training-context-section">
+        <h2>Training Context</h2>
+        <div class="context-card">
+          <div class="context-item">
+            <span class="label">Training Size:</span>
+            <span class="value">{{ currentStep.trainingSize }} historical draws</span>
+          </div>
+          <div class="context-note">
+            This step used {{ currentStep.trainingSize }} draws from historical data to generate predictions.
+            Training size increases with each step in the walk-forward process.
+          </div>
+        </div>
+      </section>
+
+      <!-- Strategy Predictions -->
+      <section class="strategy-predictions-section">
+        <h2>Strategy Predictions</h2>
+        <div class="strategy-cards">
+          <div
+            class="strategy-prediction-card"
+            *ngFor="let prediction of currentStep.predictions"
+            [style.border-left-color]="getStrategyColor(prediction.strategy)"
+          >
+            <div class="strategy-header">
+              <h3 class="strategy-name">{{ getStrategyDisplayName(prediction.strategy) }}</h3>
+              <div class="strategy-color-indicator" [style.background-color]="getStrategyColor(prediction.strategy)"></div>
+            </div>
+
+            <!-- Best Match Results -->
+            <div class="best-match-section">
+              <h4>Best Match</h4>
+              <div class="match-results">
+                <div class="match-item">
+                  <span class="match-label">White Hits:</span>
+                  <span class="match-value white-hits">{{ prediction.bestMatch.whiteHits }} / 5</span>
+                </div>
+                <div class="match-item">
+                  <span class="match-label">Powerball:</span>
+                  <span
+                    class="match-value powerball"
+                    [class.hit]="prediction.bestMatch.powerballHit"
+                    [class.miss]="!prediction.bestMatch.powerballHit"
+                  >
+                    {{ prediction.bestMatch.powerballHit ? '✓ Hit' : '✗ Miss' }}
+                  </span>
+                </div>
+              </div>
+
+              <!-- Best Matching Ticket -->
+              <div class="matched-ticket">
+                <div class="ticket-label">Best Matching Ticket:</div>
+                <div class="ticket-numbers">
+                  <span
+                    class="ticket-number white"
+                    *ngFor="let num of prediction.bestMatch.matchedTicket.slice(0, 5)"
+                  >
+                    {{ num }}
+                  </span>
+                  <span
+                    class="ticket-number powerball"
+                    *ngFor="let num of prediction.bestMatch.matchedTicket.slice(5)"
+                  >
+                    {{ num }}
+                  </span>
+                </div>
+              </div>
+
+              <!-- Match Classification -->
+              <div class="match-classification" *ngIf="prediction.bestMatch.whiteHits === 5 && prediction.bestMatch.powerballHit">
+                <span class="classification-badge perfect">Perfect Match (5 + Powerball)</span>
+              </div>
+              <div class="match-classification" *ngIf="(prediction.bestMatch.whiteHits === 4 && prediction.bestMatch.powerballHit) || (prediction.bestMatch.whiteHits === 5 && !prediction.bestMatch.powerballHit)">
+                <span class="classification-badge near">Near Miss</span>
+              </div>
+            </div>
+
+            <!-- Tickets Generated -->
+            <div class="tickets-info">
+              <div class="tickets-count">
+                <span class="label">Tickets Generated:</span>
+                <span class="value">{{ prediction.tickets.length }}</span>
+              </div>
+              <div class="tickets-note">
+                This strategy generated {{ prediction.tickets.length }} tickets for this step.
+                Only the best matching ticket is shown above.
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Actual vs Predicted Comparison -->
+      <section class="comparison-section">
+        <h2>Actual vs. Predicted Comparison</h2>
+        <div class="comparison-card">
+          <div class="actual-draw">
+            <div class="comparison-header">Actual Draw</div>
+            <div class="number-display">
+              <span
+                class="number white"
+                *ngFor="let num of getFormattedActualWhiteNumbers()"
+              >
+                {{ num }}
+              </span>
+              <span
+                class="number powerball"
+                *ngFor="let num of getFormattedActualPowerballNumbers()"
+              >
+                {{ num }}
+              </span>
+            </div>
+          </div>
+
+          <div class="strategy-comparisons">
+            <div
+              class="strategy-comparison"
+              *ngFor="let prediction of currentStep.predictions"
+            >
+              <div class="comparison-header">
+                {{ getStrategyDisplayName(prediction.strategy) }}
+              </div>
+              <div class="comparison-numbers">
+                <div class="predicted-ticket">
+                  <div class="ticket-label">Best Predicted:</div>
+                  <div class="ticket-numbers">
+                    <span
+                      class="ticket-number white"
+                      [class.matched]="isNumberMatched(num, getFormattedActualWhiteNumbers())"
+                      *ngFor="let num of prediction.bestMatch.matchedTicket.slice(0, 5)"
+                    >
+                      {{ num }}
+                    </span>
+                    <span
+                      class="ticket-number powerball"
+                      [class.matched]="isNumberMatched(num, getFormattedActualPowerballNumbers())"
+                      *ngFor="let num of prediction.bestMatch.matchedTicket.slice(5)"
+                    >
+                      {{ num }}
+                    </span>
+                  </div>
+                </div>
+                <div class="match-summary">
+                  {{ prediction.bestMatch.whiteHits }} white + {{ prediction.bestMatch.powerballHit ? '1' : '0' }} powerball
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Actions -->
+      <section class="actions-section">
+        <button class="btn-export" (click)="exportStepData()">
+          <span class="export-icon">↓</span>
+          Export Step Data
+        </button>
+        <button class="btn-back" (click)="goToOverview()">
+          ← Back to Overview
+        </button>
+      </section>
+
+      <!-- Disclaimer -->
+      <div class="disclaimer">
+        <p>
+          <strong>Note:</strong> This step represents a single test draw from the walk-forward simulation.
+          Performance varies by draw, and these results are from historical simulation only.
+          The occurrence of perfect matches or near misses does not indicate predictive capability.
+        </p>
+      </div>
+    </main>
+  </div>
+</div>

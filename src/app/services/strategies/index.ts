@@ -5,4 +5,5 @@ export * from './predictive-weighted-random-strategy';
 export * from './highest-probability-strategy';
 export * from './ai-predictive-strategy';
 export * from './higher-order-markov-strategy';
+export * from './target-win-strategy';
 export * from './strategy-factory.service';

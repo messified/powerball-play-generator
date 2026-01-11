@@ -6,6 +6,7 @@ import { PredictiveWeightedRandomStrategy } from './predictive-weighted-random-s
 import { HighestProbabilityStrategy } from './highest-probability-strategy';
 import { AiPredictiveStrategy } from './ai-predictive-strategy';
 import { HigherOrderMarkovStrategy } from './higher-order-markov-strategy';
+import { TargetWinStrategy } from './target-win-strategy';
 
 /**
  * Factory service for creating and managing generation strategies.
@@ -23,7 +24,8 @@ export class StrategyFactoryService {
     private predictiveWeightedRandomStrategy: PredictiveWeightedRandomStrategy,
     private highestProbabilityStrategy: HighestProbabilityStrategy,
     private aiPredictiveStrategy: AiPredictiveStrategy,
-    private higherOrderMarkovStrategy: HigherOrderMarkovStrategy
+    private higherOrderMarkovStrategy: HigherOrderMarkovStrategy,
+    private targetWinStrategy: TargetWinStrategy
   ) {
     this.registerStrategies();
   }
@@ -38,6 +40,7 @@ export class StrategyFactoryService {
     this.strategies.set('highestProbability', this.highestProbabilityStrategy);
     this.strategies.set('aiPredictive', this.aiPredictiveStrategy);
     this.strategies.set('higherOrderMarkov', this.higherOrderMarkovStrategy);
+    this.strategies.set('targetWin', this.targetWinStrategy);
   }
 
   /**

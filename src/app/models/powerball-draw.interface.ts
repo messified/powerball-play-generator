@@ -78,6 +78,10 @@ export interface CheckPicksResult {
   picks: string[][];
   wins: Win[];
   organizedResults: Array<Record<string, Win[]>>;
+  targetWins: {
+    fourWhite: Win[];
+    threeWhitePowerball: Win[];
+  };
 }
 
 /**

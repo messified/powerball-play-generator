@@ -1,0 +1,845 @@
+.step-inspection-container {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  font-family: -apple-system, BlinkSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  color: #1f2937;
+  background-color: #f9fafb;
+}
+
+// Header Section
+.header-section {
+  background: white;
+  border-bottom: 1px solid #e5e7eb;
+  padding: 1.5rem 2rem;
+
+  .breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+    font-size: 0.875rem;
+
+    .breadcrumb-link {
+      color: #3b82f6;
+      text-decoration: none;
+      font-weight: 500;
+
+      &:hover {
+        text-decoration: underline;
+      }
+    }
+
+    .breadcrumb-separator {
+      color: #9ca3af;
+    }
+
+    .breadcrumb-current {
+      color: #6b7280;
+      font-weight: 500;
+    }
+  }
+
+  .header-content {
+    h1 {
+      font-size: 1.75rem;
+      font-weight: 600;
+      margin: 0 0 0.5rem 0;
+      color: #111827;
+    }
+
+    .header-subtitle {
+      margin: 0;
+      font-size: 0.875rem;
+      color: #6b7280;
+      line-height: 1.5;
+    }
+  }
+}
+
+// Loading and Error States
+.loading-state,
+.error-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem;
+  color: #6b7280;
+
+  .error-message {
+    color: #dc2626;
+    margin-bottom: 1rem;
+  }
+}
+
+.btn-retry {
+  padding: 0.625rem 1.25rem;
+  background-color: #3b82f6;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s;
+
+  &:hover {
+    background-color: #2563eb;
+  }
+}
+
+// Main Layout
+.inspection-layout {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+  min-height: 0;
+}
+
+// Left Panel: Step Selector
+.step-selector-panel {
+  width: 320px;
+  background: white;
+  border-right: 1px solid #e5e7eb;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+
+  .panel-header {
+    padding: 1.25rem;
+    border-bottom: 1px solid #e5e7eb;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    h2 {
+      font-size: 1.125rem;
+      font-weight: 600;
+      margin: 0;
+      color: #111827;
+    }
+
+    .step-count {
+      font-size: 0.75rem;
+      color: #6b7280;
+      font-weight: 500;
+    }
+  }
+
+  .step-list-container {
+    flex: 1;
+    overflow-y: auto;
+    padding: 0.5rem;
+  }
+
+  .step-list-item {
+    padding: 1rem;
+    margin-bottom: 0.5rem;
+    border: 1px solid #e5e7eb;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s;
+    background: white;
+
+    &:hover {
+      background-color: #f9fafb;
+      border-color: #d1d5db;
+    }
+
+    &.active {
+      background-color: #eff6ff;
+      border-color: #3b82f6;
+      border-left-width: 3px;
+    }
+
+    &.perfect-match {
+      border-left: 3px solid #059669;
+
+      &.active {
+        border-left-color: #059669;
+      }
+    }
+
+    &.near-miss {
+      border-left: 3px solid #f59e0b;
+
+      &.active {
+        border-left-color: #f59e0b;
+      }
+    }
+
+    .step-number {
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: #111827;
+      margin-bottom: 0.25rem;
+    }
+
+    .step-date {
+      font-size: 0.75rem;
+      color: #6b7280;
+      margin-bottom: 0.5rem;
+    }
+
+    .step-metrics {
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+      margin-bottom: 0.5rem;
+
+      .metric {
+        font-size: 0.7rem;
+        color: #9ca3af;
+        font-weight: 500;
+      }
+    }
+
+    .step-badges {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+
+      .badge {
+        padding: 0.125rem 0.5rem;
+        border-radius: 4px;
+        font-size: 0.7rem;
+        font-weight: 600;
+
+        &.perfect {
+          background-color: #d1fae5;
+          color: #065f46;
+        }
+
+        &.near {
+          background-color: #fef3c7;
+          color: #92400e;
+        }
+      }
+    }
+  }
+}
+
+// Right Panel: Step Details
+.step-details-panel {
+  flex: 1;
+  overflow-y: auto;
+  padding: 2rem;
+  background-color: #f9fafb;
+
+  section {
+    margin-bottom: 2rem;
+  }
+
+  h2 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin: 0 0 1rem 0;
+    color: #111827;
+  }
+}
+
+// Step Navigation
+.step-navigation {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem;
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  margin-bottom: 2rem;
+
+  .nav-btn {
+    padding: 0.625rem 1.25rem;
+    background-color: #3b82f6;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.2s;
+
+    &:hover:not(:disabled) {
+      background-color: #2563eb;
+    }
+
+    &:disabled {
+      background-color: #9ca3af;
+      cursor: not-allowed;
+    }
+
+    &.prev {
+      order: 1;
+    }
+
+    &.next {
+      order: 3;
+    }
+  }
+
+  .step-info {
+    order: 2;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+
+    .step-indicator {
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: #6b7280;
+    }
+
+    .btn-jump {
+      padding: 0.5rem 1rem;
+      background: none;
+      border: 1px solid #d1d5db;
+      border-radius: 6px;
+      font-size: 0.75rem;
+      font-weight: 500;
+      color: #4b5563;
+      cursor: pointer;
+      transition: all 0.2s;
+
+      &:hover {
+        background-color: #f9fafb;
+        border-color: #9ca3af;
+      }
+    }
+  }
+}
+
+// Test Draw Section
+.test-draw-section {
+  .test-draw-card {
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    padding: 1.5rem;
+
+    .draw-date,
+    .draw-multiplier {
+      display: flex;
+      gap: 0.75rem;
+      margin-bottom: 1rem;
+
+      .label {
+        font-size: 0.875rem;
+        font-weight: 500;
+        color: #6b7280;
+      }
+
+      .value {
+        font-size: 0.875rem;
+        font-weight: 600;
+        color: #111827;
+      }
+    }
+
+    .draw-numbers {
+      .label {
+        display: block;
+        font-size: 0.875rem;
+        font-weight: 500;
+        color: #6b7280;
+        margin-bottom: 0.75rem;
+      }
+
+      .number-display {
+        display: flex;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+
+        .number {
+          width: 3rem;
+          height: 3rem;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          border-radius: 50%;
+          font-weight: 600;
+          font-size: 1rem;
+
+          &.white {
+            background-color: #f3f4f6;
+            color: #111827;
+            border: 2px solid #d1d5db;
+          }
+
+          &.powerball {
+            background-color: #dc2626;
+            color: white;
+          }
+        }
+      }
+    }
+  }
+}
+
+// Training Context Section
+.training-context-section {
+  .context-card {
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    padding: 1.5rem;
+
+    .context-item {
+      display: flex;
+      gap: 0.75rem;
+      margin-bottom: 1rem;
+
+      .label {
+        font-size: 0.875rem;
+        font-weight: 500;
+        color: #6b7280;
+      }
+
+      .value {
+        font-size: 0.875rem;
+        font-weight: 600;
+        color: #111827;
+      }
+    }
+
+    .context-note {
+      font-size: 0.8125rem;
+      color: #6b7280;
+      line-height: 1.6;
+      padding: 0.75rem;
+      background-color: #f9fafb;
+      border-radius: 4px;
+      border-left: 3px solid #3b82f6;
+    }
+  }
+}
+
+// Strategy Predictions Section
+.strategy-predictions-section {
+  .strategy-cards {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+
+  .strategy-prediction-card {
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-left: 4px solid;
+    border-radius: 8px;
+    padding: 1.5rem;
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+
+    .strategy-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.5rem;
+      padding-bottom: 1rem;
+      border-bottom: 1px solid #e5e7eb;
+
+      .strategy-name {
+        font-size: 1.125rem;
+        font-weight: 600;
+        margin: 0;
+        color: #111827;
+      }
+
+      .strategy-color-indicator {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+      }
+    }
+
+    .best-match-section {
+      margin-bottom: 1.5rem;
+
+      h4 {
+        font-size: 0.875rem;
+        font-weight: 600;
+        color: #6b7280;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        margin: 0 0 1rem 0;
+      }
+
+      .match-results {
+        display: flex;
+        gap: 2rem;
+        margin-bottom: 1rem;
+
+        .match-item {
+          display: flex;
+          flex-direction: column;
+          gap: 0.25rem;
+
+          .match-label {
+            font-size: 0.75rem;
+            color: #6b7280;
+            font-weight: 500;
+          }
+
+          .match-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+
+            &.white-hits {
+              color: #111827;
+            }
+
+            &.powerball.hit {
+              color: #059669;
+            }
+
+            &.powerball.miss {
+              color: #dc2626;
+            }
+          }
+        }
+      }
+
+      .matched-ticket {
+        margin-top: 1rem;
+        padding: 1rem;
+        background-color: #f9fafb;
+        border-radius: 6px;
+
+        .ticket-label {
+          display: block;
+          font-size: 0.75rem;
+          font-weight: 500;
+          color: #6b7280;
+          margin-bottom: 0.5rem;
+        }
+
+        .ticket-numbers {
+          display: flex;
+          gap: 0.5rem;
+          flex-wrap: wrap;
+
+          .ticket-number {
+            width: 2.5rem;
+            height: 2.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            font-weight: 600;
+            font-size: 0.875rem;
+
+            &.white {
+              background-color: #f3f4f6;
+              color: #111827;
+              border: 2px solid #d1d5db;
+            }
+
+            &.powerball {
+              background-color: #dc2626;
+              color: white;
+            }
+          }
+        }
+      }
+
+      .match-classification {
+        margin-top: 1rem;
+
+        .classification-badge {
+          display: inline-block;
+          padding: 0.5rem 1rem;
+          border-radius: 6px;
+          font-size: 0.75rem;
+          font-weight: 600;
+
+          &.perfect {
+            background-color: #d1fae5;
+            color: #065f46;
+          }
+
+          &.near {
+            background-color: #fef3c7;
+            color: #92400e;
+          }
+        }
+      }
+    }
+
+    .tickets-info {
+      padding-top: 1rem;
+      border-top: 1px solid #f3f4f6;
+
+      .tickets-count {
+        display: flex;
+        gap: 0.75rem;
+        margin-bottom: 0.5rem;
+
+        .label {
+          font-size: 0.75rem;
+          font-weight: 500;
+          color: #6b7280;
+        }
+
+        .value {
+          font-size: 0.75rem;
+          font-weight: 600;
+          color: #111827;
+        }
+      }
+
+      .tickets-note {
+        font-size: 0.7rem;
+        color: #9ca3af;
+        font-style: italic;
+      }
+    }
+  }
+}
+
+// Comparison Section
+.comparison-section {
+  .comparison-card {
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    padding: 1.5rem;
+
+    .actual-draw {
+      margin-bottom: 2rem;
+      padding-bottom: 2rem;
+      border-bottom: 1px solid #e5e7eb;
+
+      .comparison-header {
+        font-size: 0.875rem;
+        font-weight: 600;
+        color: #6b7280;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        margin-bottom: 1rem;
+      }
+
+      .number-display {
+        display: flex;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+
+        .number {
+          width: 3rem;
+          height: 3rem;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          border-radius: 50%;
+          font-weight: 600;
+          font-size: 1rem;
+
+          &.white {
+            background-color: #f3f4f6;
+            color: #111827;
+            border: 2px solid #d1d5db;
+          }
+
+          &.powerball {
+            background-color: #dc2626;
+            color: white;
+          }
+        }
+      }
+    }
+
+    .strategy-comparisons {
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+
+      .strategy-comparison {
+        .comparison-header {
+          font-size: 0.875rem;
+          font-weight: 600;
+          color: #111827;
+          margin-bottom: 0.75rem;
+        }
+
+        .comparison-numbers {
+          .predicted-ticket {
+            .ticket-label {
+              display: block;
+              font-size: 0.75rem;
+              font-weight: 500;
+              color: #6b7280;
+              margin-bottom: 0.5rem;
+            }
+
+            .ticket-numbers {
+              display: flex;
+              gap: 0.5rem;
+              flex-wrap: wrap;
+              margin-bottom: 0.75rem;
+
+              .ticket-number {
+                width: 2.5rem;
+                height: 2.5rem;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                border-radius: 50%;
+                font-weight: 600;
+                font-size: 0.875rem;
+
+                &.white {
+                  background-color: #f3f4f6;
+                  color: #111827;
+                  border: 2px solid #d1d5db;
+
+                  &.matched {
+                    background-color: #d1fae5;
+                    border-color: #059669;
+                    color: #065f46;
+                  }
+                }
+
+                &.powerball {
+                  background-color: #dc2626;
+                  color: white;
+
+                  &.matched {
+                    background-color: #059669;
+                  }
+                }
+              }
+            }
+          }
+
+          .match-summary {
+            font-size: 0.8125rem;
+            color: #6b7280;
+            font-weight: 500;
+          }
+        }
+      }
+    }
+  }
+}
+
+// Actions Section
+.actions-section {
+  display: flex;
+  gap: 1rem;
+  padding: 1.5rem 0;
+  border-top: 1px solid #e5e7eb;
+
+  .btn-export,
+  .btn-back {
+    padding: 0.625rem 1.25rem;
+    border: none;
+    border-radius: 6px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .btn-export {
+    background-color: #3b82f6;
+    color: white;
+
+    &:hover {
+      background-color: #2563eb;
+    }
+
+    .export-icon {
+      font-size: 0.875rem;
+    }
+  }
+
+  .btn-back {
+    background-color: #6b7280;
+    color: white;
+
+    &:hover {
+      background-color: #4b5563;
+    }
+  }
+}
+
+// Disclaimer
+.disclaimer {
+  margin-top: 2rem;
+  padding: 1rem;
+  background-color: #fef3c7;
+  border-left: 4px solid #f59e0b;
+  border-radius: 4px;
+
+  p {
+    margin: 0;
+    font-size: 0.8125rem;
+    color: #92400e;
+    line-height: 1.5;
+
+    strong {
+      color: #78350f;
+    }
+  }
+}
+
+// Responsive Design
+@media (max-width: 1024px) {
+  .inspection-layout {
+    flex-direction: column;
+  }
+
+  .step-selector-panel {
+    width: 100%;
+    max-height: 300px;
+    border-right: none;
+    border-bottom: 1px solid #e5e7eb;
+  }
+
+  .step-details-panel {
+    padding: 1rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .header-section {
+    padding: 1rem;
+
+    .header-content h1 {
+      font-size: 1.5rem;
+    }
+  }
+
+  .step-navigation {
+    flex-direction: column;
+    gap: 1rem;
+
+    .nav-btn {
+      width: 100%;
+      order: 0 !important;
+    }
+
+    .step-info {
+      order: 0 !important;
+      width: 100%;
+      justify-content: space-between;
+    }
+  }
+
+  .match-results {
+    flex-direction: column;
+    gap: 1rem !important;
+  }
+
+  .actions-section {
+    flex-direction: column;
+
+    .btn-export,
+    .btn-back {
+      width: 100%;
+    }
+  }
+}
