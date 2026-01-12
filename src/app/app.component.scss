@@ -29,6 +29,12 @@
   margin-right: 16px;
 }
 
+.toolbar-logo {
+  max-height: 48px;
+  height: auto;
+  margin-right: 12px;
+}
+
 .toolbar-title {
   flex: 1;
   font-size: 1.25rem;
@@ -46,6 +52,10 @@
 
 /* Mobile-first: Default styles for mobile */
 @media (max-width: 767px) {
+  .toolbar-logo {
+    max-height: 36px;
+  }
+
   .toolbar-title {
     font-size: 1rem;
   }

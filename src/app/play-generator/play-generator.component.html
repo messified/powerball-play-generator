@@ -1,13 +1,4 @@
 <div class="play-generator-container">
-  <!-- Banner Section -->
-  <div class="banner-section">
-    <img
-      class="banner-image"
-      src="../../../assets/powerball_logo.png"
-      alt="Powerball Logo"
-    />
-  </div>
-
   <!-- Target Win Optimization Card -->
   <mat-card class="settings-card">
     <mat-card-header>
@@ -69,38 +60,6 @@
     </button>
   </div>
 
-  <!-- Results Summary Card -->
-  <mat-card *ngIf="recentDrawings && combindResults" class="results-card">
-    <mat-card-header>
-      <mat-card-title>Results Summary</mat-card-title>
-    </mat-card-header>
-    <mat-card-content>
-      <div class="results-content">
-        <p class="latest-draw">Latest Draw: '15 28 57 58 63 23'</p>
-        <div class="stat-item">
-          <span class="stat-label">Total Picks Generated:</span>
-          <span class="stat-value">{{ combindResults.myPicks }}</span>
-        </div>
-        <div class="stat-item">
-          <span class="stat-label">Matched Plays:</span>
-          <span class="stat-value">{{ combindResults.totalWins }}</span>
-        </div>
-
-        <div *ngIf="combindResults.targetWins" class="target-wins-section">
-          <h4 class="target-wins-title">Target Win Statistics:</h4>
-          <div class="stat-item">
-            <span class="stat-label">4 White Ball Matches:</span>
-            <span class="stat-value">{{ combindResults.targetWins.fourWhite.length }}</span>
-          </div>
-          <div class="stat-item">
-            <span class="stat-label">3 White Ball + Powerball Matches:</span>
-            <span class="stat-value">{{ combindResults.targetWins.threeWhitePowerball.length }}</span>
-          </div>
-        </div>
-      </div>
-    </mat-card-content>
-  </mat-card>
-
   <!-- Bar Graph Card -->
   <mat-card class="chart-card">
     <mat-card-content>
@@ -143,26 +102,37 @@
     </mat-card-content>
   </mat-card>
 
-  <!-- Past Winning Numbers Card -->
-  <mat-card *ngIf="play" class="past-winning-card">
-    <mat-card-header>
-      <mat-card-title>Past Winning Numbers</mat-card-title>
-    </mat-card-header>
-    <mat-card-content>
-      <div class="past-winning-container">
-        <div *ngFor="let set of recentDrawings" class="powerball-set">
-          <ul class="powerball-numbers">
-            <li
-              class="ball"
-              [ngClass]="play[i] === num ? 'match' : ''"
-              *ngFor="let num of set; let i = index">
-              <span>{{ num }}</span>
-            </li>
-          </ul>
+    <!-- Results Summary Card -->
+    <mat-card *ngIf="recentDrawings && combindResults" class="results-card">
+      <mat-card-header>
+        <mat-card-title>Results Summary</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="results-content">
+          <p class="latest-draw">Latest Draw: '15 28 57 58 63 23'</p>
+          <div class="stat-item">
+            <span class="stat-label">Total Picks Generated:</span>
+            <span class="stat-value">{{ combindResults.myPicks }}</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-label">Matched Plays:</span>
+            <span class="stat-value">{{ combindResults.totalWins }}</span>
+          </div>
+  
+          <div *ngIf="combindResults.targetWins" class="target-wins-section">
+            <h4 class="target-wins-title">Target Win Statistics:</h4>
+            <div class="stat-item">
+              <span class="stat-label">4 White Ball Matches:</span>
+              <span class="stat-value">{{ combindResults.targetWins.fourWhite.length }}</span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-label">3 White Ball + Powerball Matches:</span>
+              <span class="stat-value">{{ combindResults.targetWins.threeWhitePowerball.length }}</span>
+            </div>
+          </div>
         </div>
-      </div>
-    </mat-card-content>
-  </mat-card>
+      </mat-card-content>
+    </mat-card>
 
   <!-- Footer -->
   <div *ngIf="history.length >= 1" class="footer-section">

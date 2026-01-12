@@ -6,19 +6,6 @@
   min-height: calc(100vh - 64px);
 }
 
-/* Banner Section */
-.banner-section {
-  text-align: center;
-  margin-bottom: 24px;
-  padding: 16px 0;
-}
-
-.banner-image {
-  max-width: 100%;
-  height: auto;
-  max-height: 120px;
-}
-
 /* Material Cards */
 .settings-card,
 .results-card,
@@ -262,10 +249,6 @@
     padding-left: max(12px, env(safe-area-inset-left));
     padding-right: max(12px, env(safe-area-inset-right));
     padding-bottom: max(12px, env(safe-area-inset-bottom));
-  }
-
-  .banner-image {
-    max-height: 80px;
   }
 
   .ball {
