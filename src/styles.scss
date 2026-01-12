@@ -1,1 +1,248 @@
-/* You can add global styles to this file, and also import other style files */
+/* Angular Material Theme Imports */
+@use '@angular/material' as mat;
+
+/* Include Material core styles */
+@include mat.core();
+
+/* Define Powerball-inspired color palette */
+$powerball-primary: mat.define-palette(mat.$red-palette, 600, 400, 800);
+$powerball-accent: mat.define-palette(mat.$red-palette, A200, A100, A400);
+$powerball-warn: mat.define-palette(mat.$amber-palette);
+
+/* Dark theme configuration */
+$powerball-dark-theme: mat.define-dark-theme((
+  color: (
+    primary: $powerball-primary,
+    accent: $powerball-accent,
+    warn: $powerball-warn,
+  ),
+  typography: mat.define-typography-config(),
+  density: 0,
+));
+
+/* Apply dark theme */
+@include mat.all-component-themes($powerball-dark-theme);
+
+/* Global Styles - Mobile First */
+* {
+  box-sizing: border-box;
+}
+
+html, body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: Roboto, "Helvetica Neue", sans-serif;
+  background-color: #121212;
+  color: rgba(255, 255, 255, 0.87);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Safe area insets for iPhone notch and home indicator */
+body {
+  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+}
+
+/* Ensure toolbar respects safe areas */
+mat-toolbar {
+  padding-left: max(16px, env(safe-area-inset-left));
+  padding-right: max(16px, env(safe-area-inset-right));
+  padding-top: max(0px, env(safe-area-inset-top));
+}
+
+/* Ensure sidenav respects safe areas */
+mat-sidenav {
+  padding-top: max(0px, env(safe-area-inset-top));
+  padding-bottom: max(0px, env(safe-area-inset-bottom));
+}
+
+/* Ensure main content respects safe areas */
+.main-content {
+  padding-left: max(0px, env(safe-area-inset-left));
+  padding-right: max(0px, env(safe-area-inset-right));
+  padding-bottom: max(0px, env(safe-area-inset-bottom));
+}
+
+/* Mobile-first responsive typography */
+h1, h2, h3, h4, h5, h6 {
+  margin: 0;
+  font-weight: 500;
+}
+
+/* Touch target optimization - minimum 44px for iOS */
+button, 
+a, 
+mat-chip, 
+.mat-mdc-button, 
+.mat-mdc-raised-button,
+.mat-mdc-icon-button,
+.mat-mdc-fab,
+.mat-mdc-mini-fab,
+.mat-mdc-checkbox,
+.mat-mdc-radio-button,
+.mat-mdc-list-item,
+.mat-mdc-tab,
+input[type="checkbox"],
+input[type="radio"] {
+  min-height: 44px;
+  min-width: 44px;
+}
+
+/* Ensure icon buttons meet touch target */
+.mat-mdc-icon-button {
+  width: 48px;
+  height: 48px;
+  padding: 12px;
+}
+
+/* Ensure list items are touch-friendly */
+.mat-mdc-list-item {
+  padding: 12px 16px;
+}
+
+/* Ensure checkboxes and radio buttons are touch-friendly */
+.mat-mdc-checkbox,
+.mat-mdc-radio-button {
+  margin: 8px 0;
+}
+
+/* Ensure chips are touch-friendly */
+mat-chip {
+  min-height: 44px;
+  padding: 8px 16px;
+  font-size: 0.875rem;
+}
+
+/* Material spacing utilities */
+.mobile-padding {
+  padding: 16px;
+}
+
+.mobile-margin {
+  margin: 16px;
+}
+
+/* Responsive breakpoints */
+@media (min-width: 768px) {
+  .mobile-padding {
+    padding: 24px;
+  }
+  
+  .mobile-margin {
+    margin: 24px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .mobile-padding {
+    padding: 32px;
+  }
+  
+  .mobile-margin {
+    margin: 32px;
+  }
+}
+
+/* Chart.js responsive container */
+.chart-container,
+.chart-wrapper {
+  position: relative;
+  width: 100%;
+  height: auto;
+  min-height: 250px;
+  max-width: 100%;
+  overflow: hidden;
+}
+
+/* Mobile-first chart sizing */
+@media (max-width: 767px) {
+  .chart-container,
+  .chart-wrapper {
+    min-height: 250px;
+    max-height: 300px;
+  }
+  
+  /* Ensure canvas is responsive */
+  canvas {
+    max-width: 100%;
+    height: auto !important;
+  }
+}
+
+/* Tablet chart sizing */
+@media (min-width: 768px) {
+  .chart-container,
+  .chart-wrapper {
+    min-height: 350px;
+    max-height: 400px;
+  }
+}
+
+/* Desktop chart sizing */
+@media (min-width: 1024px) {
+  .chart-container,
+  .chart-wrapper {
+    min-height: 400px;
+    max-height: 500px;
+  }
+}
+
+/* Scrollbar styling for dark theme */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #1e1e1e;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #424242;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #616161;
+}
+
+/* Material card elevation adjustments for mobile */
+@media (max-width: 767px) {
+  .mat-mdc-card {
+    margin: 8px;
+  }
+}
+
+/* Table horizontal scroll on mobile */
+@media (max-width: 767px) {
+  .mat-mdc-table-container,
+  .table-container {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    display: block;
+    width: 100%;
+  }
+  
+  /* Ensure tables are scrollable on mobile */
+  table {
+    min-width: 600px;
+    width: 100%;
+  }
+  
+  /* Add scroll indicator */
+  .table-container::after {
+    content: '→';
+    position: absolute;
+    right: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 1.5rem;
+    pointer-events: none;
+    opacity: 0.5;
+  }
+}

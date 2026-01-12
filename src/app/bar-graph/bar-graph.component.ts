@@ -23,14 +23,44 @@ export class BarGraphComponent implements OnInit {
   barChartOptions: ChartOptions<'bar'> = {
     indexAxis: 'y',
     responsive: true,
+    maintainAspectRatio: false,
     plugins: {
       legend: {
         labels: {
           font: {
+            size: 11,
+          },
+          boxWidth: 12,
+          padding: 8,
+        },
+        display: true,
+        position: 'top',
+      },
+      tooltip: {
+        enabled: true,
+        padding: 8,
+        titleFont: {
+          size: 12,
+        },
+        bodyFont: {
+          size: 11,
+        },
+      },
+    },
+    scales: {
+      x: {
+        ticks: {
+          font: {
             size: 10,
           },
         },
-        display: true,
+      },
+      y: {
+        ticks: {
+          font: {
+            size: 10,
+          },
+        },
       },
     },
   };

@@ -1,12 +1,40 @@
-<nav class="main-navigation">
-  <div class="nav-container">
-    <div class="nav-brand">Powerball Generator</div>
-    <ul class="nav-links">
-      <li><a routerLink="/generator" routerLinkActive="active">Generator</a></li>
-      <li><a routerLink="/backtest" routerLinkActive="active">Backtest Results</a></li>
-    </ul>
-  </div>
-</nav>
-<div class="container">
-  <router-outlet></router-outlet>
-</div>
+<mat-sidenav-container class="sidenav-container">
+  <mat-sidenav
+    #sidenav
+    mode="over"
+    [opened]="false"
+    class="sidenav"
+    [class.mat-elevation-z2]="true">
+    <mat-nav-list>
+      <a mat-list-item routerLink="/generator" routerLinkActive="active" (click)="sidenav.close()">
+        <mat-icon matListItemIcon>casino</mat-icon>
+        <span matListItemTitle>Generator</span>
+      </a>
+      <a mat-list-item routerLink="/backtest" routerLinkActive="active" (click)="sidenav.close()">
+        <mat-icon matListItemIcon>analytics</mat-icon>
+        <span matListItemTitle>Backtest Results</span>
+      </a>
+      <a mat-list-item routerLink="/diff-analysis" routerLinkActive="active" (click)="sidenav.close()">
+        <mat-icon matListItemIcon>pattern</mat-icon>
+        <span matListItemTitle>Diff Pattern Analysis</span>
+      </a>
+    </mat-nav-list>
+  </mat-sidenav>
+
+  <mat-sidenav-content>
+    <mat-toolbar color="primary" class="toolbar">
+      <button
+        mat-icon-button
+        (click)="sidenav.toggle()"
+        aria-label="Toggle navigation menu"
+        class="menu-button">
+        <mat-icon>menu</mat-icon>
+      </button>
+      <span class="toolbar-title">Powerball Generator</span>
+    </mat-toolbar>
+
+    <main class="main-content">
+      <router-outlet></router-outlet>
+    </main>
+  </mat-sidenav-content>
+</mat-sidenav-container>

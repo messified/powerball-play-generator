@@ -7,6 +7,8 @@ import { HighestProbabilityStrategy } from './highest-probability-strategy';
 import { AiPredictiveStrategy } from './ai-predictive-strategy';
 import { HigherOrderMarkovStrategy } from './higher-order-markov-strategy';
 import { TargetWinStrategy } from './target-win-strategy';
+import { DiffPatternStrategy } from './diff-pattern-strategy';
+import { EnsembleStrategy } from './ensemble-strategy';
 
 /**
  * Factory service for creating and managing generation strategies.
@@ -25,7 +27,9 @@ export class StrategyFactoryService {
     private highestProbabilityStrategy: HighestProbabilityStrategy,
     private aiPredictiveStrategy: AiPredictiveStrategy,
     private higherOrderMarkovStrategy: HigherOrderMarkovStrategy,
-    private targetWinStrategy: TargetWinStrategy
+    private targetWinStrategy: TargetWinStrategy,
+    private diffPatternStrategy: DiffPatternStrategy,
+    private ensembleStrategy: EnsembleStrategy
   ) {
     this.registerStrategies();
   }
@@ -41,6 +45,8 @@ export class StrategyFactoryService {
     this.strategies.set('aiPredictive', this.aiPredictiveStrategy);
     this.strategies.set('higherOrderMarkov', this.higherOrderMarkovStrategy);
     this.strategies.set('targetWin', this.targetWinStrategy);
+    this.strategies.set('diffPattern', this.diffPatternStrategy);
+    this.strategies.set('ensemble', this.ensembleStrategy);
   }
 
   /**

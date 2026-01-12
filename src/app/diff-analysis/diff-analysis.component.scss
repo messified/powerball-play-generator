@@ -1,0 +1,367 @@
+.diff-analysis-container {
+  padding: 16px;
+  max-width: 1400px;
+  margin: 0 auto;
+  background-color: #121212;
+  min-height: calc(100vh - 64px);
+
+  h2 {
+    margin-bottom: 24px;
+    color: rgba(255, 255, 255, 0.87);
+    font-size: 1.75rem;
+    font-weight: 500;
+  }
+
+  h3 {
+    margin-top: 32px;
+    margin-bottom: 16px;
+    color: rgba(255, 255, 255, 0.87);
+    font-size: 1.25rem;
+    border-bottom: 2px solid rgba(255, 255, 255, 0.12);
+    padding-bottom: 8px;
+  }
+
+  h4 {
+    margin-top: 16px;
+    margin-bottom: 12px;
+    color: rgba(255, 255, 255, 0.87);
+    font-size: 1rem;
+    font-weight: 500;
+  }
+}
+
+// Summary Section
+.summary-card {
+  margin-bottom: 24px;
+  background-color: #1e1e1e;
+}
+
+.summary-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+  margin-bottom: 20px;
+
+  .summary-item {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+
+    .label {
+      font-weight: 600;
+      color: rgba(255, 255, 255, 0.7);
+      font-size: 0.875rem;
+    }
+
+    .value {
+      font-size: 1.125rem;
+      color: rgba(255, 255, 255, 0.87);
+      font-weight: 500;
+    }
+  }
+}
+
+.most-common-diffs {
+  margin-top: 20px;
+
+  h4 {
+    margin-bottom: 16px;
+    font-size: 1rem;
+    font-weight: 500;
+    color: rgba(255, 255, 255, 0.87);
+  }
+
+  .diffs-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 12px;
+
+    .diff-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px;
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 4px;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      min-height: 44px;
+
+      .position-name {
+        font-weight: 600;
+        color: rgba(255, 255, 255, 0.87);
+        min-width: 100px;
+        font-size: 0.875rem;
+      }
+
+      .diff-chip {
+        min-height: 32px;
+        font-weight: 600;
+        font-size: 0.875rem;
+      }
+
+      .frequency {
+        color: rgba(255, 255, 255, 0.7);
+        font-size: 0.875rem;
+        margin-left: auto;
+      }
+    }
+  }
+}
+
+// Pattern Frequency Section
+.pattern-frequency-card {
+  margin-bottom: 32px;
+  background-color: #1e1e1e;
+}
+
+.patterns-container {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 20px;
+
+  .position-patterns {
+    background: rgba(255, 255, 255, 0.05);
+    padding: 16px;
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+
+    h4 {
+      margin-bottom: 12px;
+      font-size: 1rem;
+      font-weight: 500;
+      color: rgba(255, 255, 255, 0.87);
+    }
+
+    .table-container {
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .pattern-table {
+      width: 100%;
+      min-width: 300px;
+      border-collapse: collapse;
+      margin-top: 12px;
+
+      thead {
+        background: rgba(255, 255, 255, 0.05);
+
+        th {
+          padding: 12px;
+          text-align: left;
+          font-weight: 600;
+          color: rgba(255, 255, 255, 0.87);
+          border-bottom: 2px solid rgba(255, 255, 255, 0.12);
+          font-size: 0.875rem;
+        }
+      }
+
+      tbody {
+        tr {
+          border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+
+          &:hover {
+            background: rgba(255, 255, 255, 0.05);
+          }
+
+          td {
+            padding: 10px 12px;
+            color: rgba(255, 255, 255, 0.87);
+            font-size: 0.875rem;
+            min-height: 44px;
+
+            &.diff-positive {
+              color: #10b981;
+              font-weight: 600;
+            }
+
+            &.diff-negative {
+              color: #f44336;
+              font-weight: 600;
+            }
+
+            &.diff-zero {
+              color: rgba(255, 255, 255, 0.6);
+            }
+
+            &.no-patterns {
+              text-align: center;
+              color: rgba(255, 255, 255, 0.6);
+              font-style: italic;
+              padding: 16px;
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+// Picks Analysis Section
+.picks-analysis-card {
+  margin-bottom: 32px;
+  background-color: #1e1e1e;
+}
+
+.table-container {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  position: relative;
+}
+
+.picks-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 800px;
+
+  thead {
+    background: rgba(255, 255, 255, 0.08);
+    color: rgba(255, 255, 255, 0.87);
+
+    th {
+      padding: 12px;
+      text-align: left;
+      font-weight: 600;
+      font-size: 0.875rem;
+      white-space: nowrap;
+      min-height: 44px;
+    }
+  }
+
+  tbody {
+    tr {
+      border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+
+      &:nth-child(even) {
+        background: rgba(255, 255, 255, 0.02);
+      }
+
+      &:hover {
+        background: rgba(255, 255, 255, 0.05);
+      }
+
+      td {
+        padding: 12px;
+        font-size: 0.875rem;
+        min-height: 44px;
+
+        &.pick-numbers {
+          font-weight: 600;
+          color: rgba(255, 255, 255, 0.87);
+          font-family: 'Courier New', monospace;
+        }
+
+        .diff-chip {
+          min-height: 32px;
+          font-weight: 600;
+          font-size: 0.8125rem;
+        }
+
+        .no-diff {
+          color: rgba(255, 255, 255, 0.6);
+          font-style: italic;
+        }
+      }
+    }
+  }
+}
+
+// Empty State
+.empty-state-card {
+  margin-bottom: 24px;
+  background-color: #1e1e1e;
+  text-align: center;
+  padding: 48px 20px;
+
+  p {
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 1rem;
+    margin: 0;
+  }
+}
+
+// Diff chip color classes
+.diff-chip {
+  &.diff-positive {
+    background-color: rgba(16, 185, 129, 0.2);
+    color: #10b981;
+  }
+
+  &.diff-negative {
+    background-color: rgba(244, 67, 54, 0.2);
+    color: #f44336;
+  }
+
+  &.diff-zero {
+    background-color: rgba(255, 255, 255, 0.1);
+    color: rgba(255, 255, 255, 0.6);
+  }
+}
+
+// Responsive adjustments - Mobile-first
+@media (max-width: 767px) {
+  .diff-analysis-container {
+    padding: 12px;
+
+    h2 {
+      font-size: 1.5rem;
+    }
+
+    h3 {
+      font-size: 1.125rem;
+    }
+  }
+
+  .summary-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .patterns-container {
+    grid-template-columns: 1fr;
+  }
+
+  .diffs-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+// Tablet
+@media (min-width: 768px) {
+  .diff-analysis-container {
+    padding: 24px;
+  }
+
+  .summary-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .patterns-container {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .diffs-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+// Desktop
+@media (min-width: 1024px) {
+  .diff-analysis-container {
+    padding: 32px;
+  }
+
+  .summary-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .patterns-container {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .diffs-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}

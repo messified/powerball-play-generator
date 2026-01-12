@@ -12,6 +12,17 @@ import { BarGraphComponent } from '../bar-graph/bar-graph.component';
 import { AiPowerballService } from '../services/ai-powerball.service';
 import { PowerballDataMinusLatest } from '../data/historical-data';
 import { PowerballConfigService } from '../services/powerball-config.service';
+import { MatCardModule } from '@angular/material/card';
+import { MatButtonModule } from '@angular/material/button';
+import { MatCheckboxModule } from '@angular/material/checkbox';
+import { MatRadioModule } from '@angular/material/radio';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { MatListModule } from '@angular/material/list';
+import { MatChipsModule } from '@angular/material/chips';
+import { MatExpansionModule } from '@angular/material/expansion';
+import { MatIconModule } from '@angular/material/icon';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import {
   PowerballDraw,
   RecentDrawing,
@@ -22,6 +33,11 @@ import {
 import { BacktestService } from '../services/backtest.service';
 import { StrategyFactoryService } from '../services/strategies/strategy-factory.service';
 import { GenerationContext } from '../services/strategies/generation-strategy.interface';
+import { DiffAnalysisService } from '../services/diff-analysis.service';
+import {
+  PickDiffAnalysis,
+  DiffPatternAnalysis,
+} from '../models/powerball-draw.interface';
 
 @Component({
   selector: 'app-play-generator',
@@ -33,6 +49,17 @@ import { GenerationContext } from '../services/strategies/generation-strategy.in
     LightboxModule,
     BarGraphComponent,
     FormsModule,
+    MatCardModule,
+    MatButtonModule,
+    MatCheckboxModule,
+    MatRadioModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatListModule,
+    MatChipsModule,
+    MatExpansionModule,
+    MatIconModule,
+    MatProgressSpinnerModule,
   ],
   providers: [provideAnimations()],
   templateUrl: './play-generator.component.html',
@@ -56,6 +83,11 @@ export class PlayGeneratorComponent implements OnInit {
   combindResults: CheckPicksResult | null = null;
   prediction: string[] = [];
 
+  // Diff analysis results
+  diffAnalyses: PickDiffAnalysis[] = [];
+  diffPatternAnalysis: DiffPatternAnalysis | null = null;
+  diffPatternPicks: string[][] = [];
+
   // Target win optimization settings
   targetWinOptimizationEnabled: boolean = false;
   targetWinType: 'fourWhite' | 'threeWhitePowerball' | 'both' = 'both';
@@ -68,7 +100,8 @@ export class PlayGeneratorComponent implements OnInit {
     private aiService: AiPowerballService,
     private configService: PowerballConfigService,
     private backtestService: BacktestService,
-    private strategyFactory: StrategyFactoryService
+    private strategyFactory: StrategyFactoryService,
+    private diffAnalysisService: DiffAnalysisService
   ) {
     // Load initial settings from config
     const targetConfig = this.configService.get('targetWinOptimization');
@@ -302,6 +335,34 @@ export class PlayGeneratorComponent implements OnInit {
         };
       }
 
+      // 8) Analyze generated picks against latest draw for diff patterns
+      try {
+        const latestDrawNumbers = await this.diffAnalysisService.getLatestDraw();
+        if (latestDrawNumbers && latestDrawNumbers.length === 6 && combined.length > 0) {
+          // Analyze picks against latest draw
+          this.diffAnalyses = this.diffAnalysisService.analyzePicks(
+            combined,
+            latestDrawNumbers
+          );
+
+          // Identify patterns from the analyses
+          this.diffPatternAnalysis = this.diffAnalysisService.identifyPatterns(
+            this.diffAnalyses
+          );
+
+          console.log('Diff analysis completed:', {
+            totalPicks: this.diffPatternAnalysis.totalPicks,
+            patternsCount: this.diffPatternAnalysis.patterns.length,
+            latestDraw: this.diffPatternAnalysis.latestDraw,
+          });
+        }
+      } catch (error) {
+        console.error('Error performing diff analysis:', error);
+        // Don't throw - diff analysis is optional
+        this.diffAnalyses = [];
+        this.diffPatternAnalysis = null;
+      }
+
       this.toastr.success('', 'Generated Powerball Plays', {
         timeOut: 1500,
         positionClass: 'toast-bottom-right',
@@ -334,6 +395,61 @@ export class PlayGeneratorComponent implements OnInit {
     // Or export to JSON
     const json = this.backtestService.exportToJson(results);
 
+  }
+
+  /**
+   * Runs a backtest specifically for the diff pattern strategy.
+   * Can optionally include other strategies for comparison.
+   * 
+   * @param includeOtherStrategies - If true, includes 'legacy', 'prediction', and 'ai' strategies for comparison
+   * @param maxSteps - Optional limit on number of backtest steps (default: 50)
+   * @param ticketsPerStrategy - Number of tickets to generate per strategy (default: 20)
+   */
+  async runDiffPatternBacktest(
+    includeOtherStrategies: boolean = false,
+    maxSteps: number = 50,
+    ticketsPerStrategy: number = 20
+  ): Promise<void> {
+    try {
+      const strategies = includeOtherStrategies
+        ? ['legacy', 'prediction', 'ai', 'diffPattern']
+        : ['diffPattern'];
+
+      const results = await this.backtestService.runBacktest({
+        initialTrainingSize: 100,
+        stepSize: 1,
+        holdoutSize: 1,
+        strategies: strategies,
+        ticketsPerStrategy: ticketsPerStrategy,
+        maxSteps: maxSteps,
+      });
+
+      console.log('=== DIFF PATTERN BACKTEST RESULTS ===');
+      console.log(this.backtestService.formatResultsForConsole(results));
+
+      // Export to JSON for further analysis
+      const json = this.backtestService.exportToJson(results);
+      console.log('Backtest results (JSON):', json);
+
+      this.toastr.success(
+        `Diff pattern backtest completed: ${results.summary.totalSteps} steps`,
+        'Backtest Complete',
+        {
+          timeOut: 3000,
+          positionClass: 'toast-bottom-right',
+        }
+      );
+    } catch (error: unknown) {
+      const errorMessage =
+        error instanceof Error
+          ? error.message
+          : 'An unknown error occurred while running the diff pattern backtest';
+      console.error('Error running diff pattern backtest:', error);
+      this.toastr.error(errorMessage, 'Backtest Failed', {
+        timeOut: 3000,
+        positionClass: 'toast-bottom-right',
+      });
+    }
   }
 
   /**
@@ -651,5 +767,135 @@ export class PlayGeneratorComponent implements OnInit {
       enabled: this.targetWinOptimizationEnabled,
       targetType: this.targetWinType,
     });
+  }
+
+  /**
+   * Generates picks using the existing diff pattern analysis.
+   * Uses the DiffPatternStrategy to generate picks based on identified patterns.
+   * 
+   * @param numPicks - Number of picks to generate (default: 20)
+   */
+  async generateDiffPatternPicks(numPicks: number = 20): Promise<void> {
+    try {
+      // Check if diff pattern analysis is available
+      if (!this.diffPatternAnalysis || !this.diffPatternAnalysis.patterns || this.diffPatternAnalysis.patterns.length === 0) {
+        this.toastr.warning('No diff pattern analysis available. Please generate picks first.', 'Pattern Analysis Required', {
+          timeOut: 3000,
+          positionClass: 'toast-bottom-right',
+        });
+        this.diffPatternPicks = [];
+        return;
+      }
+
+      // Get the DiffPatternStrategy from StrategyFactoryService
+      const diffPatternStrategy = this.strategyFactory.getStrategy('diffPattern');
+      if (!diffPatternStrategy) {
+        throw new Error('DiffPatternStrategy not available');
+      }
+
+      // Prepare historical data for context building
+      const parsedDraws = this.parseDrawHistoryForModel(
+        PowerballDataMinusLatest
+      );
+
+      if (!parsedDraws || parsedDraws.length === 0) {
+        throw new Error('No historical data available');
+      }
+
+      // Build generation context with diff patterns included
+      const context = this.buildGenerationContext(parsedDraws);
+      context.diffPatterns = this.diffPatternAnalysis;
+
+      // Generate picks using the diff pattern strategy
+      const generatedPicks: string[][] = [];
+      for (let i = 0; i < numPicks; i++) {
+        try {
+          const pick = await diffPatternStrategy.generate(context);
+          if (pick && pick.length === 6) {
+            // Ensure proper formatting (zero-padded)
+            const formattedPick: string[] = pick.map((num: string) => 
+              (num.length === 1 ? `0${num}` : num)
+            );
+            generatedPicks.push(formattedPick);
+          }
+        } catch (error) {
+          console.error(`Error generating diff pattern pick ${i + 1}:`, error);
+          // Continue with next iteration
+        }
+      }
+
+      this.diffPatternPicks = generatedPicks;
+
+      this.toastr.success(`Generated ${generatedPicks.length} diff pattern picks`, 'Diff Pattern Picks Generated', {
+        timeOut: 1500,
+        positionClass: 'toast-bottom-right',
+      });
+    } catch (error: unknown) {
+      const errorMessage =
+        error instanceof Error
+          ? error.message
+          : 'An unknown error occurred while generating diff pattern picks';
+      console.error('Error generating diff pattern picks:', error);
+      this.toastr.error(errorMessage, 'Generation Failed', {
+        timeOut: 3000,
+        positionClass: 'toast-bottom-right',
+      });
+      this.diffPatternPicks = [];
+    }
+  }
+
+  /**
+   * Gets all generated picks combining history and diffPatternPicks.
+   * @returns Combined array of all generated picks
+   */
+  getAllGeneratedPicks(): string[][] {
+    return [...this.history, ...this.diffPatternPicks];
+  }
+
+  /**
+   * Copies all generated picks to clipboard.
+   * Formats each pick as space-separated numbers (e.g., "01 15 28 57 58 63").
+   * Shows toast notifications for success/error.
+   */
+  async copyHistoryToClipboard(): Promise<void> {
+    try {
+      const allPicks = this.getAllGeneratedPicks();
+      
+      if (allPicks.length === 0) {
+        this.toastr.warning('No picks to copy', 'Clipboard Copy', {
+          timeOut: 2000,
+          positionClass: 'toast-bottom-right',
+        });
+        return;
+      }
+
+      // Format each pick as space-separated numbers
+      const formattedPicks = allPicks.map(pick => pick.join(' '));
+      
+      // Join all picks with newlines
+      const clipboardText = formattedPicks.join('\n');
+
+      // Copy to clipboard
+      await navigator.clipboard.writeText(clipboardText);
+
+      this.toastr.success(
+        `Copied ${allPicks.length} pick${allPicks.length === 1 ? '' : 's'} to clipboard`,
+        'Clipboard Copy',
+        {
+          timeOut: 2000,
+          positionClass: 'toast-bottom-right',
+        }
+      );
+    } catch (error: unknown) {
+      const errorMessage =
+        error instanceof Error
+          ? error.message
+          : 'An unknown error occurred while copying to clipboard';
+      console.error('Error copying to clipboard:', error);
+      this.toastr.error(errorMessage, 'Clipboard Copy Failed', {
+        timeOut: 3000,
+        positionClass: 'toast-bottom-right',
+      });
+    }
   }
 }

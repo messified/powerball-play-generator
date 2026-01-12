@@ -13,7 +13,8 @@ import {
   FilteredNumberSet,
   GeneratedPlay,
   RecentDrawing,
-  FutureTestData
+  FutureTestData,
+  DiffPatternAnalysis
 } from '../models/powerball-draw.interface';
 
 @Injectable({
@@ -156,8 +157,14 @@ export class PowerballService {
 
   /**
    * Builds the generation context that strategies need to generate plays.
+   * 
+   * @param filteredParsedSets - Filtered parsed number sets
+   * @param diffPatterns - Optional diff pattern analysis for pattern-based strategies
    */
-  private buildGenerationContext(filteredParsedSets: Array<{ key: string; numbers: number[] }>): GenerationContext {
+  private buildGenerationContext(
+    filteredParsedSets: Array<{ key: string; numbers: number[] }>,
+    diffPatterns?: DiffPatternAnalysis
+  ): GenerationContext {
     return {
       historicalData: this.historicalData,
       filteredParsedSets: filteredParsedSets,
@@ -183,6 +190,7 @@ export class PowerballService {
         }
         return result as string[];
       },
+      diffPatterns: diffPatterns,
     };
   }
 

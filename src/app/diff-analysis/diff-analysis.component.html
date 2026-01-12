@@ -1,0 +1,174 @@
+<div class="diff-analysis-container">
+  <h2>Diff Pattern Analysis</h2>
+
+  <!-- Summary Statistics Card -->
+  <mat-card *ngIf="patternAnalysis" class="summary-card">
+    <mat-card-header>
+      <mat-card-title>Summary Statistics</mat-card-title>
+    </mat-card-header>
+    <mat-card-content>
+      <div class="summary-grid">
+        <div class="summary-item">
+          <span class="label">Total Picks Analyzed:</span>
+          <span class="value">{{ totalPicks }}</span>
+        </div>
+        <div class="summary-item" *ngIf="patternAnalysis.latestDraw && patternAnalysis.latestDraw.length === 6">
+          <span class="label">Latest Draw:</span>
+          <span class="value">{{ formatPick(patternAnalysis.latestDraw) }}</span>
+        </div>
+      </div>
+
+      <div class="most-common-diffs" *ngIf="mostCommonDiffsByPosition.size > 0">
+        <h4>Most Common Diff by Position</h4>
+        <div class="diffs-grid">
+          <div class="diff-item" *ngFor="let entry of mostCommonDiffsByPosition | keyvalue">
+            <span class="position-name">{{ getPositionName(+entry.key) }}:</span>
+            <mat-chip [ngClass]="getDiffColorClass(entry.value.diffValue)" class="diff-chip">
+              {{ entry.value.diffValue > 0 ? '+' : '' }}{{ entry.value.diffValue }}
+            </mat-chip>
+            <span class="frequency">({{ entry.value.frequency }}x, {{ entry.value.percentage }}%)</span>
+          </div>
+        </div>
+      </div>
+    </mat-card-content>
+  </mat-card>
+
+  <!-- Pattern Frequency Table Card -->
+  <mat-card *ngIf="patternAnalysis && patternAnalysis.patterns.length > 0" class="pattern-frequency-card">
+    <mat-card-header>
+      <mat-card-title>Pattern Frequency by Position</mat-card-title>
+    </mat-card-header>
+    <mat-card-content>
+      <div class="patterns-container">
+        <div class="position-patterns" *ngFor="let position of [0, 1, 2, 3, 4, 5]">
+          <h4>{{ getPositionName(position) }}</h4>
+          <div class="table-container">
+            <table mat-table [dataSource]="getPatternsForPosition(position)" class="pattern-table">
+              <ng-container matColumnDef="diffValue">
+                <th mat-header-cell *matHeaderCellDef>Diff Value</th>
+                <td mat-cell *matCellDef="let pattern" [ngClass]="getDiffColorClass(pattern.diffValue)">
+                  {{ pattern.diffValue > 0 ? '+' : '' }}{{ pattern.diffValue }}
+                </td>
+              </ng-container>
+
+              <ng-container matColumnDef="frequency">
+                <th mat-header-cell *matHeaderCellDef>Frequency</th>
+                <td mat-cell *matCellDef="let pattern">{{ pattern.frequency }}</td>
+              </ng-container>
+
+              <ng-container matColumnDef="percentage">
+                <th mat-header-cell *matHeaderCellDef>Percentage</th>
+                <td mat-cell *matCellDef="let pattern">{{ pattern.percentage }}%</td>
+              </ng-container>
+
+              <tr mat-header-row *matHeaderRowDef="['diffValue', 'frequency', 'percentage']"></tr>
+              <tr mat-row *matRowDef="let row; columns: ['diffValue', 'frequency', 'percentage']"></tr>
+              <tr class="mat-row" *matNoDataRow>
+                <td class="mat-cell no-patterns" colspan="3">No patterns found for this position</td>
+              </tr>
+            </table>
+          </div>
+        </div>
+      </div>
+    </mat-card-content>
+  </mat-card>
+
+  <!-- Pick Diff Analysis Table Card -->
+  <mat-card *ngIf="pickAnalyses && pickAnalyses.length > 0" class="picks-analysis-card">
+    <mat-card-header>
+      <mat-card-title>Individual Pick Analysis</mat-card-title>
+    </mat-card-header>
+    <mat-card-content>
+      <div class="table-container">
+        <table mat-table [dataSource]="pickAnalyses" class="picks-table">
+          <ng-container matColumnDef="pick">
+            <th mat-header-cell *matHeaderCellDef>Pick</th>
+            <td mat-cell *matCellDef="let analysis" class="pick-numbers">{{ formatPick(analysis.pick) }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="pos0">
+            <th mat-header-cell *matHeaderCellDef>Pos 1</th>
+            <td mat-cell *matCellDef="let analysis">
+              <mat-chip *ngIf="getBallDiff(analysis, 0)" 
+                        [ngClass]="getDiffColorClass(getBallDiff(analysis, 0)!.diff)"
+                        class="diff-chip">
+                {{ getBallDiff(analysis, 0)!.diffString }}
+              </mat-chip>
+              <span *ngIf="!getBallDiff(analysis, 0)" class="no-diff">-</span>
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="pos1">
+            <th mat-header-cell *matHeaderCellDef>Pos 2</th>
+            <td mat-cell *matCellDef="let analysis">
+              <mat-chip *ngIf="getBallDiff(analysis, 1)" 
+                        [ngClass]="getDiffColorClass(getBallDiff(analysis, 1)!.diff)"
+                        class="diff-chip">
+                {{ getBallDiff(analysis, 1)!.diffString }}
+              </mat-chip>
+              <span *ngIf="!getBallDiff(analysis, 1)" class="no-diff">-</span>
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="pos2">
+            <th mat-header-cell *matHeaderCellDef>Pos 3</th>
+            <td mat-cell *matCellDef="let analysis">
+              <mat-chip *ngIf="getBallDiff(analysis, 2)" 
+                        [ngClass]="getDiffColorClass(getBallDiff(analysis, 2)!.diff)"
+                        class="diff-chip">
+                {{ getBallDiff(analysis, 2)!.diffString }}
+              </mat-chip>
+              <span *ngIf="!getBallDiff(analysis, 2)" class="no-diff">-</span>
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="pos3">
+            <th mat-header-cell *matHeaderCellDef>Pos 4</th>
+            <td mat-cell *matCellDef="let analysis">
+              <mat-chip *ngIf="getBallDiff(analysis, 3)" 
+                        [ngClass]="getDiffColorClass(getBallDiff(analysis, 3)!.diff)"
+                        class="diff-chip">
+                {{ getBallDiff(analysis, 3)!.diffString }}
+              </mat-chip>
+              <span *ngIf="!getBallDiff(analysis, 3)" class="no-diff">-</span>
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="pos4">
+            <th mat-header-cell *matHeaderCellDef>Pos 5</th>
+            <td mat-cell *matCellDef="let analysis">
+              <mat-chip *ngIf="getBallDiff(analysis, 4)" 
+                        [ngClass]="getDiffColorClass(getBallDiff(analysis, 4)!.diff)"
+                        class="diff-chip">
+                {{ getBallDiff(analysis, 4)!.diffString }}
+              </mat-chip>
+              <span *ngIf="!getBallDiff(analysis, 4)" class="no-diff">-</span>
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="powerball">
+            <th mat-header-cell *matHeaderCellDef>Powerball</th>
+            <td mat-cell *matCellDef="let analysis">
+              <mat-chip *ngIf="getBallDiff(analysis, 5)" 
+                        [ngClass]="getDiffColorClass(getBallDiff(analysis, 5)!.diff)"
+                        class="diff-chip">
+                {{ getBallDiff(analysis, 5)!.diffString }}
+              </mat-chip>
+              <span *ngIf="!getBallDiff(analysis, 5)" class="no-diff">-</span>
+            </td>
+          </ng-container>
+
+          <tr mat-header-row *matHeaderRowDef="['pick', 'pos0', 'pos1', 'pos2', 'pos3', 'pos4', 'powerball']"></tr>
+          <tr mat-row *matRowDef="let row; columns: ['pick', 'pos0', 'pos1', 'pos2', 'pos3', 'pos4', 'powerball']"></tr>
+        </table>
+      </div>
+    </mat-card-content>
+  </mat-card>
+
+  <!-- Empty State -->
+  <mat-card *ngIf="(!pickAnalyses || pickAnalyses.length === 0) && !patternAnalysis" class="empty-state-card">
+    <mat-card-content>
+      <p>No diff analysis data available. Generate picks and analyze them to see patterns.</p>
+    </mat-card-content>
+  </mat-card>
+</div>

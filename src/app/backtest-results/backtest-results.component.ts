@@ -8,6 +8,17 @@ import {
   withDefaultRegisterables,
 } from 'ng2-charts';
 import { ChartConfiguration, ChartData, ChartOptions } from 'chart.js';
+import { MatCardModule } from '@angular/material/card';
+import { MatTabsModule } from '@angular/material/tabs';
+import { MatButtonModule } from '@angular/material/button';
+import { MatButtonToggleModule } from '@angular/material/button-toggle';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatTableModule } from '@angular/material/table';
+import { MatChipsModule } from '@angular/material/chips';
+import { MatIconModule } from '@angular/material/icon';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { MatExpansionModule } from '@angular/material/expansion';
 
 interface StrategyCard {
   name: string;
@@ -33,10 +44,37 @@ interface QuickInsights {
   consistencyIndicators: Array<{ strategy: string; variance: number; label: string }>;
 }
 
+interface MatchGroup {
+  label: string; // e.g., "3 White + Powerball"
+  key: string;    // e.g., "3W+PB"
+  whiteHits: number;
+  hasPowerball: boolean;
+}
+
+interface StrategyMatchGroups {
+  strategy: string;
+  groups: { [key: string]: number };
+}
+
 @Component({
   selector: 'app-backtest-results',
   standalone: true,
-  imports: [CommonModule, RouterModule, BaseChartDirective],
+  imports: [
+    CommonModule,
+    RouterModule,
+    BaseChartDirective,
+    MatCardModule,
+    MatTabsModule,
+    MatButtonModule,
+    MatButtonToggleModule,
+    MatProgressSpinnerModule,
+    MatTableModule,
+    MatChipsModule,
+    MatIconModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatExpansionModule,
+  ],
   providers: [provideCharts(withDefaultRegisterables())],
   templateUrl: './backtest-results.component.html',
   styleUrl: './backtest-results.component.scss',
@@ -58,6 +96,7 @@ export class BacktestResultsComponent implements OnInit {
 
   // Tier 2: Tabbed interface
   activeTab: 'overview' | 'performance' | 'consistency' | 'outcome' | 'efficiency' = 'overview';
+  selectedTabIndex: number = 0;
 
   // Performance Over Time tab data
   timeSeriesChartData: ChartData<'line'> | null = null;
@@ -77,6 +116,8 @@ export class BacktestResultsComponent implements OnInit {
   outcomeChartData: ChartData<'bar'> | null = null;
   outcomeChartOptions: ChartOptions<'bar'> = {};
   rareEventDetails: Array<{ strategy: string; perfectMatches: number; nearMisses: number; rates: { perfect: number; nearMiss: number } }> = [];
+  matchGroupsByStrategy: StrategyMatchGroups[] = [];
+  allMatchGroups: MatchGroup[] = [];
 
   // Efficiency Analysis tab data
   efficiencyScatterData: Array<{ x: number; y: number; strategy: string; label: string }> = [];
@@ -102,7 +143,7 @@ export class BacktestResultsComponent implements OnInit {
         initialTrainingSize: 100,
         stepSize: 1,
         holdoutSize: 1,
-        strategies: ['all'],
+        strategies: ['all', 'ensemble'], // Include ensemble strategy
         ticketsPerStrategy: 20,
         maxSteps: 50,
       });
@@ -176,6 +217,8 @@ export class BacktestResultsComponent implements OnInit {
       legacy: 'Legacy Strategy',
       prediction: 'Prediction Strategy',
       ai: 'AI Strategy',
+      diffPattern: 'Diff Pattern Strategy',
+      ensemble: 'Blended / Ensemble Strategy',
     };
     return displayNames[strategyName] || strategyName;
   }
@@ -203,6 +246,8 @@ export class BacktestResultsComponent implements OnInit {
       legacy: '#3b82f6', // blue
       prediction: '#10b981', // green
       ai: '#8b5cf6', // purple
+      diffPattern: '#f59e0b', // amber
+      ensemble: '#ec4899', // pink (to indicate composite)
     };
     return colors[strategyName] || '#6b7280'; // gray default
   }
@@ -306,6 +351,32 @@ export class BacktestResultsComponent implements OnInit {
    */
   switchTab(tab: 'overview' | 'performance' | 'consistency' | 'outcome' | 'efficiency'): void {
     this.activeTab = tab;
+    const tabMap: { [key: string]: number } = {
+      'overview': 0,
+      'performance': 1,
+      'consistency': 2,
+      'outcome': 3,
+      'efficiency': 4
+    };
+    this.selectedTabIndex = tabMap[tab] || 0;
+  }
+
+  /**
+   * Handles tab change from mat-tab-group.
+   */
+  onTabChange(index: number): void {
+    const tabMap: { [key: number]: 'overview' | 'performance' | 'consistency' | 'outcome' | 'efficiency' } = {
+      0: 'overview',
+      1: 'performance',
+      2: 'consistency',
+      3: 'outcome',
+      4: 'efficiency'
+    };
+    const tab = tabMap[index];
+    if (tab) {
+      this.activeTab = tab;
+      this.selectedTabIndex = index;
+    }
   }
 
   /**
@@ -380,12 +451,30 @@ export class BacktestResultsComponent implements OnInit {
         legend: {
           display: true,
           position: 'top',
+          labels: {
+            boxWidth: 12,
+            padding: 10,
+            font: {
+              size: 11,
+            },
+          },
         },
         title: {
           display: true,
           text: 'White Hits Over Time (Simulation)',
+          font: {
+            size: 14,
+          },
         },
         tooltip: {
+          enabled: true,
+          padding: 8,
+          titleFont: {
+            size: 12,
+          },
+          bodyFont: {
+            size: 11,
+          },
           callbacks: {
             afterLabel: (context) => {
               const stepIndex = context.dataIndex;
@@ -406,16 +495,32 @@ export class BacktestResultsComponent implements OnInit {
           max: 5,
           ticks: {
             stepSize: 1,
+            font: {
+              size: 10,
+            },
           },
           title: {
             display: true,
             text: 'White Hits (0-5)',
+            font: {
+              size: 11,
+            },
           },
         },
         x: {
+          ticks: {
+            font: {
+              size: 10,
+            },
+            maxRotation: 45,
+            minRotation: 0,
+          },
           title: {
             display: true,
             text: 'Step Number (Chronological Order)',
+            font: {
+              size: 11,
+            },
           },
         },
       },
@@ -453,24 +558,60 @@ export class BacktestResultsComponent implements OnInit {
         legend: {
           display: true,
           position: 'top',
+          labels: {
+            boxWidth: 12,
+            padding: 10,
+            font: {
+              size: 11,
+            },
+          },
         },
         title: {
           display: true,
           text: 'White Hit Distribution Across Test Draws',
+          font: {
+            size: 14,
+          },
+        },
+        tooltip: {
+          enabled: true,
+          padding: 8,
+          titleFont: {
+            size: 12,
+          },
+          bodyFont: {
+            size: 11,
+          },
         },
       },
       scales: {
         y: {
           beginAtZero: true,
+          ticks: {
+            font: {
+              size: 10,
+            },
+          },
           title: {
             display: true,
             text: 'Frequency',
+            font: {
+              size: 11,
+            },
           },
         },
         x: {
+          ticks: {
+            font: {
+              size: 10,
+            },
+          },
           title: {
             display: true,
             text: 'White Hits',
+            font: {
+              size: 11,
+            },
           },
         },
       },
@@ -536,25 +677,63 @@ export class BacktestResultsComponent implements OnInit {
         legend: {
           display: true,
           position: 'top',
+          labels: {
+            boxWidth: 12,
+            padding: 10,
+            font: {
+              size: 11,
+            },
+          },
         },
         title: {
           display: true,
           text: 'Hit Rate by Time Window (Arbitrary Grouping)',
+          font: {
+            size: 14,
+          },
+        },
+        tooltip: {
+          enabled: true,
+          padding: 8,
+          titleFont: {
+            size: 12,
+          },
+          bodyFont: {
+            size: 11,
+          },
         },
       },
       scales: {
         y: {
           beginAtZero: true,
           max: 5,
+          ticks: {
+            font: {
+              size: 10,
+            },
+          },
           title: {
             display: true,
             text: 'Average White Hits',
+            font: {
+              size: 11,
+            },
           },
         },
         x: {
+          ticks: {
+            font: {
+              size: 10,
+            },
+            maxRotation: 45,
+            minRotation: 0,
+          },
           title: {
             display: true,
             text: 'Time Window',
+            font: {
+              size: 11,
+            },
           },
         },
       },
@@ -582,6 +761,49 @@ export class BacktestResultsComponent implements OnInit {
   }
 
   /**
+   * Gets a formatted label for a match combination.
+   */
+  private getMatchGroupLabel(whiteHits: number, hasPowerball: boolean): string {
+    if (whiteHits === 0) {
+      return hasPowerball ? 'Powerball Only' : 'No Matches';
+    }
+    const whiteLabel = whiteHits === 1 ? '1 White' : `${whiteHits} White${whiteHits > 1 ? 's' : ''}`;
+    if (hasPowerball) {
+      return `${whiteLabel} + Powerball`;
+    }
+    return `${whiteLabel} (no Powerball)`;
+  }
+
+  /**
+   * Gets a key for a match combination.
+   */
+  private getMatchGroupKey(whiteHits: number, hasPowerball: boolean): string {
+    return `${whiteHits}W${hasPowerball ? '+PB' : ''}`;
+  }
+
+  /**
+   * Initializes all possible match groups.
+   */
+  private initializeAllMatchGroups(): MatchGroup[] {
+    const groups: MatchGroup[] = [];
+    for (let whiteHits = 0; whiteHits <= 5; whiteHits++) {
+      groups.push({
+        label: this.getMatchGroupLabel(whiteHits, false),
+        key: this.getMatchGroupKey(whiteHits, false),
+        whiteHits,
+        hasPowerball: false,
+      });
+      groups.push({
+        label: this.getMatchGroupLabel(whiteHits, true),
+        key: this.getMatchGroupKey(whiteHits, true),
+        whiteHits,
+        hasPowerball: true,
+      });
+    }
+    return groups;
+  }
+
+  /**
    * Prepares data for Outcome Analysis tab.
    */
   private prepareOutcomeAnalysisData(result: BacktestResult): void {
@@ -589,28 +811,70 @@ export class BacktestResultsComponent implements OnInit {
     const strategyColors = strategies.map(s => this.getStrategyColor(s));
     const totalSteps = result.summary.totalSteps;
 
-    // Perfect matches vs near misses
-    const perfectMatchData = strategies.map(s => result.summary.strategies[s].perfectMatches);
-    const nearMissData = strategies.map(s => result.summary.strategies[s].nearMisses);
+    // Initialize all possible match groups
+    this.allMatchGroups = this.initializeAllMatchGroups();
+
+    // Initialize match groups for each strategy
+    const matchGroupsMap: { [strategy: string]: { [key: string]: number } } = {};
+    strategies.forEach(strategy => {
+      matchGroupsMap[strategy] = {};
+      this.allMatchGroups.forEach(group => {
+        matchGroupsMap[strategy][group.key] = 0;
+      });
+    });
+
+    // Count matches for each strategy
+    result.stepResults.forEach(step => {
+      step.predictions.forEach(pred => {
+        const match = pred.bestMatch;
+        const key = this.getMatchGroupKey(match.whiteHits, match.powerballHit);
+        if (matchGroupsMap[pred.strategy] && matchGroupsMap[pred.strategy][key] !== undefined) {
+          matchGroupsMap[pred.strategy][key]++;
+        }
+      });
+    });
+
+    // Convert to array format
+    this.matchGroupsByStrategy = strategies.map(strategy => ({
+      strategy: this.getStrategyDisplayName(strategy),
+      groups: matchGroupsMap[strategy],
+    }));
+
+    // Get all unique combinations that have at least one match across all strategies
+    const activeGroups = this.allMatchGroups.filter(group => {
+      return strategies.some(strategy => {
+        const key = group.key;
+        return matchGroupsMap[strategy][key] > 0;
+      });
+    });
+
+    // Sort by white hits (ascending), then by powerball (false first)
+    activeGroups.sort((a, b) => {
+      if (a.whiteHits !== b.whiteHits) {
+        return a.whiteHits - b.whiteHits;
+      }
+      return a.hasPowerball === b.hasPowerball ? 0 : a.hasPowerball ? 1 : -1;
+    });
+
+    // Prepare chart data with grouped bars
+    const chartLabels = activeGroups.map(g => g.label);
+    const datasets = strategies.map((strategy, index) => {
+      const data = activeGroups.map(group => {
+        return matchGroupsMap[strategy][group.key] || 0;
+      });
+
+      return {
+        label: this.getStrategyDisplayName(strategy),
+        data: data,
+        backgroundColor: strategyColors[index] + '80',
+        borderColor: strategyColors[index],
+        borderWidth: 1,
+      };
+    });
 
     this.outcomeChartData = {
-      labels: strategies.map(s => this.getStrategyDisplayName(s)),
-      datasets: [
-        {
-          label: 'Perfect Matches (5 white + powerball)',
-          data: perfectMatchData,
-          backgroundColor: '#059669' + '80',
-          borderColor: '#059669',
-          borderWidth: 1,
-        },
-        {
-          label: 'Near Misses (4+PB or 5 white)',
-          data: nearMissData,
-          backgroundColor: '#f59e0b' + '80',
-          borderColor: '#f59e0b',
-          borderWidth: 1,
-        },
-      ],
+      labels: chartLabels,
+      datasets: datasets,
     };
 
     this.outcomeChartOptions = {
@@ -620,30 +884,69 @@ export class BacktestResultsComponent implements OnInit {
         legend: {
           display: true,
           position: 'top',
+          labels: {
+            boxWidth: 12,
+            padding: 10,
+            font: {
+              size: 11,
+            },
+          },
         },
         title: {
           display: true,
-          text: 'Perfect Matches vs Near Misses',
+          text: 'Match Groups by Combination',
+          font: {
+            size: 14,
+          },
+        },
+        tooltip: {
+          enabled: true,
+          padding: 8,
+          titleFont: {
+            size: 12,
+          },
+          bodyFont: {
+            size: 11,
+          },
         },
       },
       scales: {
         y: {
           beginAtZero: true,
+          ticks: {
+            stepSize: 1,
+            font: {
+              size: 10,
+            },
+          },
           title: {
             display: true,
             text: 'Count',
+            font: {
+              size: 11,
+            },
           },
         },
         x: {
+          ticks: {
+            font: {
+              size: 10,
+            },
+            maxRotation: 45,
+            minRotation: 45,
+          },
           title: {
             display: true,
-            text: 'Strategy',
+            text: 'Match Combination',
+            font: {
+              size: 11,
+            },
           },
         },
       },
     };
 
-    // Rare event details
+    // Rare event details (keep for backward compatibility)
     this.rareEventDetails = strategies.map(strategy => {
       const metrics = result.summary.strategies[strategy];
       return {

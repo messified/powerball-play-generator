@@ -1,0 +1,67 @@
+<div class="diff-analysis-page-container">
+  <!-- Header Section -->
+  <div class="header-section">
+    <h1>Diff Pattern Analysis</h1>
+    <p class="header-subtitle">
+      Generate picks and analyze their differences from the latest draw to identify patterns.
+    </p>
+  </div>
+
+  <!-- Action Button -->
+  <div class="button-section">
+    <button
+      mat-raised-button
+      color="primary"
+      (click)="generateAndAnalyze()"
+      [disabled]="loading"
+      class="action-button">
+      <mat-icon *ngIf="!loading">analytics</mat-icon>
+      <mat-progress-spinner *ngIf="loading" mode="indeterminate" diameter="20" class="button-spinner"></mat-progress-spinner>
+      <span>{{ loading ? 'Generating and Analyzing...' : 'Generate Picks & Analyze' }}</span>
+    </button>
+  </div>
+
+  <!-- Loading State -->
+  <div class="loading-state" *ngIf="loading">
+    <mat-card>
+      <mat-card-content>
+        <div class="loading-content">
+          <mat-progress-spinner mode="indeterminate" diameter="50"></mat-progress-spinner>
+          <p>Generating picks and performing diff analysis...</p>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </div>
+
+  <!-- Diff Analysis Results -->
+  <div *ngIf="!loading && diffAnalyses && diffAnalyses.length > 0" class="analysis-results">
+    <app-diff-analysis
+      [pickAnalyses]="diffAnalyses"
+      [patternAnalysis]="diffPatternAnalysis">
+    </app-diff-analysis>
+  </div>
+
+  <!-- Empty State -->
+  <div *ngIf="!loading && (!diffAnalyses || diffAnalyses.length === 0)" class="empty-state">
+    <mat-card>
+      <mat-card-content>
+        <div class="empty-content">
+          <mat-icon class="empty-icon">analytics</mat-icon>
+          <p>No diff analysis data available.</p>
+          <p>Click "Generate Picks & Analyze" to generate picks and analyze their patterns.</p>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </div>
+
+  <!-- Navigation -->
+  <div class="navigation-section">
+    <button
+      mat-button
+      routerLink="/generator"
+      class="nav-button">
+      <mat-icon>arrow_back</mat-icon>
+      Back to Generator
+    </button>
+  </div>
+</div>

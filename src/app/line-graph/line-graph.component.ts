@@ -109,9 +109,46 @@ export class LineGraphComponent implements OnInit {
   // Chart options for responsiveness and styling
   chartOptions: ChartOptions<'line'> = {
     responsive: true,
+    maintainAspectRatio: false,
     plugins: {
       legend: {
         display: true,
+        position: 'top',
+        labels: {
+          boxWidth: 12,
+          padding: 10,
+          font: {
+            size: 12,
+          },
+        },
+      },
+      tooltip: {
+        enabled: true,
+        padding: 8,
+        titleFont: {
+          size: 12,
+        },
+        bodyFont: {
+          size: 11,
+        },
+      },
+    },
+    scales: {
+      x: {
+        ticks: {
+          font: {
+            size: 10,
+          },
+          maxRotation: 45,
+          minRotation: 45,
+        },
+      },
+      y: {
+        ticks: {
+          font: {
+            size: 10,
+          },
+        },
       },
     },
   };

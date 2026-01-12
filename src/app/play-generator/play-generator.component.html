@@ -1,190 +1,175 @@
-<div class="container">
-  <div class="jumbotron">
+<div class="play-generator-container">
+  <!-- Banner Section -->
+  <div class="banner-section">
     <img
-      class="banner"
-      src="img-responsive"
+      class="banner-image"
       src="../../../assets/powerball_logo.png"
+      alt="Powerball Logo"
     />
   </div>
-  <!-- <div class="row">
-      <div class="col">
-        <app-lottery-settings></app-lottery-settings>
+
+  <!-- Target Win Optimization Card -->
+  <mat-card class="settings-card">
+    <mat-card-header>
+      <mat-card-title>Target Win Optimization</mat-card-title>
+    </mat-card-header>
+    <mat-card-content>
+      <mat-checkbox
+        [(ngModel)]="targetWinOptimizationEnabled"
+        (change)="onTargetWinOptimizationToggle()"
+        class="full-width-checkbox">
+        Enable Target Win Optimization
+      </mat-checkbox>
+
+      <div *ngIf="targetWinOptimizationEnabled" class="target-win-options">
+        <mat-label class="options-label">Target Win Type:</mat-label>
+        <mat-radio-group
+          [(ngModel)]="targetWinType"
+          (change)="onTargetWinTypeChange()"
+          class="radio-group">
+          <mat-radio-button value="fourWhite" class="radio-button">
+            4 White Ball Matches
+          </mat-radio-button>
+          <mat-radio-button value="threeWhitePowerball" class="radio-button">
+            3 White Ball + Powerball Matches
+          </mat-radio-button>
+          <mat-radio-button value="both" class="radio-button">
+            Both Targets
+          </mat-radio-button>
+        </mat-radio-group>
       </div>
-    </div> -->
-  <div class="row" style="margin-bottom: 20px;">
-    <div class="col">
-      <div class="panel panel-default">
-        <div class="panel-heading">
-          <h4 class="panel-title">Target Win Optimization</h4>
+    </mat-card-content>
+  </mat-card>
+
+  <!-- Action Buttons -->
+  <div class="button-section">
+    <button
+      mat-raised-button
+      color="primary"
+      (click)="generateTicket()"
+      class="action-button">
+      <mat-icon>casino</mat-icon>
+      Generate Numbers
+    </button>
+    <button
+      mat-raised-button
+      color="accent"
+      (click)="generateDiffPatternPicks(20)"
+      class="action-button">
+      <mat-icon>pattern</mat-icon>
+      Generate Diff Pattern Picks
+    </button>
+    <button
+      mat-raised-button
+      color="warn"
+      (click)="runDiffPatternBacktest(false, 50, 20)"
+      class="action-button">
+      <mat-icon>analytics</mat-icon>
+      Run Diff Pattern Backtest
+    </button>
+  </div>
+
+  <!-- Results Summary Card -->
+  <mat-card *ngIf="recentDrawings && combindResults" class="results-card">
+    <mat-card-header>
+      <mat-card-title>Results Summary</mat-card-title>
+    </mat-card-header>
+    <mat-card-content>
+      <div class="results-content">
+        <p class="latest-draw">Latest Draw: '15 28 57 58 63 23'</p>
+        <div class="stat-item">
+          <span class="stat-label">Total Picks Generated:</span>
+          <span class="stat-value">{{ combindResults.myPicks }}</span>
         </div>
-        <div class="panel-body">
-          <div class="form-group">
-            <label>
-              <input
-                type="checkbox"
-                [(ngModel)]="targetWinOptimizationEnabled"
-                (change)="onTargetWinOptimizationToggle()"
-              />
-              Enable Target Win Optimization
-            </label>
+        <div class="stat-item">
+          <span class="stat-label">Matched Plays:</span>
+          <span class="stat-value">{{ combindResults.totalWins }}</span>
+        </div>
+
+        <div *ngIf="combindResults.targetWins" class="target-wins-section">
+          <h4 class="target-wins-title">Target Win Statistics:</h4>
+          <div class="stat-item">
+            <span class="stat-label">4 White Ball Matches:</span>
+            <span class="stat-value">{{ combindResults.targetWins.fourWhite.length }}</span>
           </div>
-          <div *ngIf="targetWinOptimizationEnabled" class="form-group" style="margin-top: 15px;">
-            <label>Target Win Type:</label>
-            <div class="radio" style="margin-top: 10px;">
-              <label>
-                <input
-                  type="radio"
-                  [(ngModel)]="targetWinType"
-                  value="fourWhite"
-                  (change)="onTargetWinTypeChange()"
-                />
-                4 White Ball Matches
-              </label>
-            </div>
-            <div class="radio">
-              <label>
-                <input
-                  type="radio"
-                  [(ngModel)]="targetWinType"
-                  value="threeWhitePowerball"
-                  (change)="onTargetWinTypeChange()"
-                />
-                3 White Ball + Powerball Matches
-              </label>
-            </div>
-            <div class="radio">
-              <label>
-                <input
-                  type="radio"
-                  [(ngModel)]="targetWinType"
-                  value="both"
-                  (change)="onTargetWinTypeChange()"
-                />
-                Both Targets
-              </label>
-            </div>
+          <div class="stat-item">
+            <span class="stat-label">3 White Ball + Powerball Matches:</span>
+            <span class="stat-value">{{ combindResults.targetWins.threeWhitePowerball.length }}</span>
           </div>
         </div>
       </div>
-    </div>
-  </div>
-  <div class="row button-row">
-    <div class="col">
-      <button class="btn btn-primary bottom-button" (click)="generateTicket()">
-        Generate Numbers
-      </button>
-    </div>
-  </div>
-  <div *ngIf="recentDrawings && combindResults" class="row">
-    <div class="col">
-      <!-- <p>
-        Late Drawing Date: <br />
-        <span class="bold">{{ latestDrawing.date }}</span>
-      </p>
-      <p>Last Drawing: {{ latestDrawing.numbers }}</p> -->
-      <p>'15 28 57 58 63 23'</p>
-      <p>
-        Total Picks Generated:
-        <span class="bold">{{ combindResults.myPicks }}</span>
-      </p>
-      <p>
-        Matched Plays: <span class="bold">{{ combindResults.totalWins }}</span>
-      </p>
-      <div *ngIf="combindResults.targetWins" style="margin-top: 15px;">
-        <p style="font-weight: bold; margin-bottom: 10px;">Target Win Statistics:</p>
-        <p>
-          4 White Ball Matches:
-          <span class="bold">{{ combindResults.targetWins.fourWhite.length }}</span>
-        </p>
-        <p>
-          3 White Ball + Powerball Matches:
-          <span class="bold">{{ combindResults.targetWins.threeWhitePowerball.length }}</span>
-        </p>
-      </div>
-    </div>
-  </div>
-  <!-- <div class="row">
-    <div class="col">
-      <app-line-graph></app-line-graph>
-    </div>
-  </div> -->
-  <div class="row chart">
-    <div class="col">
+    </mat-card-content>
+  </mat-card>
+
+  <!-- Bar Graph Card -->
+  <mat-card class="chart-card">
+    <mat-card-content>
       <app-bar-graph></app-bar-graph>
-    </div>
+    </mat-card-content>
+  </mat-card>
+
+  <!-- Ways to Win Button -->
+  <div *ngIf="play" class="button-section">
+    <button
+      mat-raised-button
+      color="accent"
+      (click)="open()"
+      class="action-button">
+      <mat-icon>emoji_events</mat-icon>
+      Ways to Win!
+    </button>
   </div>
-  <div *ngIf="play" class="row button-row">
-    <div class="col">
-      <button (click)="open()" class="btn btn-secondary bottom-button">Ways to win!</button>
-    </div>
-  </div>
-  <!-- <div class="row">
-    <div class="col">
-      <app-ag-grid-data-table></app-ag-grid-data-table>
-    </div>
-  </div> -->
-  <!-- <div *ngIf="recentDrawings" class="row button-row">
-    <div class="col">
-      <button (click)="open()" class="btn btn-secondary">Ways to win!</button>
-    </div>
-  </div> -->
-  <div *ngIf="history.length >= 1" class="panel panel-primary history">
-    <div class="panel-heading history-heading">
-      Generated History
-      <!-- <span class="icon" (click)="copyTicketToClipboard()"><i class="fas fa-clipboard"></i></span></div> -->
-      <ul class="history">
-        <li *ngFor="let t of history">
+
+  <!-- Generated History Card -->
+  <mat-card *ngIf="getAllGeneratedPicks().length >= 1" class="history-card">
+    <mat-card-header>
+      <mat-card-title>
+        Generated History
+        <button
+          mat-icon-button
+          (click)="copyHistoryToClipboard()"
+          aria-label="Copy history to clipboard"
+          class="copy-button">
+          <mat-icon>content_copy</mat-icon>
+        </button>
+      </mat-card-title>
+    </mat-card-header>
+    <mat-card-content>
+      <mat-list class="history-list">
+        <mat-list-item *ngFor="let t of getAllGeneratedPicks()" class="history-item">
           <span>{{ t }}</span>
-        </li>
-      </ul>
-    </div>
-  </div>
-  <!-- <div class="row" *ngIf="play">
-    <div class="panel panel-primary">
-      <ng-container>
-        <ul class="powerball well generated">
-          <li class="ball" *ngFor="let t of play">
-            <span>{{ t }}</span>
-          </li>
-        </ul>
-      </ng-container>
-    </div>
-  </div> -->
-  <div class="row" *ngIf="play">
-    <div class="panel panel-primary">
-      <div class="panel-body ticket-wrapper">
-        <div class="ticket-container">
-          <div class="past-winning">
-            <div *ngFor="let set of recentDrawings">
-              <ul class="powerball well">
-                <li
-                  class="ball"
-                  [ngClass]="play[i] === num ? 'match' : ''"
-                  *ngFor="let num of set; let i = index"
-                >
-                  <span>{{ num }}</span>
-                </li>
-              </ul>
-            </div>
-          </div>
+        </mat-list-item>
+      </mat-list>
+    </mat-card-content>
+  </mat-card>
+
+  <!-- Past Winning Numbers Card -->
+  <mat-card *ngIf="play" class="past-winning-card">
+    <mat-card-header>
+      <mat-card-title>Past Winning Numbers</mat-card-title>
+    </mat-card-header>
+    <mat-card-content>
+      <div class="past-winning-container">
+        <div *ngFor="let set of recentDrawings" class="powerball-set">
+          <ul class="powerball-numbers">
+            <li
+              class="ball"
+              [ngClass]="play[i] === num ? 'match' : ''"
+              *ngFor="let num of set; let i = index">
+              <span>{{ num }}</span>
+            </li>
+          </ul>
         </div>
       </div>
-    </div>
-  </div>
-  <div *ngIf="history.length >= 1" class="panel panel-primary history">
-    <!-- <div *ngIf="recentDrawings && history.length >= 1" class="row button-row">
-      <div class="col">
-        <button (click)="checkGeneratedPicks()" class="btn btn-secondary">
-          Check Picks
-        </button>
-      </div>
-    </div> -->
-    <div class="footer">
-      <p>Powerball Ticket Generator &copy; {{ year }}</p>
-      <p>
-        Developed by
-        <a target="_blank" href="https://jessereese.com">Jesse Reese</a>
-      </p>
-    </div>
+    </mat-card-content>
+  </mat-card>
+
+  <!-- Footer -->
+  <div *ngIf="history.length >= 1" class="footer-section">
+    <p>Powerball Ticket Generator &copy; {{ year }}</p>
+    <p>
+      Developed by
+      <a target="_blank" href="https://jessereese.com">Jesse Reese</a>
+    </p>
   </div>
 </div>

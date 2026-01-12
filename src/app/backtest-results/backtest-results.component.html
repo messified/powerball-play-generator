@@ -4,38 +4,46 @@
     <h1>Backtest Results Overview</h1>
     
     <!-- Test Configuration Summary -->
-    <div class="config-summary" *ngIf="configSummary">
-      <div class="sample-size-highlight">
-        <span class="sample-size-label">Sample Size:</span>
-        <span class="sample-size-value">{{ configSummary.totalTestDraws }} test draw{{ configSummary.totalTestDraws !== 1 ? 's' : '' }}</span>
-      </div>
-      <div class="config-details">
-        <div class="config-item">
-          <span class="config-label">Steps:</span>
-          <span class="config-value">{{ configSummary.totalSteps }}</span>
+    <mat-card *ngIf="configSummary" class="config-summary-card">
+      <mat-card-content>
+        <div class="sample-size-highlight">
+          <span class="sample-size-label">Sample Size:</span>
+          <span class="sample-size-value">{{ configSummary.totalTestDraws }} test draw{{ configSummary.totalTestDraws !== 1 ? 's' : '' }}</span>
         </div>
-        <div class="config-item">
-          <span class="config-label">Strategies:</span>
-          <span class="config-value">{{ configSummary.strategies.length }}</span>
+        <div class="config-details">
+          <div class="config-item">
+            <span class="config-label">Steps:</span>
+            <span class="config-value">{{ configSummary.totalSteps }}</span>
+          </div>
+          <div class="config-item">
+            <span class="config-label">Strategies:</span>
+            <span class="config-value">{{ configSummary.strategies.length }}</span>
+          </div>
+          <div class="config-item">
+            <span class="config-label">Date Range:</span>
+            <span class="config-value">{{ configSummary.dateRange }}</span>
+          </div>
         </div>
-        <div class="config-item">
-          <span class="config-label">Date Range:</span>
-          <span class="config-value">{{ configSummary.dateRange }}</span>
-        </div>
-      </div>
-    </div>
+      </mat-card-content>
+    </mat-card>
 
     <!-- Prominent Disclaimer -->
-    <div class="disclaimer">
-      <p>
-        <strong>Important:</strong> These results are from historical simulation only. Past performance does not predict future outcomes. Powerball draws are random events.
-      </p>
-    </div>
+    <mat-card class="disclaimer-card">
+      <mat-card-content>
+        <p>
+          <strong>Important:</strong> These results are from historical simulation only. Past performance does not predict future outcomes. Powerball draws are random events.
+        </p>
+      </mat-card-content>
+    </mat-card>
 
     <!-- Header Actions -->
     <div class="header-actions">
-      <button class="btn-export" (click)="exportToJson()" [disabled]="!backtestResult">
-        <span class="export-icon">↓</span>
+      <button
+        mat-raised-button
+        color="primary"
+        (click)="exportToJson()"
+        [disabled]="!backtestResult">
+        <mat-icon>download</mat-icon>
         Export Results
       </button>
     </div>
@@ -43,437 +51,462 @@
 
   <!-- Loading State -->
   <div class="loading-state" *ngIf="loading">
+    <mat-progress-spinner mode="indeterminate" diameter="50"></mat-progress-spinner>
     <p>Loading backtest results...</p>
   </div>
 
   <!-- Error State -->
-  <div class="error-state" *ngIf="error && !loading">
-    <p class="error-message">{{ error }}</p>
-    <button class="btn-retry" (click)="loadBacktestResults()">Retry</button>
-  </div>
+  <mat-card *ngIf="error && !loading" class="error-card">
+    <mat-card-content>
+      <p class="error-message">{{ error }}</p>
+      <button mat-raised-button color="warn" (click)="loadBacktestResults()">Retry</button>
+    </mat-card-content>
+  </mat-card>
 
   <!-- Strategy Comparison Cards (Overview Tab) -->
   <div class="strategy-cards-grid" *ngIf="backtestResult && !loading && !error && activeTab === 'overview'">
-    <div
-      class="strategy-card"
+    <mat-card
       *ngFor="let card of strategyCards"
-      [style.border-left-color]="getStrategyColor(card.name)"
-    >
-      <div class="card-header">
-        <h2 class="strategy-name">{{ card.displayName }}</h2>
-        <div class="strategy-color-indicator" [style.background-color]="getStrategyColor(card.name)"></div>
-      </div>
+      class="strategy-card"
+      [style.border-left]="'4px solid ' + getStrategyColor(card.name)">
+      <mat-card-header>
+        <mat-card-title>
+          {{ card.displayName }}
+          <div class="strategy-color-indicator" [style.background-color]="getStrategyColor(card.name)"></div>
+        </mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <!-- Primary Metrics (Always Visible) -->
+        <div class="primary-metrics">
+          <div class="metric-item">
+            <div class="metric-label">Average White Hits per Step</div>
+            <div class="metric-value">{{ card.metrics.averageWhiteHits | number: '1.2-2' }}</div>
+            <div class="metric-tooltip">Average across {{ configSummary?.totalSteps || 0 }} steps</div>
+          </div>
+          <div class="metric-item">
+            <div class="metric-label">Average Powerball Hits per Step</div>
+            <div class="metric-value">{{ card.metrics.averagePowerballHits | number: '1.2-2' }}</div>
+            <div class="metric-tooltip">Average across {{ configSummary?.totalSteps || 0 }} steps</div>
+          </div>
+          <div class="metric-item">
+            <div class="metric-label">Perfect Matches</div>
+            <div class="metric-value highlight">{{ card.metrics.perfectMatches }}</div>
+            <div class="metric-tooltip">
+              {{ card.metrics.perfectMatches }} in {{ configSummary?.totalSteps || 0 }} steps
+              <span class="rate">({{ getPerfectMatchRate(card.metrics.perfectMatches, configSummary?.totalSteps || 0) }})</span>
+            </div>
+          </div>
+          <div class="metric-item">
+            <div class="metric-label">Near Misses</div>
+            <div class="metric-value highlight">{{ card.metrics.nearMisses }}</div>
+            <div class="metric-tooltip">
+              {{ card.metrics.nearMisses }} in {{ configSummary?.totalSteps || 0 }} steps
+            </div>
+          </div>
+        </div>
 
-      <!-- Primary Metrics (Always Visible) -->
-      <div class="primary-metrics">
-        <div class="metric-item">
-          <div class="metric-label">Average White Hits per Step</div>
-          <div class="metric-value">{{ card.metrics.averageWhiteHits | number: '1.2-2' }}</div>
-          <div class="metric-tooltip" title="Average across {{ configSummary?.totalSteps || 0 }} steps">
-            Average across {{ configSummary?.totalSteps || 0 }} steps
-          </div>
-        </div>
-        <div class="metric-item">
-          <div class="metric-label">Average Powerball Hits per Step</div>
-          <div class="metric-value">{{ card.metrics.averagePowerballHits | number: '1.2-2' }}</div>
-          <div class="metric-tooltip" title="Average across {{ configSummary?.totalSteps || 0 }} steps">
-            Average across {{ configSummary?.totalSteps || 0 }} steps
-          </div>
-        </div>
-        <div class="metric-item">
-          <div class="metric-label">Perfect Matches</div>
-          <div class="metric-value highlight">{{ card.metrics.perfectMatches }}</div>
-          <div class="metric-tooltip" 
-               title="Steps with 5 white balls + powerball match ({{ card.metrics.perfectMatches }} in {{ configSummary?.totalSteps || 0 }} steps). Rate: {{ getPerfectMatchRate(card.metrics.perfectMatches, configSummary?.totalSteps || 0) }}">
-            {{ card.metrics.perfectMatches }} in {{ configSummary?.totalSteps || 0 }} steps
-            <span class="rate">({{ getPerfectMatchRate(card.metrics.perfectMatches, configSummary?.totalSteps || 0) }})</span>
-          </div>
-        </div>
-        <div class="metric-item">
-          <div class="metric-label">Near Misses</div>
-          <div class="metric-value highlight">{{ card.metrics.nearMisses }}</div>
-          <div class="metric-tooltip" 
-               title="Steps with 4 white + powerball or 5 white ({{ card.metrics.nearMisses }} in {{ configSummary?.totalSteps || 0 }} steps)">
-            {{ card.metrics.nearMisses }} in {{ configSummary?.totalSteps || 0 }} steps
-          </div>
-        </div>
-      </div>
-
-      <!-- Expandable Secondary Metrics -->
-      <div class="expandable-section">
-        <button
-          class="btn-expand"
-          (click)="toggleCardExpansion(card)"
-          [attr.aria-expanded]="card.expanded"
-        >
-          <span>{{ card.expanded ? 'Hide' : 'Show' }} Additional Metrics</span>
-          <span class="expand-icon" [class.expanded]="card.expanded">▼</span>
-        </button>
-
-        <div class="secondary-metrics" *ngIf="card.expanded">
-          <div class="metric-row">
-            <div class="metric-item secondary">
-              <div class="metric-label">Total White Hits</div>
-              <div class="metric-value">{{ card.metrics.totalWhiteHits }}</div>
-              <div class="metric-note">Cumulative across all steps</div>
-            </div>
-            <div class="metric-item secondary">
-              <div class="metric-label">Total Powerball Hits</div>
-              <div class="metric-value">{{ card.metrics.totalPowerballHits }}</div>
-              <div class="metric-note">Cumulative across all steps</div>
-            </div>
-          </div>
-          <div class="metric-row">
-            <div class="metric-item secondary">
-              <div class="metric-label">Best White Hits</div>
-              <div class="metric-value">{{ card.metrics.bestWhiteHits }}</div>
-              <div class="metric-note">Maximum in any single step</div>
-            </div>
-            <div class="metric-item secondary">
-              <div class="metric-label">Worst White Hits</div>
-              <div class="metric-value">{{ card.metrics.worstWhiteHits }}</div>
-              <div class="metric-note">Minimum in any single step</div>
-            </div>
-          </div>
-          <div class="metric-row variance-row">
-            <div class="metric-item secondary variance-item">
-              <div class="metric-label">Outcome Variance</div>
-              <div class="metric-value">{{ card.metrics.variance }}</div>
-              <div class="metric-note variance-note">
-                {{ getVarianceDescription(card.metrics.variance) }}
+        <!-- Expandable Secondary Metrics -->
+        <mat-expansion-panel [expanded]="card.expanded" (opened)="card.expanded = true" (closed)="card.expanded = false">
+          <mat-expansion-panel-header>
+            <mat-panel-title>
+              {{ card.expanded ? 'Hide' : 'Show' }} Additional Metrics
+            </mat-panel-title>
+          </mat-expansion-panel-header>
+          <div class="secondary-metrics">
+            <div class="metric-row">
+              <div class="metric-item secondary">
+                <div class="metric-label">Total White Hits</div>
+                <div class="metric-value">{{ card.metrics.totalWhiteHits }}</div>
+                <div class="metric-note">Cumulative across all steps</div>
               </div>
-              <div class="variance-range">Range: {{ card.metrics.worstWhiteHits }} - {{ card.metrics.bestWhiteHits }}</div>
+              <div class="metric-item secondary">
+                <div class="metric-label">Total Powerball Hits</div>
+                <div class="metric-value">{{ card.metrics.totalPowerballHits }}</div>
+                <div class="metric-note">Cumulative across all steps</div>
+              </div>
+            </div>
+            <div class="metric-row">
+              <div class="metric-item secondary">
+                <div class="metric-label">Best White Hits</div>
+                <div class="metric-value">{{ card.metrics.bestWhiteHits }}</div>
+                <div class="metric-note">Maximum in any single step</div>
+              </div>
+              <div class="metric-item secondary">
+                <div class="metric-label">Worst White Hits</div>
+                <div class="metric-value">{{ card.metrics.worstWhiteHits }}</div>
+                <div class="metric-note">Minimum in any single step</div>
+              </div>
+            </div>
+            <div class="metric-row variance-row">
+              <div class="metric-item secondary variance-item">
+                <div class="metric-label">Outcome Variance</div>
+                <div class="metric-value">{{ card.metrics.variance }}</div>
+                <div class="metric-note variance-note">
+                  {{ getVarianceDescription(card.metrics.variance) }}
+                </div>
+                <div class="variance-range">Range: {{ card.metrics.worstWhiteHits }} - {{ card.metrics.bestWhiteHits }}</div>
+              </div>
             </div>
           </div>
-        </div>
-      </div>
-    </div>
+        </mat-expansion-panel>
+      </mat-card-content>
+    </mat-card>
   </div>
 
   <!-- Quick Insights Panel (Overview Tab) -->
-  <div class="insights-panel" *ngIf="backtestResult && !loading && !error && quickInsights && activeTab === 'overview'">
-    <h3>Quick Insights</h3>
-    <div class="insights-content">
-      <!-- Performance Comparison -->
-      <div class="insight-item">
-        <strong class="insight-title">Performance Comparison:</strong>
-        <p class="insight-text">{{ quickInsights.performanceComparison }}</p>
+  <mat-card *ngIf="backtestResult && !loading && !error && quickInsights && activeTab === 'overview'" class="insights-card">
+    <mat-card-header>
+      <mat-card-title>Quick Insights</mat-card-title>
+    </mat-card-header>
+    <mat-card-content>
+      <div class="insights-content">
+        <div class="insight-item">
+          <strong class="insight-title">Performance Comparison:</strong>
+          <p class="insight-text">{{ quickInsights.performanceComparison }}</p>
+        </div>
+        <div class="insight-item">
+          <strong class="insight-title">Variance Indicators:</strong>
+          <p class="insight-text">{{ quickInsights.varianceNote }}</p>
+          <ul class="variance-list" *ngIf="quickInsights.consistencyIndicators.length > 0">
+            <li *ngFor="let indicator of quickInsights.consistencyIndicators">
+              <span class="strategy-name-inline">{{ indicator.strategy }}:</span>
+              <mat-chip [class.low]="indicator.variance <= 2" 
+                        [class.moderate]="indicator.variance > 2 && indicator.variance <= 3"
+                        [class.high]="indicator.variance > 3">
+                {{ indicator.label }} (range: {{ indicator.variance }})
+              </mat-chip>
+            </li>
+          </ul>
+        </div>
+        <div class="insight-item" *ngIf="quickInsights.rareEventSummary">
+          <strong class="insight-title">Rare Event Summary:</strong>
+          <p class="insight-text">{{ quickInsights.rareEventSummary }}</p>
+        </div>
+        <div class="insight-item context-note">
+          <p class="context-text">
+            <strong>Sample Size Context:</strong> {{ getSampleSizeContext() }}. 
+            Small differences between strategies may be due to randomness, not strategy effectiveness.
+          </p>
+        </div>
       </div>
-
-      <!-- Variance Indicators -->
-      <div class="insight-item">
-        <strong class="insight-title">Variance Indicators:</strong>
-        <p class="insight-text">{{ quickInsights.varianceNote }}</p>
-        <ul class="variance-list" *ngIf="quickInsights.consistencyIndicators.length > 0">
-          <li *ngFor="let indicator of quickInsights.consistencyIndicators">
-            <span class="strategy-name-inline">{{ indicator.strategy }}:</span>
-            <span class="variance-label" [class.low]="indicator.variance <= 2" 
-                  [class.moderate]="indicator.variance > 2 && indicator.variance <= 3"
-                  [class.high]="indicator.variance > 3">
-              {{ indicator.label }} (range: {{ indicator.variance }})
-            </span>
-          </li>
-        </ul>
-      </div>
-
-      <!-- Rare Event Summary -->
-      <div class="insight-item" *ngIf="quickInsights.rareEventSummary">
-        <strong class="insight-title">Rare Event Summary:</strong>
-        <p class="insight-text">{{ quickInsights.rareEventSummary }}</p>
-      </div>
-
-      <!-- Sample Size Context -->
-      <div class="insight-item context-note">
-        <p class="context-text">
-          <strong>Sample Size Context:</strong> {{ getSampleSizeContext() }}. 
-          Small differences between strategies may be due to randomness, not strategy effectiveness.
-        </p>
-      </div>
-    </div>
-  </div>
+    </mat-card-content>
+  </mat-card>
 
   <!-- Navigation to Detailed Analysis -->
-  <div class="navigation-to-analysis" *ngIf="backtestResult && !loading && !error && activeTab === 'overview'">
-    <div class="analysis-navigation-card">
-      <h3>Detailed Analysis</h3>
+  <mat-card *ngIf="backtestResult && !loading && !error && activeTab === 'overview'" class="analysis-nav-card">
+    <mat-card-header>
+      <mat-card-title>Detailed Analysis</mat-card-title>
+    </mat-card-header>
+    <mat-card-content>
       <p>Explore in-depth performance metrics, time-series charts, consistency analysis, and efficiency comparisons.</p>
       <div class="analysis-links">
-        <button class="analysis-link-btn" (click)="switchTab('performance')">
-          <span class="link-icon">📈</span>
-          <span class="link-text">Performance Over Time</span>
+        <button mat-raised-button color="accent" (click)="switchTab('performance')" class="analysis-link-btn">
+          <mat-icon>show_chart</mat-icon>
+          Performance Over Time
         </button>
-        <button class="analysis-link-btn" (click)="switchTab('consistency')">
-          <span class="link-icon">📊</span>
-          <span class="link-text">Consistency Analysis</span>
+        <button mat-raised-button color="accent" (click)="switchTab('consistency')" class="analysis-link-btn">
+          <mat-icon>bar_chart</mat-icon>
+          Consistency Analysis
         </button>
-        <button class="analysis-link-btn" (click)="switchTab('outcome')">
-          <span class="link-icon">🎯</span>
-          <span class="link-text">Outcome Analysis</span>
+        <button mat-raised-button color="accent" (click)="switchTab('outcome')" class="analysis-link-btn">
+          <mat-icon>track_changes</mat-icon>
+          Outcome Analysis
         </button>
-        <button class="analysis-link-btn" (click)="switchTab('efficiency')">
-          <span class="link-icon">⚡</span>
-          <span class="link-text">Efficiency Analysis</span>
+        <button mat-raised-button color="accent" (click)="switchTab('efficiency')" class="analysis-link-btn">
+          <mat-icon>speed</mat-icon>
+          Efficiency Analysis
         </button>
-        <button class="analysis-link-btn step-inspection" (click)="goToStepInspection()">
-          <span class="link-icon">🔍</span>
-          <span class="link-text">Step-by-Step Inspection</span>
+        <button mat-raised-button color="accent" (click)="goToStepInspection()" class="analysis-link-btn">
+          <mat-icon>search</mat-icon>
+          Step-by-Step Inspection
         </button>
       </div>
-    </div>
-  </div>
+    </mat-card-content>
+  </mat-card>
 
   <!-- Tier 2: Detailed Analysis Views (Tabbed Interface) -->
   <div class="tier2-section" *ngIf="backtestResult && !loading && !error">
     <!-- Breadcrumb Navigation -->
     <div class="breadcrumb" *ngIf="activeTab !== 'overview'">
-      <button class="breadcrumb-link" (click)="switchTab('overview')">
-        ← Back to Overview
+      <button mat-button (click)="switchTab('overview')">
+        <mat-icon>arrow_back</mat-icon>
+        Back to Overview
       </button>
     </div>
 
     <!-- Tab Navigation -->
-    <div class="tab-navigation">
-      <button
-        class="tab-button"
-        [class.active]="activeTab === 'overview'"
-        (click)="switchTab('overview')"
-      >
-        Overview
-      </button>
-      <button
-        class="tab-button"
-        [class.active]="activeTab === 'performance'"
-        (click)="switchTab('performance')"
-      >
-        Performance Over Time
-      </button>
-      <button
-        class="tab-button"
-        [class.active]="activeTab === 'consistency'"
-        (click)="switchTab('consistency')"
-      >
-        Consistency Analysis
-      </button>
-      <button
-        class="tab-button"
-        [class.active]="activeTab === 'outcome'"
-        (click)="switchTab('outcome')"
-      >
-        Outcome Analysis
-      </button>
-      <button
-        class="tab-button"
-        [class.active]="activeTab === 'efficiency'"
-        (click)="switchTab('efficiency')"
-      >
-        Efficiency Analysis
-      </button>
-    </div>
-
-    <!-- Tab Content -->
-    <div class="tab-content">
-      <!-- Performance Over Time Tab -->
-      <div class="tab-panel" *ngIf="activeTab === 'performance'">
-        <div class="tab-header">
-          <h2>Performance Over Time</h2>
-          <p class="tab-description">
-            Time-series visualization showing white hits per step for each strategy. Performance varies by draw; no trend or pattern implies future performance. Variance is expected in random processes.
-          </p>
-        </div>
-
-        <!-- Date Range Filter -->
-        <div class="filter-section">
-          <h3>Date Range Filter</h3>
-          <div class="date-filter">
-            <div class="date-input-group">
-              <label for="start-date">Start Date:</label>
-              <input
-                type="date"
-                id="start-date"
-                [min]="dateRangeMin || ''"
-                [max]="dateRangeMax || ''"
-                [value]="dateRangeFilter.start || ''"
-                (change)="dateRangeFilter.start = $any($event.target).value; updateDateRangeFilter()"
-              />
-            </div>
-            <div class="date-input-group">
-              <label for="end-date">End Date:</label>
-              <input
-                type="date"
-                id="end-date"
-                [min]="dateRangeMin || ''"
-                [max]="dateRangeMax || ''"
-                [value]="dateRangeFilter.end || ''"
-                (change)="dateRangeFilter.end = $any($event.target).value; updateDateRangeFilter()"
-              />
-            </div>
-            <button class="btn-clear-filter" (click)="clearDateRangeFilter()">
-              Clear Filter
-            </button>
+    <mat-tab-group [(selectedIndex)]="selectedTabIndex" (selectedTabChange)="onTabChange($event.index)">
+      <mat-tab label="Overview">
+        <!-- Overview content is shown above -->
+      </mat-tab>
+      <mat-tab label="Performance Over Time">
+        <div class="tab-panel">
+          <div class="tab-header">
+            <h2>Performance Over Time</h2>
+            <mat-card class="description-card">
+              <mat-card-content>
+                <p class="tab-description">
+                  Time-series visualization showing white hits per step for each strategy. Performance varies by draw; no trend or pattern implies future performance. Variance is expected in random processes.
+                </p>
+              </mat-card-content>
+            </mat-card>
           </div>
-        </div>
 
-        <!-- Time-Series Chart -->
-        <div class="chart-container">
-          <h3>White Hits Over Time</h3>
-          <div class="chart-wrapper" *ngIf="timeSeriesChartData">
-            <canvas baseChart
-              [data]="timeSeriesChartData"
-              [options]="timeSeriesChartOptions"
-              type="line">
-            </canvas>
-          </div>
-        </div>
-
-        <!-- Distribution Chart -->
-        <div class="chart-container">
-          <h3>White Hit Distribution</h3>
-          <p class="chart-note">
-            Frequency of each white hit count (0-5) across all test draws. Shows the distribution shape for each strategy.
-          </p>
-          <div class="chart-wrapper" *ngIf="distributionChartData">
-            <canvas baseChart
-              [data]="distributionChartData"
-              [options]="distributionChartOptions"
-              type="bar">
-            </canvas>
-          </div>
-        </div>
-      </div>
-
-      <!-- Consistency Analysis Tab -->
-      <div class="tab-panel" *ngIf="activeTab === 'consistency'">
-        <div class="tab-header">
-          <h2>Consistency Analysis</h2>
-          <p class="tab-description">
-            Hit rate consistency across different time windows. Time windows are arbitrary; variance is expected in random processes.
-          </p>
-        </div>
-
-        <!-- Consistency Chart -->
-        <div class="chart-container">
-          <h3>Hit Rate by Time Window</h3>
-          <div class="chart-wrapper" *ngIf="consistencyChartData">
-            <canvas baseChart
-              [data]="consistencyChartData"
-              [options]="consistencyChartOptions"
-              type="bar">
-            </canvas>
-          </div>
-        </div>
-
-        <!-- Variance Metrics -->
-        <div class="metrics-section">
-          <h3>Variance Metrics</h3>
-          <div class="variance-metrics-grid">
-            <div class="variance-metric-card" *ngFor="let metric of varianceMetrics">
-              <div class="metric-header">
-                <h4>{{ metric.strategy }}</h4>
+          <!-- Date Range Filter -->
+          <mat-card class="filter-card">
+            <mat-card-header>
+              <mat-card-title>Date Range Filter</mat-card-title>
+            </mat-card-header>
+            <mat-card-content>
+              <div class="date-filter">
+                <mat-form-field>
+                  <mat-label>Start Date</mat-label>
+                  <input
+                    matInput
+                    type="date"
+                    [min]="dateRangeMin || ''"
+                    [max]="dateRangeMax || ''"
+                    [value]="dateRangeFilter.start || ''"
+                    (change)="dateRangeFilter.start = $any($event.target).value; updateDateRangeFilter()"
+                  />
+                </mat-form-field>
+                <mat-form-field>
+                  <mat-label>End Date</mat-label>
+                  <input
+                    matInput
+                    type="date"
+                    [min]="dateRangeMin || ''"
+                    [max]="dateRangeMax || ''"
+                    [value]="dateRangeFilter.end || ''"
+                    (change)="dateRangeFilter.end = $any($event.target).value; updateDateRangeFilter()"
+                  />
+                </mat-form-field>
+                <button mat-button (click)="clearDateRangeFilter()">Clear Filter</button>
               </div>
-              <div class="metric-values">
-                <div class="metric-value-item">
-                  <span class="metric-label">Standard Deviation:</span>
-                  <span class="metric-value">{{ metric.stdDev | number: '1.2-2' }}</span>
-                </div>
-                <div class="metric-value-item">
-                  <span class="metric-label">Variance:</span>
-                  <span class="metric-value">{{ metric.variance | number: '1.2-2' }}</span>
-                </div>
+            </mat-card-content>
+          </mat-card>
+
+          <!-- Time-Series Chart -->
+          <mat-card class="chart-card">
+            <mat-card-header>
+              <mat-card-title>White Hits Over Time</mat-card-title>
+            </mat-card-header>
+            <mat-card-content>
+              <div class="chart-wrapper" *ngIf="timeSeriesChartData">
+                <canvas baseChart
+                  [data]="timeSeriesChartData"
+                  [options]="timeSeriesChartOptions"
+                  type="line">
+                </canvas>
               </div>
+            </mat-card-content>
+          </mat-card>
+
+          <!-- Distribution Chart -->
+          <mat-card class="chart-card">
+            <mat-card-header>
+              <mat-card-title>White Hit Distribution</mat-card-title>
+            </mat-card-header>
+            <mat-card-content>
+              <p class="chart-note">
+                Frequency of each white hit count (0-5) across all test draws. Shows the distribution shape for each strategy.
+              </p>
+              <div class="chart-wrapper" *ngIf="distributionChartData">
+                <canvas baseChart
+                  [data]="distributionChartData"
+                  [options]="distributionChartOptions"
+                  type="bar">
+                </canvas>
+              </div>
+            </mat-card-content>
+          </mat-card>
+        </div>
+      </mat-tab>
+      <mat-tab label="Consistency Analysis">
+        <div class="tab-panel">
+          <div class="tab-header">
+            <h2>Consistency Analysis</h2>
+            <mat-card class="description-card">
+              <mat-card-content>
+                <p class="tab-description">
+                  Hit rate consistency across different time windows. Time windows are arbitrary; variance is expected in random processes.
+                </p>
+              </mat-card-content>
+            </mat-card>
+          </div>
+
+          <!-- Consistency Chart -->
+          <mat-card class="chart-card">
+            <mat-card-header>
+              <mat-card-title>Hit Rate by Time Window</mat-card-title>
+            </mat-card-header>
+            <mat-card-content>
+              <div class="chart-wrapper" *ngIf="consistencyChartData">
+                <canvas baseChart
+                  [data]="consistencyChartData"
+                  [options]="consistencyChartOptions"
+                  type="bar">
+                </canvas>
+              </div>
+            </mat-card-content>
+          </mat-card>
+
+          <!-- Variance Metrics -->
+          <div class="metrics-section">
+            <h3>Variance Metrics</h3>
+            <div class="variance-metrics-grid">
+              <mat-card *ngFor="let metric of varianceMetrics" class="variance-metric-card">
+                <mat-card-header>
+                  <mat-card-title>{{ metric.strategy }}</mat-card-title>
+                </mat-card-header>
+                <mat-card-content>
+                  <div class="metric-value-item">
+                    <span class="metric-label">Standard Deviation:</span>
+                    <span class="metric-value">{{ metric.stdDev | number: '1.2-2' }}</span>
+                  </div>
+                  <div class="metric-value-item">
+                    <span class="metric-label">Variance:</span>
+                    <span class="metric-value">{{ metric.variance | number: '1.2-2' }}</span>
+                  </div>
+                </mat-card-content>
+              </mat-card>
             </div>
           </div>
         </div>
-      </div>
-
-      <!-- Outcome Analysis Tab -->
-      <div class="tab-panel" *ngIf="activeTab === 'outcome'">
-        <div class="tab-header">
-          <h2>Outcome Analysis</h2>
-          <p class="tab-description">
-            Comparison of perfect matches and near misses across strategies. Perfect matches are extremely rare events. Their occurrence in simulation does not indicate predictive capability.
-          </p>
-        </div>
-
-        <!-- Outcome Chart -->
-        <div class="chart-container">
-          <h3>Perfect Matches vs Near Misses</h3>
-          <div class="chart-wrapper" *ngIf="outcomeChartData">
-            <canvas baseChart
-              [data]="outcomeChartData"
-              [options]="outcomeChartOptions"
-              type="bar">
-            </canvas>
+      </mat-tab>
+      <mat-tab label="Outcome Analysis">
+        <div class="tab-panel">
+          <div class="tab-header">
+            <h2>Outcome Analysis</h2>
+            <mat-card class="description-card">
+              <mat-card-content>
+                <p class="tab-description">
+                  Comparison of matches grouped by white ball count and powerball status across strategies. Perfect matches (5 white + powerball) are extremely rare events. Their occurrence in simulation does not indicate predictive capability.
+                </p>
+              </mat-card-content>
+            </mat-card>
           </div>
-        </div>
 
-        <!-- Rare Event Details -->
-        <div class="metrics-section">
-          <h3>Rare Event Details</h3>
-          <div class="rare-event-grid">
-            <div class="rare-event-card" *ngFor="let detail of rareEventDetails">
-              <div class="card-header">
-                <h4>{{ detail.strategy }}</h4>
+          <!-- Outcome Chart -->
+          <mat-card class="chart-card">
+            <mat-card-header>
+              <mat-card-title>Match Groups by Combination</mat-card-title>
+            </mat-card-header>
+            <mat-card-content>
+              <div class="chart-wrapper" *ngIf="outcomeChartData">
+                <canvas baseChart
+                  [data]="outcomeChartData"
+                  [options]="outcomeChartOptions"
+                  type="bar">
+                </canvas>
               </div>
-              <div class="card-content">
-                <div class="event-item">
-                  <span class="event-label">Perfect Matches:</span>
-                  <span class="event-value highlight">{{ detail.perfectMatches }}</span>
-                  <span class="event-rate">({{ detail.rates.perfect | number: '1.3-3' }}% of steps)</span>
-                </div>
-                <div class="event-item">
-                  <span class="event-label">Near Misses:</span>
-                  <span class="event-value">{{ detail.nearMisses }}</span>
-                  <span class="event-rate">({{ detail.rates.nearMiss | number: '1.3-3' }}% of steps)</span>
-                </div>
+            </mat-card-content>
+          </mat-card>
+
+          <!-- Match Groups Table -->
+          <mat-card class="chart-card" *ngIf="matchGroupsByStrategy.length > 0">
+            <mat-card-header>
+              <mat-card-title>Detailed Match Counts by Combination</mat-card-title>
+            </mat-card-header>
+            <mat-card-content>
+              <div class="table-wrapper">
+                <table class="match-groups-table">
+                  <thead>
+                    <tr>
+                      <th>Match Combination</th>
+                      <th *ngFor="let strategyGroup of matchGroupsByStrategy">{{ strategyGroup.strategy }}</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr *ngFor="let group of allMatchGroups">
+                      <td>{{ group.label }}</td>
+                      <td *ngFor="let strategyGroup of matchGroupsByStrategy">
+                        <span [class.highlight]="strategyGroup.groups[group.key] > 0">
+                          {{ strategyGroup.groups[group.key] || 0 }}
+                        </span>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
               </div>
+            </mat-card-content>
+          </mat-card>
+
+          <!-- Rare Event Details -->
+          <div class="metrics-section">
+            <h3>Rare Event Summary</h3>
+            <div class="rare-event-grid">
+              <mat-card *ngFor="let detail of rareEventDetails" class="rare-event-card">
+                <mat-card-header>
+                  <mat-card-title>{{ detail.strategy }}</mat-card-title>
+                </mat-card-header>
+                <mat-card-content>
+                  <div class="event-item">
+                    <span class="event-label">Perfect Matches (5 White + Powerball):</span>
+                    <span class="event-value highlight">{{ detail.perfectMatches }}</span>
+                    <span class="event-rate">({{ detail.rates.perfect | number: '1.3-3' }}% of steps)</span>
+                  </div>
+                  <div class="event-item">
+                    <span class="event-label">Near Misses (4+PB or 5 White):</span>
+                    <span class="event-value">{{ detail.nearMisses }}</span>
+                    <span class="event-rate">({{ detail.rates.nearMiss | number: '1.3-3' }}% of steps)</span>
+                  </div>
+                </mat-card-content>
+              </mat-card>
             </div>
           </div>
         </div>
-      </div>
+      </mat-tab>
+      <mat-tab label="Efficiency Analysis">
+        <div class="tab-panel">
+          <div class="tab-header">
+            <h2>Efficiency Analysis</h2>
+            <mat-card class="description-card">
+              <mat-card-content>
+                <p class="tab-description">
+                  Ticket efficiency comparison showing hits per ticket ratio. Efficiency varies by draw; shown for comparison only. Fewer tickets is not necessarily "better" — it's a tradeoff.
+                </p>
+              </mat-card-content>
+            </mat-card>
+          </div>
 
-      <!-- Efficiency Analysis Tab -->
-      <div class="tab-panel" *ngIf="activeTab === 'efficiency'">
-        <div class="tab-header">
-          <h2>Efficiency Analysis</h2>
-          <p class="tab-description">
-            Ticket efficiency comparison showing hits per ticket ratio. Efficiency varies by draw; shown for comparison only. Fewer tickets is not necessarily "better" — it's a tradeoff.
-          </p>
-        </div>
-
-        <!-- Efficiency Metrics -->
-        <div class="metrics-section">
-          <h3>Efficiency Metrics</h3>
-          <div class="efficiency-metrics-grid">
-            <div class="efficiency-metric-card" *ngFor="let metric of efficiencyMetrics">
-              <div class="metric-header">
-                <h4>{{ metric.strategy }}</h4>
-              </div>
-              <div class="metric-values">
-                <div class="metric-value-item">
-                  <span class="metric-label">Hits per 100 Tickets:</span>
-                  <span class="metric-value highlight">{{ metric.hitsPer100Tickets | number: '1.2-2' }}</span>
-                </div>
-                <div class="metric-value-item">
-                  <span class="metric-label">Total Tickets:</span>
-                  <span class="metric-value">{{ metric.totalTickets }}</span>
-                </div>
-                <div class="metric-value-item">
-                  <span class="metric-label">Total White Hits:</span>
-                  <span class="metric-value">{{ metric.totalHits }}</span>
-                </div>
-              </div>
+          <!-- Efficiency Metrics -->
+          <div class="metrics-section">
+            <h3>Efficiency Metrics</h3>
+            <div class="efficiency-metrics-grid">
+              <mat-card *ngFor="let metric of efficiencyMetrics" class="efficiency-metric-card">
+                <mat-card-header>
+                  <mat-card-title>{{ metric.strategy }}</mat-card-title>
+                </mat-card-header>
+                <mat-card-content>
+                  <div class="metric-value-item">
+                    <span class="metric-label">Hits per 100 Tickets:</span>
+                    <span class="metric-value highlight">{{ metric.hitsPer100Tickets | number: '1.2-2' }}</span>
+                  </div>
+                  <div class="metric-value-item">
+                    <span class="metric-label">Total Tickets:</span>
+                    <span class="metric-value">{{ metric.totalTickets }}</span>
+                  </div>
+                  <div class="metric-value-item">
+                    <span class="metric-label">Total White Hits:</span>
+                    <span class="metric-value">{{ metric.totalHits }}</span>
+                  </div>
+                </mat-card-content>
+              </mat-card>
             </div>
           </div>
-        </div>
 
-        <!-- Efficiency Note -->
-        <div class="info-box">
-          <p>
-            <strong>Note:</strong> These efficiency metrics show the relationship between ticket volume and hit rate in the simulation. 
-            They do not predict future efficiency. The tradeoff between ticket count and hit rate varies by draw.
-          </p>
+          <!-- Efficiency Note -->
+          <mat-card class="info-card">
+            <mat-card-content>
+              <p>
+                <strong>Note:</strong> These efficiency metrics show the relationship between ticket volume and hit rate in the simulation. 
+                They do not predict future efficiency. The tradeoff between ticket count and hit rate varies by draw.
+              </p>
+            </mat-card-content>
+          </mat-card>
         </div>
-      </div>
-    </div>
+      </mat-tab>
+    </mat-tab-group>
   </div>
 </div>

@@ -6,4 +6,6 @@ export * from './highest-probability-strategy';
 export * from './ai-predictive-strategy';
 export * from './higher-order-markov-strategy';
 export * from './target-win-strategy';
+export * from './diff-pattern-strategy';
+export * from './ensemble-strategy';
 export * from './strategy-factory.service';

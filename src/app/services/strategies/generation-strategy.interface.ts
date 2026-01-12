@@ -1,3 +1,5 @@
+import { DiffPatternAnalysis } from '../../models/powerball-draw.interface';
+
 /**
  * Interface for Powerball number generation strategies.
  * Each strategy implements a different algorithm for generating lottery numbers.
@@ -44,4 +46,7 @@ export interface GenerationContext {
   pickPowerballAi: () => string;
   generateFallbackSet: () => string[];
   sortGeneratedSet: (generated: string[] | string[][]) => string[];
+  
+  // Optional diff pattern analysis for pattern-based generation strategies
+  diffPatterns?: DiffPatternAnalysis;
 }

@@ -94,7 +94,7 @@ export class StepInspectionComponent implements OnInit, OnChanges {
         initialTrainingSize: 100,
         stepSize: 1,
         holdoutSize: 1,
-        strategies: ['all'],
+        strategies: ['all', 'ensemble'],
         ticketsPerStrategy: 20,
         maxSteps: 50,
       });
@@ -146,6 +146,9 @@ export class StepInspectionComponent implements OnInit, OnChanges {
         strategies: stepResult.predictions.map((pred) => pred.strategy),
       };
     });
+    
+    // Reverse the list to show most recent steps first (highest step numbers first)
+    this.stepList.reverse();
   }
 
   private initializeCurrentStep(): void {
@@ -230,15 +233,19 @@ export class StepInspectionComponent implements OnInit, OnChanges {
   }
 
   previousStep(): void {
-    if (this.currentStepIndex > 0) {
-      this.goToStepByIndex(this.currentStepIndex - 1);
+    // Since steps are displayed reversed (most recent first),
+    // "Previous" means going to a newer step (higher index in original array)
+    if (!this.backtestResult) return;
+    if (this.currentStepIndex < this.backtestResult.stepResults.length - 1) {
+      this.goToStepByIndex(this.currentStepIndex + 1);
     }
   }
 
   nextStep(): void {
-    if (!this.backtestResult) return;
-    if (this.currentStepIndex < this.backtestResult.stepResults.length - 1) {
-      this.goToStepByIndex(this.currentStepIndex + 1);
+    // Since steps are displayed reversed (most recent first),
+    // "Next" means going to an older step (lower index in original array)
+    if (this.currentStepIndex > 0) {
+      this.goToStepByIndex(this.currentStepIndex - 1);
     }
   }
 
@@ -293,6 +300,8 @@ export class StepInspectionComponent implements OnInit, OnChanges {
       legacy: 'Legacy Strategy',
       prediction: 'Prediction Strategy',
       ai: 'AI Strategy',
+      diffPattern: 'Diff Pattern Strategy',
+      ensemble: 'Blended / Ensemble Strategy',
     };
     return displayNames[strategyName] || strategyName;
   }
@@ -302,6 +311,8 @@ export class StepInspectionComponent implements OnInit, OnChanges {
       legacy: '#3b82f6', // blue
       prediction: '#10b981', // green
       ai: '#8b5cf6', // purple
+      diffPattern: '#f59e0b', // amber
+      ensemble: '#ec4899', // pink
     };
     return colors[strategyName] || '#6b7280'; // gray default
   }
@@ -312,12 +323,16 @@ export class StepInspectionComponent implements OnInit, OnChanges {
   }
 
   canGoPrevious(): boolean {
-    return this.currentStepIndex > 0;
+    // Since steps are displayed reversed (most recent first),
+    // "Previous" means going to a newer step (higher index)
+    if (!this.backtestResult) return false;
+    return this.currentStepIndex < this.backtestResult.stepResults.length - 1;
   }
 
   canGoNext(): boolean {
-    if (!this.backtestResult) return false;
-    return this.currentStepIndex < this.backtestResult.stepResults.length - 1;
+    // Since steps are displayed reversed (most recent first),
+    // "Next" means going to an older step (lower index)
+    return this.currentStepIndex > 0;
   }
 
   getHighlightClass(stepItem: StepListItem): string {
@@ -336,6 +351,83 @@ export class StepInspectionComponent implements OnInit, OnChanges {
 
   isNumberMatched(num: string, actualNumbers: string[]): boolean {
     return actualNumbers.includes(num);
+  }
+
+  // Portfolio metrics helpers for ensemble strategy
+  getEnsembleUniqueWhites(tickets: string[][]): number {
+    if (!tickets || tickets.length === 0) return 0;
+    const uniqueWhites = new Set<string>();
+    tickets.forEach(ticket => {
+      // First 5 numbers are white numbers
+      ticket.slice(0, 5).forEach(num => uniqueWhites.add(num));
+    });
+    return uniqueWhites.size;
+  }
+
+  getEnsembleCoverage(tickets: string[][]): number {
+    const uniqueWhites = this.getEnsembleUniqueWhites(tickets);
+    return (uniqueWhites / 69) * 100; // Returns percentage
+  }
+
+  getEnsembleMaxReuse(tickets: string[][]): number {
+    if (!tickets || tickets.length === 0) return 0;
+    const whiteNumberCounts: { [key: string]: number } = {};
+    tickets.forEach(ticket => {
+      ticket.slice(0, 5).forEach(num => {
+        whiteNumberCounts[num] = (whiteNumberCounts[num] || 0) + 1;
+      });
+    });
+    return Math.max(...Object.values(whiteNumberCounts), 0);
+  }
+
+  // Strategy contributions calculation
+  getStrategyContributions(prediction: { strategy: string; tickets: string[][]; bestMatch: { matchedTicket: string[] } }, allPredictions: { strategy: string; tickets: string[][]; bestMatch: { matchedTicket: string[] } }[]): Array<{ strategy: string; count: number; percentage: number }> {
+    if (prediction.strategy !== 'ensemble' || !prediction.bestMatch.matchedTicket || prediction.bestMatch.matchedTicket.length < 5) {
+      return [];
+    }
+
+    const bestMatchWhites = prediction.bestMatch.matchedTicket.slice(0, 5);
+    const baseStrategies = ['legacy', 'prediction', 'ai', 'diffPattern'];
+    const contributions: Array<{ strategy: string; count: number; percentage: number }> = [];
+
+    baseStrategies.forEach(baseStrategy => {
+      const basePrediction = allPredictions.find(p => p.strategy === baseStrategy);
+      if (!basePrediction || !basePrediction.tickets || basePrediction.tickets.length === 0) {
+        return;
+      }
+
+      // Calculate top-K most frequent numbers from base strategy tickets
+      const whiteNumberCounts: { [key: string]: number } = {};
+      basePrediction.tickets.forEach(ticket => {
+        ticket.slice(0, 5).forEach(num => {
+          whiteNumberCounts[num] = (whiteNumberCounts[num] || 0) + 1;
+        });
+      });
+
+      // Get top-K numbers (K = number of tickets, but we'll use top 20 to be safe)
+      const sortedNumbers = Object.entries(whiteNumberCounts)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, Math.min(20, basePrediction.tickets.length))
+        .map(entry => entry[0]);
+
+      // Count how many numbers from best match appear in top-K
+      const contributionCount = bestMatchWhites.filter(num => sortedNumbers.includes(num)).length;
+      const percentage = bestMatchWhites.length > 0 ? (contributionCount / bestMatchWhites.length) * 100 : 0;
+
+      if (contributionCount > 0) {
+        contributions.push({
+          strategy: baseStrategy,
+          count: contributionCount,
+          percentage: percentage
+        });
+      }
+    });
+
+    return contributions.sort((a, b) => b.percentage - a.percentage);
+  }
+
+  isEnsembleStrategy(strategy: string): boolean {
+    return strategy === 'ensemble';
   }
 
   goToOverview(): void {
