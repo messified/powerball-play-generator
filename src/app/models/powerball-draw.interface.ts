@@ -255,3 +255,27 @@ export interface EnsembleResult {
     [key: string]: any;
   };
 }
+
+/**
+ * Match result for a single pick against latest draw
+ */
+export interface PickMatchResult {
+  pick: string[];
+  whiteMatches: number;
+  powerballMatch: boolean;
+  matchTier: string; // e.g., "5+PB", "5 White", "4+PB", etc.
+}
+
+/**
+ * Result structure for checking picks against latest draw
+ */
+export interface LatestDrawMatchResult {
+  latestDraw: string[];
+  latestDrawDate: string;
+  latestDrawMultiplier: string;
+  totalPicks: number;
+  matches: PickMatchResult[];
+  summary: {
+    [tier: string]: number; // Count of matches per tier
+  };
+}

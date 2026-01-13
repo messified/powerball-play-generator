@@ -58,6 +58,14 @@
       <mat-icon>analytics</mat-icon>
       Run Diff Pattern Backtest
     </button>
+    <button
+    mat-raised-button
+    color="accent"
+    (click)="open()"
+    class="action-button">
+    <mat-icon>emoji_events</mat-icon>
+    Ways to Win!
+  </button>
   </div>
 
   <!-- Bar Graph Card -->
@@ -66,18 +74,6 @@
       <app-bar-graph></app-bar-graph>
     </mat-card-content>
   </mat-card>
-
-  <!-- Ways to Win Button -->
-  <div *ngIf="play" class="button-section">
-    <button
-      mat-raised-button
-      color="accent"
-      (click)="open()"
-      class="action-button">
-      <mat-icon>emoji_events</mat-icon>
-      Ways to Win!
-    </button>
-  </div>
 
   <!-- Generated History Card -->
   <mat-card *ngIf="getAllGeneratedPicks().length >= 1" class="history-card">
