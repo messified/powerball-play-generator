@@ -85,9 +85,9 @@
         <h4>Matches by Tier:</h4>
         <div class="tier-chips">
           <mat-chip
-            *ngFor="let tier of getTierKeys(latestDrawMatchResult.summary)"
+            *ngFor="let tier of getTierKeys(getFilteredSummary())"
             [color]="getTierColor(tier)">
-            {{ tier }}: {{ latestDrawMatchResult.summary[tier] }}
+            {{ tier }}: {{ getFilteredSummary()[tier] }}
           </mat-chip>
         </div>
       </div>
@@ -100,7 +100,7 @@
       <mat-card-title>Detailed Results</mat-card-title>
     </mat-card-header>
     <mat-card-content>
-      <table mat-table [dataSource]="latestDrawMatchResult.matches" class="results-table">
+      <table mat-table [dataSource]="getFilteredMatches()" class="results-table">
         <ng-container matColumnDef="pick">
           <th mat-header-cell *matHeaderCellDef>Pick</th>
           <td mat-cell *matCellDef="let match">{{ formatPick(match.pick) }}</td>
@@ -148,14 +148,21 @@
       <p>
         <strong>Total Picks Analyzed:</strong> {{ diffPatternAnalysis.totalPicks }}
       </p>
-      <h4>Top Diff Patterns:</h4>
+      <h4>Diff Patterns by Position:</h4>
       <div class="pattern-list">
-        <div
-          *ngFor="let pattern of diffPatternAnalysis.patterns.slice(0, 20)"
-          class="pattern-item">
-          <span class="pattern-position">Position {{ pattern.position }}:</span>
-          <span class="pattern-diff">{{ (pattern.diffValue > 0 ? '+' : '') + pattern.diffValue }}</span>
-          <span class="pattern-frequency">({{ pattern.frequency }}x, {{ pattern.percentage }}%)</span>
+        <div *ngFor="let position of [0, 1, 2, 3, 4, 5]" class="position-group">
+          <h5 class="position-header">{{ getPositionName(position) }}</h5>
+          <div *ngIf="getPatternsForPosition(position).length > 0; else noPatterns">
+            <div
+              *ngFor="let pattern of getPatternsForPosition(position)"
+              class="pattern-item">
+              <span class="pattern-diff">{{ (pattern.diffValue > 0 ? '+' : '') + pattern.diffValue }}</span>
+              <span class="pattern-frequency">({{ pattern.frequency }}x, {{ pattern.percentage }}%)</span>
+            </div>
+          </div>
+          <ng-template #noPatterns>
+            <div class="no-patterns">No patterns found for this position</div>
+          </ng-template>
         </div>
       </div>
     </div>

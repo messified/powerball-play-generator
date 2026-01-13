@@ -139,14 +139,18 @@ export class DiffAnalysisService {
       });
     });
 
-    // Sort by frequency (descending), then by position, then by diffValue
+    // Sort by position first (to group all diffs for each position together),
+    // then by frequency (descending) within each position, then by diffValue
     patterns.sort((a, b) => {
-      if (b.frequency !== a.frequency) {
-        return b.frequency - a.frequency;
-      }
+      // Primary: sort by position (0-5)
       if (a.position !== b.position) {
         return a.position - b.position;
       }
+      // Secondary: within same position, sort by frequency (descending)
+      if (b.frequency !== a.frequency) {
+        return b.frequency - a.frequency;
+      }
+      // Tertiary: within same position and frequency, sort by diffValue
       return a.diffValue - b.diffValue;
     });
 

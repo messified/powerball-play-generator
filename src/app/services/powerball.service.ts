@@ -156,6 +156,56 @@ export class PowerballService {
   }
 
   /**
+   * Builds and returns the generation context for testing/validation purposes.
+   * This method prepares the context by loading and processing historical data.
+   * 
+   * @param trainingData - Optional training data. If not provided, uses PowerballDataMinusLatest.
+   * @returns Promise resolving to GenerationContext
+   */
+  async buildGenerationContextForTesting(trainingData?: PowerballDraw[]): Promise<GenerationContext> {
+    // Load and process data (same as generatePowerballPlay)
+    this.powerballData = trainingData || PowerballDataMinusLatest;
+
+    if (!this.powerballData || this.powerballData.length === 0) {
+      throw new Error('No historical data available for generation');
+    }
+
+    const fromDate = this.configService.get('fromDate');
+    const filtered = this.powerballData.filter(
+      (el: PowerballDraw) => {
+        try {
+          const drawDate = new Date(el.draw_date);
+          return drawDate >= fromDate;
+        } catch (error) {
+          console.warn('Invalid date format in draw:', el.draw_date);
+          return false;
+        }
+      }
+    );
+
+    if (filtered.length === 0) {
+      throw new Error('No data available after filtering by date');
+    }
+
+    const formattedData: ParsedPowerballDraw[] = filtered.map(
+      (result: PowerballDraw) => ({
+        date: result.draw_date,
+        numbers: result.winning_numbers.split(' '),
+        multiplier: result.multiplier || '1',
+      })
+    );
+
+    const parsedsets = await this.parseWinningNumbers(formattedData);
+    const filteredParsedSets = await this.filterParsedNumberSets(parsedsets);
+
+    if (!filteredParsedSets || filteredParsedSets.length === 0) {
+      throw new Error('No valid number sets after filtering');
+    }
+
+    return this.buildGenerationContext(filteredParsedSets);
+  }
+
+  /**
    * Builds the generation context that strategies need to generate plays.
    * 
    * @param filteredParsedSets - Filtered parsed number sets

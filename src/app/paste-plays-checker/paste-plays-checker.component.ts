@@ -18,6 +18,7 @@ import {
   PickMatchResult,
   PickDiffAnalysis,
   DiffPatternAnalysis,
+  DiffPattern,
   CheckPicksResult,
 } from '../models/powerball-draw.interface';
 
@@ -302,12 +303,57 @@ export class PastePlaysCheckerComponent implements OnInit {
   }
 
   /**
-   * Gets count of matches (excluding "No Match")
+   * Gets filtered matches (3+ white balls only)
+   */
+  getFilteredMatches(): PickMatchResult[] {
+    if (!this.latestDrawMatchResult) return [];
+    return this.latestDrawMatchResult.matches.filter(
+      (m) => m.whiteMatches >= 3
+    );
+  }
+
+  /**
+   * Gets filtered summary based on matches with 3+ white balls
+   */
+  getFilteredSummary(): { [tier: string]: number } {
+    if (!this.latestDrawMatchResult) return {};
+    const filteredMatches = this.getFilteredMatches();
+    const summary: { [tier: string]: number } = {};
+    
+    filteredMatches.forEach((match) => {
+      summary[match.matchTier] = (summary[match.matchTier] || 0) + 1;
+    });
+    
+    return summary;
+  }
+
+  /**
+   * Gets count of matches (3+ white balls only)
    */
   getMatchCount(): number {
     if (!this.latestDrawMatchResult) return 0;
     return this.latestDrawMatchResult.matches.filter(
-      (m) => m.matchTier !== 'No Match'
+      (m) => m.whiteMatches >= 3
     ).length;
+  }
+
+  /**
+   * Gets patterns for a specific position
+   */
+  getPatternsForPosition(position: number): DiffPattern[] {
+    if (!this.diffPatternAnalysis || !this.diffPatternAnalysis.patterns) {
+      return [];
+    }
+    return this.diffPatternAnalysis.patterns.filter(p => p.position === position);
+  }
+
+  /**
+   * Gets the position name for display
+   */
+  getPositionName(position: number): string {
+    if (position === 5) {
+      return 'Powerball';
+    }
+    return `Position ${position + 1}`;
   }
 }

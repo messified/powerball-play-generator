@@ -4,6 +4,7 @@ import { BacktestResultsComponent } from './backtest-results/backtest-results.co
 import { StepInspectionComponent } from './backtest-results/step-inspection/step-inspection.component';
 import { DiffAnalysisPageComponent } from './diff-analysis-page/diff-analysis-page.component';
 import { PastePlaysCheckerComponent } from './paste-plays-checker/paste-plays-checker.component';
+import { AgentBValidationComponent } from './agent-b-validation/agent-b-validation.component';
 
 export const routes: Routes = [
   { path: 'generator', component: PlayGeneratorComponent },
@@ -11,6 +12,7 @@ export const routes: Routes = [
   { path: 'backtest/inspect', component: StepInspectionComponent },
   { path: 'diff-analysis', component: DiffAnalysisPageComponent },
   { path: 'paste-checker', component: PastePlaysCheckerComponent },
+  { path: 'agent-b-validation', component: AgentBValidationComponent },
   { path: '', redirectTo: '/generator', pathMatch: 'full' },
   { path: '**', redirectTo: '/generator' },
 ];

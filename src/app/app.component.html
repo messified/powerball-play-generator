@@ -3,6 +3,7 @@
     #sidenav
     mode="over"
     [opened]="false"
+    position="end"
     class="sidenav"
     [class.mat-elevation-z2]="true">
     <mat-nav-list>
@@ -27,6 +28,11 @@
 
   <mat-sidenav-content>
     <mat-toolbar color="primary" class="toolbar">
+      <img
+        class="toolbar-logo"
+        src="assets/powerball_logo.png"
+        alt="Powerball Logo"
+      />
       <button
         mat-icon-button
         (click)="sidenav.toggle()"
@@ -34,11 +40,6 @@
         class="menu-button">
         <mat-icon>menu</mat-icon>
       </button>
-      <img
-        class="toolbar-logo"
-        src="assets/powerball_logo.png"
-        alt="Powerball Logo"
-      />
       <!-- <span class="toolbar-title">Powerball Generator</span> -->
     </mat-toolbar>
 

@@ -72,12 +72,12 @@ export class PowerballConfigService {
     // Duplicate thresholds
     // Note: Different services may use different thresholds
     // This is the default; services can override if needed
-    whiteBallDupThreshold: 5,
+    whiteBallDupThreshold: 4,
     powerballDupThreshold: 4,
 
     // Recency weighting
     // Standardized to 1.051 (can be adjusted based on testing)
-    recencyExpBase: 1.051,
+    recencyExpBase: 1.052,
     recencyThreshold: 50,
 
     // Generation parameters
