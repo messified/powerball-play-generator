@@ -23,6 +23,7 @@ import { MatChipsModule } from '@angular/material/chips';
 import { MatExpansionModule } from '@angular/material/expansion';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatTableModule } from '@angular/material/table';
 import {
   PowerballDraw,
   RecentDrawing,
@@ -61,6 +62,7 @@ import { PowerballData } from '../data/powerball-data';
     MatExpansionModule,
     MatIconModule,
     MatProgressSpinnerModule,
+    MatTableModule,
   ],
   providers: [provideAnimations()],
   templateUrl: './play-generator.component.html',
@@ -83,6 +85,16 @@ export class PlayGeneratorComponent implements OnInit {
   playBasedOnPredictedPowerballResults: string[] = [];
   combindResults: CheckPicksResult | null = null;
   prediction: string[] = [];
+
+  historicalDisplayedColumns: string[] = [
+    'date',
+    'historical_draw',
+    'match_types',
+    'matching_picks',
+    'multiplier',
+    'month',
+    'year',
+  ];
 
   // Diff analysis results
   diffAnalyses: PickDiffAnalysis[] = [];
@@ -905,5 +917,71 @@ export class PlayGeneratorComponent implements OnInit {
         positionClass: 'toast-bottom-right',
       });
     }
+  }
+
+  /**
+   * Formats a pick array for display
+   */
+  formatPick(pick: string[]): string {
+    if (!pick || pick.length !== 6) return '';
+    return `${pick.slice(0, 5).join(' ')} ${pick[5]}`;
+  }
+
+  /**
+   * Formats historical draw array for display
+   */
+  formatHistoricalDraw(draw: string[]): string {
+    if (!draw || draw.length !== 6) return '';
+    return `${draw.slice(0, 5).join(' ')} ${draw[5]}`;
+  }
+
+  /**
+   * Calculates match type for a single pick against a historical draw
+   * Returns format like "3w+PB", "4w", "4w+PB", etc.
+   */
+  getMatchType(pick: string[], historicalDraw: string[]): string {
+    if (!pick || !historicalDraw || pick.length !== 6 || historicalDraw.length !== 6) {
+      return '';
+    }
+
+    // Create a set for quick lookup of white balls (indices 0-4)
+    const whiteBallsSet = new Set(historicalDraw.slice(0, 5));
+
+    // Count white ball matches (indices 0-4)
+    let whiteMatches = 0;
+    for (let i = 0; i < 5; i++) {
+      if (whiteBallsSet.has(pick[i])) {
+        whiteMatches++;
+      }
+    }
+
+    // Check powerball match (index 5)
+    const powerballMatch = pick[5] === historicalDraw[5];
+
+    // Format match type
+    if (powerballMatch) {
+      return `${whiteMatches}w+PB`;
+    } else {
+      return `${whiteMatches}w`;
+    }
+  }
+
+  /**
+   * Gets all unique match types for all matching picks in a win
+   */
+  getMatchTypesForDraw(win: Win): string {
+    if (!win || !win.matching_picks || win.matching_picks.length === 0) {
+      return '';
+    }
+
+    const matchTypes = new Set<string>();
+    for (const pick of win.matching_picks) {
+      const matchType = this.getMatchType(pick, win.historical_draw);
+      if (matchType) {
+        matchTypes.add(matchType);
+      }
+    }
+
+    return Array.from(matchTypes).sort().join(', ');
   }
 }
