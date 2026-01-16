@@ -215,6 +215,56 @@
           <span class="stat-value">{{ historicalCheckResult.targetWins.threeWhitePowerball.length }}</span>
         </div>
       </div>
+
+      <!-- Historical Results Table -->
+      <div class="historical-table-container" *ngIf="historicalCheckResult.wins.length > 0">
+        <h4>Detailed Historical Matches</h4>
+        <table mat-table [dataSource]="historicalCheckResult.wins" class="historical-results-table">
+          <ng-container matColumnDef="date">
+            <th mat-header-cell *matHeaderCellDef>Date</th>
+            <td mat-cell *matCellDef="let win">{{ win.date | date: 'medium' }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="historical_draw">
+            <th mat-header-cell *matHeaderCellDef>Historical Draw</th>
+            <td mat-cell *matCellDef="let win">{{ formatHistoricalDraw(win.historical_draw) }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="match_types">
+            <th mat-header-cell *matHeaderCellDef>Match Types</th>
+            <td mat-cell *matCellDef="let win">{{ getMatchTypesForDraw(win) }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="matching_picks">
+            <th mat-header-cell *matHeaderCellDef>Matching Picks</th>
+            <td mat-cell *matCellDef="let win">
+              <div class="matching-picks-list">
+                <div *ngFor="let pick of win.matching_picks" class="pick-item">
+                  {{ formatPick(pick) }}
+                </div>
+              </div>
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="multiplier">
+            <th mat-header-cell *matHeaderCellDef>Multiplier</th>
+            <td mat-cell *matCellDef="let win">{{ win.multiplier }}x</td>
+          </ng-container>
+
+          <ng-container matColumnDef="month">
+            <th mat-header-cell *matHeaderCellDef>Month</th>
+            <td mat-cell *matCellDef="let win">{{ win.month }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="year">
+            <th mat-header-cell *matHeaderCellDef>Year</th>
+            <td mat-cell *matCellDef="let win">{{ win.year }}</td>
+          </ng-container>
+
+          <tr mat-header-row *matHeaderRowDef="historicalDisplayedColumns"></tr>
+          <tr mat-row *matRowDef="let row; columns: historicalDisplayedColumns"></tr>
+        </table>
+      </div>
     </div>
   </mat-expansion-panel>
 </div>

@@ -38,6 +38,7 @@ import {
   PickDiffAnalysis,
   DiffPatternAnalysis,
 } from '../models/powerball-draw.interface';
+import { PowerballData } from '../data/powerball-data';
 
 @Component({
   selector: 'app-play-generator',
@@ -289,11 +290,18 @@ export class PlayGeneratorComponent implements OnInit {
         recentDrawings = [];
       }
 
-      this.latestDrawing = recentDrawings[0] || {
-        date: '',
-        numbers: [],
-        multiplier: '',
-      };
+      const latestResult = PowerballData[0];
+      this.latestDrawing = latestResult
+        ? {
+            date: latestResult.draw_date,
+            numbers: latestResult.winning_numbers.split(' '),
+            multiplier: latestResult.multiplier,
+          }
+        : {
+            date: '',
+            numbers: [],
+            multiplier: '',
+          };
 
       const matchedSetsIdx: number[] = [];
       recentDrawings.forEach((set, i) => {

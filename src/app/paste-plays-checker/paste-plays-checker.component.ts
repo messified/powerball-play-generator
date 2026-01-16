@@ -20,6 +20,7 @@ import {
   DiffPatternAnalysis,
   DiffPattern,
   CheckPicksResult,
+  Win,
 } from '../models/powerball-draw.interface';
 
 @Component({
@@ -55,6 +56,15 @@ export class PastePlaysCheckerComponent implements OnInit {
   showHistoricalResults = false;
 
   displayedColumns: string[] = ['pick', 'whiteMatches', 'powerballMatch', 'matchTier'];
+  historicalDisplayedColumns: string[] = [
+    'date',
+    'historical_draw',
+    'match_types',
+    'matching_picks',
+    'multiplier',
+    'month',
+    'year',
+  ];
 
   constructor(
     private diffAnalysisService: DiffAnalysisService,
@@ -355,5 +365,71 @@ export class PastePlaysCheckerComponent implements OnInit {
       return 'Powerball';
     }
     return `Position ${position + 1}`;
+  }
+
+  /**
+   * Formats historical draw array for display
+   */
+  formatHistoricalDraw(draw: string[]): string {
+    if (!draw || draw.length !== 6) return '';
+    return `${draw.slice(0, 5).join(' ')} ${draw[5]}`;
+  }
+
+  /**
+   * Formats matching picks array for display (stacked format)
+   */
+  formatMatchingPicks(picks: string[][]): string {
+    if (!picks || picks.length === 0) return '';
+    return picks.map((pick) => this.formatPick(pick)).join('\n');
+  }
+
+  /**
+   * Calculates match type for a single pick against a historical draw
+   * Returns format like "3w+PB", "4w", "4w+PB", etc.
+   */
+  getMatchType(pick: string[], historicalDraw: string[]): string {
+    if (!pick || !historicalDraw || pick.length !== 6 || historicalDraw.length !== 6) {
+      return '';
+    }
+
+    // Create a set for quick lookup of white balls (indices 0-4)
+    const whiteBallsSet = new Set(historicalDraw.slice(0, 5));
+
+    // Count white ball matches (indices 0-4)
+    let whiteMatches = 0;
+    for (let i = 0; i < 5; i++) {
+      if (whiteBallsSet.has(pick[i])) {
+        whiteMatches++;
+      }
+    }
+
+    // Check powerball match (index 5)
+    const powerballMatch = pick[5] === historicalDraw[5];
+
+    // Format match type
+    if (powerballMatch) {
+      return `${whiteMatches}w+PB`;
+    } else {
+      return `${whiteMatches}w`;
+    }
+  }
+
+  /**
+   * Gets all unique match types for all matching picks in a win
+   */
+  getMatchTypesForDraw(win: Win): string {
+    if (!win || !win.matching_picks || win.matching_picks.length === 0) {
+      return '';
+    }
+
+    const matchTypes = new Set<string>();
+    for (const pick of win.matching_picks) {
+      const matchType = this.getMatchType(pick, win.historical_draw);
+      if (matchType) {
+        matchTypes.add(matchType);
+      }
+    }
+
+    return Array.from(matchTypes).sort().join(', ');
   }
 }
